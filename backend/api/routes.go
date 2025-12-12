@@ -28,15 +28,8 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Get("/trigger/{deviceToken}", app.SendNotification)
 
-	// Web OAuth Flow
-	mux.Get("/auth/{provider}", app.Auth)
-	mux.Post("/auth/{provider}/callback", app.AuthCallback)
-
 	// Native iOS Flow
-	mux.Post("/auth/apple/native", app.AuthCallbackNative)
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
-
-	mux.Get("/logout", app.Logout)
 
 	return mux
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"identeam/api"
 	"identeam/internal/apns"
-	"identeam/internal/auth"
 	"log"
 	"os"
 
@@ -20,8 +19,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	auth.NewAuth()
 
 	app := api.App{
 		Provider: apns.Provider{
