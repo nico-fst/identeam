@@ -1,4 +1,4 @@
-package internal // not importable from other modules
+package apns
 
 import (
 	"fmt"

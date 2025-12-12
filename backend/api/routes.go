@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"identeam/internal"
+	"identeam/internal/apns"
 	"log"
 	"net/http"
 
@@ -11,7 +11,7 @@ import (
 )
 
 type App struct {
-	Provider internal.Provider
+	Provider apns.Provider
 }
 
 func (app *App) SetupRoutes() http.Handler {
@@ -19,14 +19,24 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
+		ExposedHeaders:   []string{"Link", "Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
 	mux.Get("/trigger/{deviceToken}", app.SendNotification)
+
+	// Web OAuth Flow
+	mux.Get("/auth/{provider}", app.Auth)
+	mux.Post("/auth/{provider}/callback", app.AuthCallback)
+
+	// Native iOS Flow
+	mux.Post("/auth/apple/native", app.AuthCallbackNative)
+	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
+
+	mux.Get("/logout", app.Logout)
 
 	return mux
 }

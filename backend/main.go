@@ -2,7 +2,8 @@ package main
 
 import (
 	"identeam/api"
-	"identeam/internal"
+	"identeam/internal/apns"
+	"identeam/internal/auth"
 	"log"
 	"os"
 
@@ -12,6 +13,7 @@ import (
 // Run (implicitly build): go run main.go
 // Build only: go build -o identeam && ./identeam
 func main() {
+
 	log.Println("Setting up server...")
 
 	err := godotenv.Load(".env")
@@ -19,11 +21,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	auth.NewAuth()
+
 	app := api.App{
-		Provider: internal.Provider{
-			KeyId:   os.Getenv("KEY_ID"),
+		Provider: apns.Provider{
+			KeyId:   os.Getenv("APNS_KEY_ID"),
 			TeamId:  os.Getenv("TEAM_ID"),
-			KeyFile: "./auth-key.p8",
+			KeyFile: "./apns_key.p8",
 			Topic:   os.Getenv("BUNDLE_ID"),
 			Client:  nil,
 		},
