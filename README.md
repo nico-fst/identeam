@@ -6,10 +6,38 @@ Start your habit challenge now - elevate your **iden**tity as a TEAM!
 
 ## Setup
 
-- Create `.env` (like `.example.env`) with values from Apple Developer
+- Create `/backend/.env` (like `.example.env`) with values from Apple Developer
+  - Use Ngrok if a HTTPS redirect URL for WebAuth is necessary (enforced by Apple)
 - Insert `/backend/apns_key.p8` (created as Key for APNs on Apple Developer)
+- Insert `/backend/siwa_key.p8` (created as Key for SIWA on Apple Developer)
 
-After installing packages with `go mod tidy`, the server can now be started via `go run main.go`.
+After installing packages with `go mod tidy`, the server can be started via `go run main.go`.
+
+# Understanding
+
+## Sign in with Apple (Native on iOS)
+
+Drastically simplified process:
+
+1. **[Client]** User presses SIWA Button; sends form
+2. **[Client <-> Apple server]** Apple provides `ASAuthorizationAppleIDCredential` (containing `userID`, `email`, `fullname`, `identityToken`, `authorizationCode`)
+3. **[Client -> Backend]** Sends `identityToken` (JWT), `authorizationCode`, `userID`, ..., e.g.:
+
+```json
+POST /auth/apple/native/callback
+{
+  "identityToken": "...",
+  "authorizationCode": "...",
+  "userID": "...",
+  "fullName": "Max Mustermann"
+}
+```
+
+4. **[Backend <-> Apple PK server]** Validates JWT-Signature against Apple Public Keys; extracts claims (`userID`, `email`, ...)
+5. **[Backend <-> Apple]** Exchanges `authorizationCode` for `accessToken` / `refreshToken` from Apple
+6. **[Backend -> Client]** Saves user; Returns own `sessionToken`
+
+> Notice: `fullName` will only be provided when signing in for the first time - `userID` remains stable for AppID even after deleting SIWA credentials.
 
 # Credis
 

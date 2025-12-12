@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"identeam/internal/auth"
 	"identeam/util"
 	"net/http"
 	"os"
@@ -85,10 +86,14 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	email, _ := (*claims)["email"].(string)
 	sub, _ := (*claims)["sub"].(string) // Apple's unique stable UserID
 
-	// Voila!
-	fmt.Println(email)
-	fmt.Println(sub)
-	fmt.Println(payload.FullName)
+	// 5. Create Session Token; respond
+
+	sessionToken, err := auth.CreateSessionToken(sub, email)
+	if err != nil {
+		fmt.Println("failed to create session token:", err)
+		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		return
+	}
 
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
@@ -96,6 +101,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]interface{}{
 			"userID": sub,
 			"email":  email,
+			"sessionToken": sessionToken,
 		},
 	})
 }

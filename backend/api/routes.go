@@ -30,6 +30,7 @@ func (app *App) SetupRoutes() http.Handler {
 
 	// Native iOS Flow
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
+	mux.Post("/auth/apple/check_session", app.CheckSession)
 
 	return mux
 }
