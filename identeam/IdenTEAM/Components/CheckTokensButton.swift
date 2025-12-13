@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct CheckTokensButton: View {
+    // TODO switch to Keychain storage
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
     @State private var alertMessage: String = ""
@@ -35,47 +36,39 @@ struct CheckTokensButton: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let payload: [String: Any] = [
-            "sessionToken": sessionToken
-        ]
+        request.setValue(
+            "Bearer \(sessionToken)",
+            forHTTPHeaderField: "Authorization"
+        )
 
-        guard
-            let jsonData = try? JSONSerialization.data(withJSONObject: payload)
-        else { return }
-        request.httpBody = jsonData
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { _, response, error in
             if let error = error {
-                alertMessage = "Network error: \(error.localizedDescription)"
-                showAlert = true
-                return
-            }
-
-            guard let data = data else {
-                alertMessage = "No response data"
-                showAlert = true
-                return
-            }
-            print("RAW RESPONSE:", String(data: data, encoding: .utf8) ?? "nil")
-
-            do {
-                let json =
-                    try JSONSerialization.jsonObject(with: data)
-                    as? [String: Any]
-                if let dataDict = json?["data"] as? [String: Any],
-                   let sessionValid = dataDict["sessionValid"] as? Bool
-                {
-                    alertMessage = """
-                        Session Token valid: \(sessionValid)
-                        """
-                } else {
-                    alertMessage = "Unexpected response format"
+                DispatchQueue.main.async {
+                    alertMessage =
+                        "Network error: \(error.localizedDescription)"
+                    showAlert = true
                 }
-            } catch {
-                alertMessage = "Failed to parse JSON: \(error)"
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                DispatchQueue.main.async {
+                    alertMessage = "Invalid response"
+                    showAlert = true
+                }
+                return
             }
 
             DispatchQueue.main.async {
+                switch httpResponse.statusCode {
+                case 204:
+                    alertMessage = "Session Token valid"
+                case 401:
+                    alertMessage = "Session Token invalid or expired"
+                default:
+                    alertMessage =
+                        "Unexpected status: \(httpResponse.statusCode)"
+                }
                 showAlert = true
             }
         }.resume()

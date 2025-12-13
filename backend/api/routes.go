@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"identeam/internal/apns"
+	"identeam/middleware"
 	"log"
 	"net/http"
 
@@ -30,7 +31,12 @@ func (app *App) SetupRoutes() http.Handler {
 
 	// Native iOS Flow
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
-	mux.Post("/auth/apple/check_session", app.CheckSession)
+
+	mux.Route("/", func(r chi.Router) {
+		r.Use(middleware.JWTAuth)
+
+		r.Post("/auth/apple/check_session", app.CheckSession)
+	})
 
 	return mux
 }
