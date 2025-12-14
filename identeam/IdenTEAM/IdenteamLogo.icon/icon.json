@@ -1,0 +1,148 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "blend-mode" : "normal",
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : "none",
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "identeam_logo_foreground.png",
+          "name" : "identeam_logo_subject",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 2.06,
+            "translation-in-points" : [
+              0,
+              -4
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "subject",
+      "position" : {
+        "scale" : 1.03,
+        "translation-in-points" : [
+          0,
+          22
+        ]
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 1
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.75
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.30023,0.63428,0.62708,1.00000",
+                  "display-p3:0.21733,0.46291,0.45907,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "automatic-gradient" : "extended-gray:0.00000,1.00000",
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.30023,0.63428,0.62708,1.00000",
+                  "display-p3:0.21733,0.46291,0.45907,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            }
+          ],
+          "hidden" : false,
+          "image-name" : "identeam_logo_background.png",
+          "name" : "identeam_logo_background",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "background",
+      "opacity-specializations" : [
+        {
+          "appearance" : "tinted",
+          "value" : 1
+        }
+      ],
+      "position" : {
+        "scale" : 1.2,
+        "translation-in-points" : [
+          0,
+          0
+        ]
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 1
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

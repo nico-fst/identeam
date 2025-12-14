@@ -13,6 +13,7 @@ class AppDelegate: NSObject, UIApplicationDelegate,
     UNUserNotificationCenterDelegate
 {
     @AppStorage("deviceToken") var deviceToken: String = ""
+    @AppStorage("sessionToken") private var sessionToken: String = ""
 
     func application(
         _ application: UIApplication,
@@ -46,9 +47,7 @@ class AppDelegate: NSObject, UIApplicationDelegate,
             .joined()
 
         print("Device Token:", tokenString)
-
-        // Falls du ihn speichern willst:
-        self.deviceToken = tokenString
+        self.deviceToken = tokenString // saved in UserDefaults
     }
 
     // Registration fail

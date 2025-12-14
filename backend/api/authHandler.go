@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"identeam/internal/auth"
+	"identeam/internal/db"
+	"identeam/models"
 	"identeam/util"
 	"net/http"
 	"os"
@@ -14,7 +16,7 @@ import (
 
 // Validates native SIWA
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
-	// 1. Read body
+	// Read body
 
 	var payload struct {
 		IdentityToken     string `json:"identityToken"`
@@ -24,7 +26,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 	if payload.AuthorizationCode == "" {
@@ -32,7 +34,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. SIWA generate ClientSecret
+	// SIWA: generate ClientSecret
 
 	teamID := os.Getenv("TEAM_ID")
 	clientID := os.Getenv("SIWA_CLIENT_ID_APP")
@@ -52,7 +54,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Validate AuthorizationCode against Apple's servers
+	// Validate AuthorizationCode against Apple's servers
 
 	client := apple.New()
 	vReq := apple.AppValidationTokenRequest{
@@ -73,7 +75,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Extract Claims out of Apple's esp.IDToken (JWT))
+	// Extract Claims out of Apple's esp.IDToken (JWT)
 
 	// Get the email
 	// claims: *map[string]interface{} contains claims = content of JWT as Map
@@ -83,12 +85,22 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, _ := (*claims)["email"].(string)
-	sub, _ := (*claims)["sub"].(string) // Apple's unique stable UserID
+	user := models.User{
+		UserID:   (*claims)["sub"].(string), // Apple's unique stable UserID
+		Email:    (*claims)["email"].(string),
+		FullName: payload.FullName,
+	}
 
-	// 5. Create Session Token; respond
+	// Create or retrieve User; Return Session Token
 
-	sessionToken, err := auth.CreateSessionToken(sub, email)
+	got, err := db.GetElseCreateUser(r.Context(), app.DB, user)
+	if err != nil {
+		fmt.Println("failed to get (true)) or create (false) user:", got, err)
+		http.Error(w, "Failed to get or create user", http.StatusInternalServerError)
+		return
+	}
+
+	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
 		fmt.Println("failed to create session token:", err)
 		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
@@ -99,8 +111,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: map[string]interface{}{
-			"userID": sub,
-			"email":  email,
+			"user":         user,
 			"sessionToken": sessionToken,
 		},
 	})

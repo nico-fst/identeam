@@ -2,12 +2,13 @@ package auth
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var sessionSecret = []byte("supersecretkey")
+var sessionSecret = []byte(os.Getenv("SESSION_TOKEN_SECRET"))
 
 type MyClaims struct {
 	UserID string `json:"userID"`

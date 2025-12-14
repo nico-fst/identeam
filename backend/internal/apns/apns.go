@@ -23,7 +23,6 @@ func (provider *Provider) SetupProvider() *Provider {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Key loaded")
 
 	newToken := &token.Token{
 		AuthKey: authKey,
@@ -33,7 +32,7 @@ func (provider *Provider) SetupProvider() *Provider {
 
 	// generates new dev APNs-client using token
 	provider.Client = apns2.NewTokenClient(newToken).Development()
-	log.Println("Provider client setup done")
+	log.Println("APNs client created")
 	return provider
 }
 

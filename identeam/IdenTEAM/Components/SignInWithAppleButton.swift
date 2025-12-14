@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SignInWithAppleButtonView: View {
     @AppStorage("sessionToken") private var sessionToken: String = ""
+    @AppStorage("deviceToken") private var deviceToken: String = ""
 
     var body: some View {
         SignInWithAppleButton(
@@ -36,7 +37,10 @@ struct SignInWithAppleButtonView: View {
                     encoding: .utf8
                 ),
                 let authorizationCodeData = appleIDCredential.authorizationCode,
-                let authorizationCode = String(data: authorizationCodeData, encoding: .utf8)
+                let authorizationCode = String(
+                    data: authorizationCodeData,
+                    encoding: .utf8
+                )
             else {
                 print("Failed to retrieve tokens")
                 return
@@ -99,12 +103,52 @@ struct SignInWithAppleButtonView: View {
                 {
                     // Speichere die Tokens persistent mit @AppStorage
                     if let sToken = dataDict["sessionToken"] as? String {
-                        DispatchQueue.main.async { sessionToken = sToken } // DispatchQueue since UI-Updates only on main thread
+                        DispatchQueue.main.async { sessionToken = sToken }  // DispatchQueue since UI-Updates only on main thread
                         print("Received sessionToken: \(sToken)")
+                        print("Sending \(sessionToken) and \(deviceToken) -> Backend")
+                        sendDeviceTokenToBackend(sessionToken: sessionToken, deviceToken: deviceToken)
                     }
                 }
             } catch {
                 print("Failed to parse JSON:", error)
+            }
+        }.resume()
+    }
+
+    private func sendDeviceTokenToBackend(sessionToken: String, deviceToken: String) {
+        guard
+            let url = URL(
+                string:
+                    "https://unconvolute-effectively-leeanna.ngrok-free.dev/auth/update_device_token"
+            )
+        else { return }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(
+            "Bearer \(sessionToken)",
+            forHTTPHeaderField: "Authorization"
+        )
+
+        let body: [String: String] = [
+            "newToken": deviceToken,
+            "platform": "ios",
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)  // try? returns nil on error
+
+        URLSession.shared.dataTask(with: req) { data, _, error in
+            if let error = error {
+                print("Network error:", error)
+                return
+            }
+
+            guard let data = data else { return }
+
+            if let rawResponse = String(data: data, encoding: .utf8) {
+                print("Raw response:", rawResponse)
+            } else {
+                print("Raw response could not be decoded as UTF-8")
             }
         }.resume()
     }
