@@ -10,9 +10,9 @@ import Foundation
 import SwiftUI
 
 enum AuthState: String {
-    case unknown = "Unknown"
-    case unauthenticated = "Not Authed"
-    case authenticated = "Authed"
+    case unknown = "Unknown Auth State"
+    case unauthenticated = "Not Authenticated"
+    case authenticated = "Authenticated"
 }
 
 class AuthViewModel: ObservableObject {
@@ -22,18 +22,40 @@ class AuthViewModel: ObservableObject {
     @Published var showAlert = false
     @Published var alertMessage: String = ""
 
+    @AppStorage("currentUserID") private var currentUserID: String?
+    @AppStorage("currentUserEmail") private var currentUserEmail: String?
+    @AppStorage("currentUserFullName") private var currentUserFullName: String?
     @AppStorage("sessionToken") private var sessionToken: String?
 
     /// Sets authState according to backend's response to sessionToken
-    func tryLogin() async throws {
-        let isValid = try await AuthService.shared
-            .letBackendValidateSessionToken()
+    func tryLogin() async {
+        guard let token = sessionToken, !token.isEmpty else {
+            authState = .unauthenticated
+            return
+        }
 
-        authState = isValid ? .authenticated : .unauthenticated
+        do {
+            let response = try await AuthService.shared
+                .letBackendValidateSessionToken()
+            if response.statusCode == 401 {
+                authState = .unauthenticated
+            }
+            authState = .authenticated
+        } catch {
+            alertMessage = "ERROR authenticating: " + error.localizedDescription
+            showAlert = true
+
+            authState = .unauthenticated
+        }
     }
 
     func logout() {
-        authState = .unauthenticated
+        currentUserID = nil
+        currentUserEmail = nil
+        currentUserFullName = nil
+
         sessionToken = ""
+
+        authState = .unauthenticated
     }
 }

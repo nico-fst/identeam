@@ -5,7 +5,13 @@ struct SignInWithAppleButtonView: View {
     @AppStorage("sessionToken") private var sessionToken: String?
     @AppStorage("deviceToken") private var deviceToken: String?
 
+    @AppStorage("currentUserID") private var currentUserID: String?
+    @AppStorage("currentUserEmail") private var currentUserEmail: String?
+    @AppStorage("currentUserFullName") private var currentUserFullName: String?
+
     @EnvironmentObject var authVM: AuthViewModel
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         SignInWithAppleButton(
@@ -23,8 +29,11 @@ struct SignInWithAppleButtonView: View {
                 }
             }
         )
-        .signInWithAppleButtonStyle(.black)
+        .signInWithAppleButtonStyle(
+            colorScheme == .dark ? .white : .black
+        )
         .frame(height: 45)
+        .frame(maxWidth: 375)
         .cornerRadius(.infinity)
         .padding(.horizontal)
     }
@@ -59,26 +68,31 @@ struct SignInWithAppleButtonView: View {
 
             Task {
                 do {
-                    self.sessionToken = try await AuthService.shared
+                    let response = try await AuthService.shared
                         .sendAuthFlowToBackend(
                             identityToken: identityToken,
                             authorizationCode: authorizationCode,
                             user: user
                         )
-                    let response = try await TokenService.shared
-                        .sendDeviceTokenToBackend()
-                    if response.statusCode != 200 { // TODO restructure to throw error when .statusCode != 200
-                        authVM.showAlert = true
-                        authVM.alertMessage =
-                            "ERROR sending device token to backend: \(response.statusCode) - \(response.message)"
-                    }
-                    
-                    try await authVM.tryLogin()
+                    self.sessionToken = response.sessionToken
+                    self.currentUserID = response.user.userID
+                    self.currentUserEmail = response.user.email
+                    self.currentUserFullName = response.user.fullName
+
+                    try await TokenService.shared.sendDeviceTokenToBackend()
+                    await authVM.tryLogin()
                 } catch {
                     authVM.showAlert = true
-                    authVM.alertMessage = error.localizedDescription
+                    authVM.alertMessage =
+                        "ERROR sending device token to backend: "
+                        + error.localizedDescription
                 }
             }
         }
     }
+}
+
+#Preview {
+    SignInWithAppleButtonView()
+        .environmentObject(AuthViewModel())
 }

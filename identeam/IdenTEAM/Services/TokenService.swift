@@ -25,7 +25,7 @@ class TokenService {
     static let shared = TokenService()
 
     /// tries propagating current deviceToken to backend
-    func sendDeviceTokenToBackend() async throws -> BackendResponse {
+    func sendDeviceTokenToBackend() async throws {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "token/update_device_token"
         )
@@ -37,9 +37,10 @@ class TokenService {
             "platform": "ios",  // TODO make dynamic if planning to extend to other OS
         ]
 
-        return try await RequestService.shared.postToBackend(
-            url: url,
-            payload: payload
-        )
+        let _: BackendResponse<User> = try await RequestService.shared
+            .postToBackend(
+                url: url,
+                payload: payload
+            )
     }
 }

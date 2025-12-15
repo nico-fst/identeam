@@ -15,16 +15,20 @@ import (
 	"github.com/Timothylock/go-signin-with-apple/apple"
 )
 
-// Validates native SIWA
+// @Summary		Sign in with Apple (native)
+// @Description	Validates the Apple Sign In authorization code, creates or retrieves a user, and returns a session token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		models.SignInPayload	true	"SignIn Payload"
+// @Success		200		{object}	util.JSONResponse		"Returns the created/retrieved user and a session token"
+// @Failure		400		{object}	util.JSONResponse		"Invalid JSON or missing authorizationCode"
+// @Failure		500		{object}	util.JSONResponse		"Server error during user creation or session token generation"
+// @Router			/auth/apple/native/callback [post]
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
 
-	var payload struct {
-		IdentityToken     string `json:"identityToken"`
-		AuthorizationCode string `json:"authorizationCode"`
-		UserID            string `json:"userID"`
-		FullName          string `json:"fullName"`
-	}
+	var payload models.SignInPayload
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -112,12 +116,23 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: map[string]interface{}{
-			"user":         user,
+			"user": models.UserResponse{
+				UserID:   user.UserID,
+				Email:    user.Email,
+				FullName: user.FullName,
+			},
 			"sessionToken": sessionToken,
 		},
 	})
 }
 
+// @Summary		Check Session
+// @Description	Middleware tries authenticating user using its Bearer JWT
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	util.JSONResponse
+// @Router			/auth/apple/check_session [get]
 func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -125,5 +140,9 @@ func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "SessionToken is valid",
+		Data:    models.Empty{},
+	})
 }

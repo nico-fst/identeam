@@ -2,14 +2,18 @@ package api
 
 import (
 	"fmt"
+	"identeam/docs"
 	"identeam/internal/apns"
 	"identeam/middleware"
 	"log"
 	"net/http"
+	"os/exec"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"gorm.io/gorm"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type App struct {
@@ -17,7 +21,23 @@ type App struct {
 	DB       *gorm.DB
 }
 
+func initSwagger() {
+	// resolved *Delim Error with: https://github.com/swaggo/swag/issues/1568
+
+	cmd := exec.Command("go", "run", "github.com/swaggo/swag/cmd/swag@latest", "init")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Failed to generate swagger docs: %v\nOutput: %s", err, string(output))
+		return
+	}
+	log.Println("Swagger docs generated successfully")
+
+	docs.SwaggerInfo.BasePath = "/"
+}
+
 func (app *App) SetupRoutes() http.Handler {
+	initSwagger()
+
 	mux := chi.NewRouter()
 
 	mux.Use(cors.Handler(cors.Options{
@@ -28,6 +48,8 @@ func (app *App) SetupRoutes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	mux.Mount("/swagger", httpSwagger.WrapHandler)
 
 	mux.Get("/trigger/{deviceToken}", app.SendNotification)
 

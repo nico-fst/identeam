@@ -10,11 +10,14 @@ import SwiftUI
 
 enum AuthError: LocalizedError {
     case unexpectedAnswer
+    case emptySessionToken
 
     var errorDescription: String? {
         switch self {
         case .unexpectedAnswer:
             return "Unexpected response from backend"
+        case .emptySessionToken:
+            return "Empty session token while trying to auth against backend"
         }
     }
 }
@@ -24,13 +27,18 @@ class AuthService {
 
     static let shared = AuthService()
 
+    struct AuthResponse: Decodable {
+        let sessionToken: String
+        let user: User
+    }
+
     /// Exchanges identityToken and authorizationCode for sessionToken
     /// - Returns: custom JWT sessionToken valid for 30d
     func sendAuthFlowToBackend(
         identityToken: String,
         authorizationCode: String,
         user: User
-    ) async throws -> String {
+    ) async throws -> AuthResponse {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "auth/apple/native/callback"
         )
@@ -42,29 +50,30 @@ class AuthService {
             "fullName": user.fullName,
         ]
 
-        let response = try await RequestService.shared.postToBackend(
-            url: url,
-            payload: payload
-        )
+        let response: BackendResponse<AuthResponse> =
+            try await RequestService.shared.postToBackend(
+                url: url,
+                payload: payload
+            )
 
-        if let data = response.data {
-            return data["sessionToken"] as! String
-        } else {
-            throw AuthError.unexpectedAnswer
-        }
+        return response.data!
     }
 
     /// Let backend validate the sessionToken in UserDefaults send as Bearer
     /// - Returns: if backend accepts sessionToken
-    func letBackendValidateSessionToken() async throws
-        -> Bool
+    func letBackendValidateSessionToken() async throws -> BackendResponse<Empty>
     {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "auth/apple/check_session"
         )
 
-        let response = try await RequestService.shared.getToBackend(url: url)
+        guard !sessionToken.isEmpty else {
+            throw AuthError.emptySessionToken
+        }
 
-        return response.statusCode == 200
+        let response: BackendResponse<Empty> = try await RequestService.shared
+            .getToBackend(url: url)
+
+        return response
     }
 }

@@ -11,19 +11,14 @@ struct CheckTokensButton: View {
             Task {
                 do {
                     // if isValid
-                    if try await AuthService.shared
+                    let _ = try await AuthService.shared
                         .letBackendValidateSessionToken()
-                    {
-                        authVM.showAlert = true
-                        authVM.alertMessage = "Token is valid"
-                    } else {
-                        authVM.showAlert = true
-                        authVM.alertMessage = "Token is not valid"
-                    }
+                    authVM.alertMessage = "Token is valid"
                 } catch {
-                    authVM.showAlert = true
                     authVM.alertMessage = error.localizedDescription
                 }
+
+                authVM.showAlert = true
             }
         }
         .padding()

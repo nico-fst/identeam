@@ -26,6 +26,10 @@ func JWTAuth(next http.Handler) http.Handler {
 		}
 
 		parts := strings.Split(authHeader, " ")
+		if len(parts) == 1 && parts[0] == "Bearer" {
+			http.Error(w, "bearer token empty", http.StatusUnauthorized)
+			return
+		}
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			http.Error(w, "invalid authorization header format", http.StatusUnauthorized)
 			return

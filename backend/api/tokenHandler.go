@@ -9,6 +9,18 @@ import (
 	"net/http"
 )
 
+// @Summary		Update Device Token
+// @Description	Updates the device token for the authenticated user. Used for push notifications.
+// @Tags			Device
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		models.UpdateDeviceTokenPayload	true	"UpdateDeviceToken Payload"
+// @Success		200		{object}	util.JSONResponse				"Returns the updated user info"
+// @Failure		400		{object}	util.JSONResponse				"Invalid JSON or missing fields"
+// @Failure		401		{object}	util.JSONResponse				"Unauthorized: user not found in context"
+// @Failure		500		{object}	util.JSONResponse				"Server error updating the user"
+// @Security		ApiKeyAuth
+// @Router			/token/update_device_token [post]
 func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -16,10 +28,7 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload struct {
-		NewToken string `json:"newToken"`
-		Platform string `json:"platform"`
-	}
+	var payload models.UpdateDeviceTokenPayload
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -44,6 +53,10 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Updated DeviceToken successfully",
-		Data:    updatedUser,
+		Data: models.UserResponse{
+			UserID:   updatedUser.UserID,
+			Email:    updatedUser.Email,
+			FullName: updatedUser.FullName,
+		},
 	})
 }

@@ -2,7 +2,8 @@ ios/build
 ios/Pods
 .DS_Store
 
-# Go build
+# Docs dynamically generated
+docs/ 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

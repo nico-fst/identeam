@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -41,6 +42,8 @@ func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Head
 			w.Header()[key] = value
 		}
 	}
+
+	log.Printf("(%v) %v", status, data)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

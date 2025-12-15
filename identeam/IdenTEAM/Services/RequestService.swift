@@ -8,14 +8,18 @@
 import Foundation
 import SwiftUI
 
-struct BackendResponse {
+struct BackendResponse<T: Decodable> {
     let statusCode: Int
     let rawData: Data?
     // JSONResponse: { error, message, data }
     let error: Bool
     let message: String
-    let data: [String: Any]?
+    let data: T?
 
+}
+
+enum RequestServiceError: Error {
+    case decodingDataFailed(reason: String)
 }
 
 class RequestService {
@@ -23,8 +27,11 @@ class RequestService {
 
     static let shared = RequestService()
 
-    func postToBackend(url: URL, payload: [String: Any]) async throws
-        -> BackendResponse
+    func postToBackend<T: Decodable>(
+        url: URL,
+        payload: [String: Any],
+    ) async throws
+        -> BackendResponse<T>
     {
         var request = URLRequest(url: url)
         request.timeoutInterval = 10  // in seconds
@@ -44,27 +51,42 @@ class RequestService {
             throw error
         }
 
+        print("POST \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(
             for: request
         )
+        print("---> \(String(data: data, encoding: .utf8))")
+
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-        var json: [String: Any]? = nil
-        if !data.isEmpty {
-            json =
-                try? JSONSerialization.jsonObject(with: data)
-                as? [String: Any]
+        guard (200...299).contains(statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        // try decoding json
+        let json =
+            try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let error = json?["error"] as? Bool ?? false
+        let message = json?["message"] as? String ?? ""
+
+        var decoded: T? = nil
+        if let dataObject = json?["data"] {
+            let dataJSON = try JSONSerialization.data(
+                withJSONObject: dataObject
+            )
+            decoded = try JSONDecoder().decode(T.self, from: dataJSON)
         }
 
         return BackendResponse(
             statusCode: statusCode,
             rawData: data,
-            error: json?["error"] as? Bool ?? false,
-            message: json?["message"] as? String ?? "",
-            data: json?["data"] as? [String: Any]
+            error: error,
+            message: message,
+            data: decoded  // T?
         )
     }
 
-    func getToBackend(url: URL) async throws -> BackendResponse {
+    func getToBackend<T: Decodable>(url: URL) async throws -> BackendResponse<T>
+    {
         var request = URLRequest(url: url)
         request.timeoutInterval = 10  // in seconds
         request.httpMethod = "GET"
@@ -73,23 +95,37 @@ class RequestService {
             forHTTPHeaderField: "Authorization"
         )
 
+        print("GET \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(
             for: request
         )
+        print("---> \(String(data: data, encoding: .utf8))")
+
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-        var json: [String: Any]? = nil
-        if !data.isEmpty {
-            json =
-                try? JSONSerialization.jsonObject(with: data)
-                as? [String: Any]
+        guard (200...299).contains(statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        // try decoding json
+        let json =
+            try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let error = json?["error"] as? Bool ?? false
+        let message = json?["message"] as? String ?? ""
+
+        var decoded: T? = nil
+        if let dataObject = json?["data"] {
+            let dataJSON = try JSONSerialization.data(
+                withJSONObject: dataObject
+            )
+            decoded = try JSONDecoder().decode(T.self, from: dataJSON)
         }
 
         return BackendResponse(
             statusCode: statusCode,
             rawData: data,
-            error: json?["error"] as? Bool ?? false,
-            message: json?["message"] as? String ?? "",
-            data: json?["data"] as? [String: Any]
+            error: error,
+            message: message,
+            data: decoded  // T?
         )
     }
 }
