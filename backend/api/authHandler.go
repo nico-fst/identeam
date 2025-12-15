@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"identeam/internal/auth"
 	"identeam/internal/db"
+	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
 	"net/http"
@@ -115,4 +116,14 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 			"sessionToken": sessionToken,
 		},
 	})
+}
+
+func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
+	_, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unable to retrieve userID from context", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

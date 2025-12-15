@@ -69,7 +69,7 @@
             {
               "appearance" : "dark",
               "value" : {
-                "automatic-gradient" : "extended-gray:0.00000,1.00000",
+                "automatic-gradient" : "display-p3:0.16971,0.16971,0.16971,1.00000",
                 "orientation" : {
                   "start" : {
                     "x" : 0.5,

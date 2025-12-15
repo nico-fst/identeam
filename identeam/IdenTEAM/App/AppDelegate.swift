@@ -20,7 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate,
         didFinishLaunchingWithOptions launchOptions: [UIApplication
             .LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // all notification center events should be forwarded to this object
+        // all notification center events shall be forwarded to this object:
         UNUserNotificationCenter.current().delegate = self
 
         UNUserNotificationCenter.current().requestAuthorization(options: [
@@ -47,7 +47,7 @@ class AppDelegate: NSObject, UIApplicationDelegate,
             .joined()
 
         print("Device Token:", tokenString)
-        self.deviceToken = tokenString // saved in UserDefaults
+        self.deviceToken = tokenString  // saved in UserDefaults
     }
 
     // Registration fail

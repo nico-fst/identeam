@@ -9,26 +9,38 @@ import SwiftData
 import SwiftUI
 
 struct ContentView: View {
-    @AppStorage("sessionToken") private var sessionToken: String = ""
-
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-    @AppStorage("deviceToken") var deviceToken: String?
+    @EnvironmentObject var authVM: AuthViewModel
 
     var body: some View {
-        NavigationSplitView {
-            Text("APNS DeviceToken: \(deviceToken)")
-            Text("Session Token: \(sessionToken)")
-
-            SignInWithAppleButtonView()
-            CheckTokensButton()
-        } detail: {
-            Text("Select an item")
+        NavigationStack {
+            VStack {
+                Text("BaseURL: \(AppConfig.apiBaseURL)")
+                Text(authVM.authState.rawValue)
+                switch authVM.authState {
+                case .unknown:
+                    ProgressView("Checking Session...")
+                case .unauthenticated:
+                    SignInWithAppleButtonView()
+                case .authenticated:
+                    CheckTokensButton()
+                    Button("Logout") {
+                        authVM.logout()
+                    }
+                }
+            }
+            .task {
+                Task {
+                    do { try await authVM.tryLogin() } catch {
+                        authVM.authError = error.localizedDescription
+                    }
+                }
+            }
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .environmentObject(AuthViewModel())
 }

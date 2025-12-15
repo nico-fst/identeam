@@ -4,73 +4,38 @@ struct CheckTokensButton: View {
     // TODO switch to Keychain storage
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
-    @State private var alertMessage: String = ""
-    @State private var showAlert = false
+    @EnvironmentObject var authVM: AuthViewModel
 
     var body: some View {
         Button("Check Tokens") {
-            checkTokens()
+            Task {
+                do {
+                    // if isValid
+                    if try await AuthService.shared
+                        .letBackendValidateSessionToken()
+                    {
+                        authVM.showAlert = true
+                        authVM.alertMessage = "Token is valid"
+                    } else {
+                        authVM.showAlert = true
+                        authVM.alertMessage = "Token is not valid"
+                    }
+                } catch {
+                    authVM.showAlert = true
+                    authVM.alertMessage = error.localizedDescription
+                }
+            }
         }
         .padding()
         .background(Color.blue)
         .foregroundColor(.white)
         .cornerRadius(8)
-        .alert(isPresented: $showAlert) {
+        .alert(isPresented: $authVM.showAlert) {
             Alert(
-                title: Text("Token Check"),
-                message: Text(alertMessage),
+                title: Text("Auth Response"),
+                message: Text(authVM.alertMessage),
                 dismissButton: .default(Text("OK"))
             )
         }
-    }
-
-    private func checkTokens() {
-        guard
-            let url = URL(
-                string:
-                    "https://unconvolute-effectively-leeanna.ngrok-free.dev/auth/apple/check_session"
-            )
-        else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        request.setValue(
-            "Bearer \(sessionToken)",
-            forHTTPHeaderField: "Authorization"
-        )
-
-        URLSession.shared.dataTask(with: request) { _, response, error in
-            if let error = error {
-                DispatchQueue.main.async {
-                    alertMessage =
-                        "Network error: \(error.localizedDescription)"
-                    showAlert = true
-                }
-                return
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                DispatchQueue.main.async {
-                    alertMessage = "Invalid response"
-                    showAlert = true
-                }
-                return
-            }
-
-            DispatchQueue.main.async {
-                switch httpResponse.statusCode {
-                case 204:
-                    alertMessage = "Session Token valid"
-                case 401:
-                    alertMessage = "Session Token invalid or expired"
-                default:
-                    alertMessage =
-                        "Unexpected status: \(httpResponse.statusCode)"
-                }
-                showAlert = true
-            }
-        }.resume()
     }
 }

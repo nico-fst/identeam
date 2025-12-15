@@ -15,7 +15,7 @@ After installing packages with `go mod tidy`, the server can be started via `go 
 
 # Understanding
 
-## Sign in with Apple (Native on iOS)
+## Sign in with Apple Auth Flow (SIWA, Native on iOS)
 
 Drastically simplified process:
 
@@ -41,7 +41,7 @@ POST /auth/apple/native/callback
 
 # Credis
 
-## Resources
+## Especially helpful Resources
 
 - Example code for SIWA from [Github: Timothylock/go-signin-with-apple](https://github.com/Timothylock/go-signin-with-apple?tab=readme-ov-file)
 - Example code for APNs from [matheus-vb/APNs-go](https://github.com/matheus-vb/APNs-go/tree/main/util)

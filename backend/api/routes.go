@@ -38,8 +38,8 @@ func (app *App) SetupRoutes() http.Handler {
 		r.Use(middleware.JWTAuth,
 			middleware.InjectUser(app.DB))
 
-		r.Post("/auth/apple/check_session", app.CheckSession)
-		r.Post("/auth/update_device_token", app.UpdateDeviceToken)
+		r.Get("/auth/apple/check_session", app.CheckSession)
+		r.Post("/token/update_device_token", app.UpdateDeviceToken)
 	})
 
 	return mux

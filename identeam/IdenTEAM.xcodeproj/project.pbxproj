@@ -10,9 +10,22 @@
 		97B62F4B2ED36C170076D0C0 /* identeam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = identeam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		970EA8BE2EEF88E200D3D2B9 /* Exceptions for "identeam" folder in "identeam" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		97B62F4D2ED36C170076D0C0 /* identeam */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				970EA8BE2EEF88E200D3D2B9 /* Exceptions for "identeam" folder in "identeam" target */,
+			);
 			path = identeam;
 			sourceTree = "<group>";
 		};
@@ -258,6 +271,7 @@
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = identeam/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IdenTEAM;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -293,6 +307,7 @@
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = identeam/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IdenTEAM;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

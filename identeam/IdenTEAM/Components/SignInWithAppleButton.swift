@@ -2,8 +2,10 @@ import AuthenticationServices
 import SwiftUI
 
 struct SignInWithAppleButtonView: View {
-    @AppStorage("sessionToken") private var sessionToken: String = ""
-    @AppStorage("deviceToken") private var deviceToken: String = ""
+    @AppStorage("sessionToken") private var sessionToken: String?
+    @AppStorage("deviceToken") private var deviceToken: String?
+
+    @EnvironmentObject var authVM: AuthViewModel
 
     var body: some View {
         SignInWithAppleButton(
@@ -16,7 +18,8 @@ struct SignInWithAppleButtonView: View {
                 case .success(let authResults):
                     handle(authResults)
                 case .failure(let error):
-                    print("Authorization failed: \(error.localizedDescription)")
+                    authVM.showAlert = true
+                    authVM.alertMessage = error.localizedDescription
                 }
             }
         )
@@ -46,110 +49,36 @@ struct SignInWithAppleButtonView: View {
                 return
             }
 
-            sendToBackend(
-                identityToken: identityToken,
-                authorizationCode: authorizationCode,
+            let user = User(
                 userID: appleIDCredential.user,
-                fullName: appleIDCredential.fullName
+                email: "",  // backend looks manually up after validating JWT against Apple server
+                fullName: PersonNameComponentsFormatter().string(
+                    from: appleIDCredential.fullName ?? PersonNameComponents()
+                )
             )
-        }
-    }
 
-    private func sendToBackend(
-        identityToken: String,
-        authorizationCode: String,
-        userID: String,
-        fullName: PersonNameComponents?
-    ) {
-        guard
-            let url = URL(
-                string:
-                    "https://unconvolute-effectively-leeanna.ngrok-free.dev/auth/apple/native/callback"
-            )
-        else { return }
-
-        var payload: [String: Any] = [
-            "identityToken": identityToken,
-            "authorizationCode": authorizationCode,
-            "userID": userID,
-        ]
-
-        if let fullName = fullName {
-            let formatter = PersonNameComponentsFormatter()
-            payload["fullName"] = formatter.string(from: fullName)
-        }
-
-        guard
-            let jsonData = try? JSONSerialization.data(withJSONObject: payload)
-        else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if let error = error {
-                print("Network error:", error)
-                return
-            }
-
-            guard let data = data else { return }
-
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data)
-                    as? [String: Any],
-                    let dataDict = json["data"] as? [String: Any]
-                {
-                    // Speichere die Tokens persistent mit @AppStorage
-                    if let sToken = dataDict["sessionToken"] as? String {
-                        DispatchQueue.main.async { sessionToken = sToken }  // DispatchQueue since UI-Updates only on main thread
-                        print("Received sessionToken: \(sToken)")
-                        print("Sending \(sessionToken) and \(deviceToken) -> Backend")
-                        sendDeviceTokenToBackend(sessionToken: sessionToken, deviceToken: deviceToken)
+            Task {
+                do {
+                    self.sessionToken = try await AuthService.shared
+                        .sendAuthFlowToBackend(
+                            identityToken: identityToken,
+                            authorizationCode: authorizationCode,
+                            user: user
+                        )
+                    let response = try await TokenService.shared
+                        .sendDeviceTokenToBackend()
+                    if response.statusCode != 200 { // TODO restructure to throw error when .statusCode != 200
+                        authVM.showAlert = true
+                        authVM.alertMessage =
+                            "ERROR sending device token to backend: \(response.statusCode) - \(response.message)"
                     }
+                    
+                    try await authVM.tryLogin()
+                } catch {
+                    authVM.showAlert = true
+                    authVM.alertMessage = error.localizedDescription
                 }
-            } catch {
-                print("Failed to parse JSON:", error)
             }
-        }.resume()
-    }
-
-    private func sendDeviceTokenToBackend(sessionToken: String, deviceToken: String) {
-        guard
-            let url = URL(
-                string:
-                    "https://unconvolute-effectively-leeanna.ngrok-free.dev/auth/update_device_token"
-            )
-        else { return }
-
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue(
-            "Bearer \(sessionToken)",
-            forHTTPHeaderField: "Authorization"
-        )
-
-        let body: [String: String] = [
-            "newToken": deviceToken,
-            "platform": "ios",
-        ]
-        req.httpBody = try? JSONSerialization.data(withJSONObject: body)  // try? returns nil on error
-
-        URLSession.shared.dataTask(with: req) { data, _, error in
-            if let error = error {
-                print("Network error:", error)
-                return
-            }
-
-            guard let data = data else { return }
-
-            if let rawResponse = String(data: data, encoding: .utf8) {
-                print("Raw response:", rawResponse)
-            } else {
-                print("Raw response could not be decoded as UTF-8")
-            }
-        }.resume()
+        }
     }
 }
