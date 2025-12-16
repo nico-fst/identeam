@@ -21,7 +21,7 @@ import (
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		models.SignInPayload	true	"SignIn Payload"
-// @Success		200		{object}	util.JSONResponse		"Returns the created/retrieved user and a session token"
+// @Success		200		{object}	util.JSONResponse		"Returns the created/retrieved user, a session token and a boolean if the user is new"
 // @Failure		400		{object}	util.JSONResponse		"Invalid JSON or missing authorizationCode"
 // @Failure		500		{object}	util.JSONResponse		"Server error during user creation or session token generation"
 // @Router			/auth/apple/native/callback [post]
@@ -98,9 +98,9 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	// Create or retrieve User; Return Session Token
 
-	got, err := db.GetElseCreateUser(r.Context(), app.DB, user)
+	created, foundUser, err := db.GetElseCreateUser(r.Context(), app.DB, user)
 	if err != nil {
-		fmt.Println("failed to get (true)) or create (false) user:", got, err)
+		fmt.Println("failed to get (true)) or create (false) user:", foundUser, err)
 		http.Error(w, "Failed to get or create user", http.StatusInternalServerError)
 		return
 	}
@@ -117,11 +117,13 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Message: "Auth successful",
 		Data: map[string]interface{}{
 			"user": models.UserResponse{
-				UserID:   user.UserID,
-				Email:    user.Email,
-				FullName: user.FullName,
+				UserID:   foundUser.UserID,
+				Email:    foundUser.Email,
+				FullName: foundUser.FullName,
+				Username: foundUser.Username,
 			},
 			"sessionToken": sessionToken,
+			"created":      created,
 		},
 	})
 }

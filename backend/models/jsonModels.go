@@ -7,6 +7,7 @@ type UserResponse struct {
 	UserID   string `json:"userID"`
 	Email    string `json:"email"`
 	FullName string `json:"fullName"`
+	Username string `json:"username"`
 }
 
 type SignInPayload struct {
@@ -19,4 +20,8 @@ type SignInPayload struct {
 type UpdateDeviceTokenPayload struct {
 	NewToken string `json:"newToken"`
 	Platform string `json:"platform"`
+}
+
+type UpdateUserPayload struct {
+	User User `json:"user"`
 }

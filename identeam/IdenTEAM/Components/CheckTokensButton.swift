@@ -25,12 +25,5 @@ struct CheckTokensButton: View {
         .background(Color.blue)
         .foregroundColor(.white)
         .cornerRadius(8)
-        .alert(isPresented: $authVM.showAlert) {
-            Alert(
-                title: Text("Auth Response"),
-                message: Text(authVM.alertMessage),
-                dismissButton: .default(Text("OK"))
-            )
-        }
     }
 }

@@ -9,6 +9,7 @@ type User struct {
 	UserID     string `gorm:"uniqueIndex;not null"`
 	Email      string `gorm:"uniqueIndex;not null"`
 	FullName   string
+	Username   string `gorm:"unique"`
 
 	DeviceTokens []DeviceToken // defines 1:N - GORM expectes for DeviceToken.UserID
 }

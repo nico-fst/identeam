@@ -2,13 +2,20 @@ package db
 
 import (
 	"context"
+	"errors"
 	"identeam/models"
 	"log"
+	"unicode/utf8"
 
 	"gorm.io/gorm"
 )
 
-// Returns user if exists, otherwise nil
+var (
+	ErrFullNameTooLong = errors.New("'Your Name' is too long (max. 10 chars) >:(")
+	ErrUsernameTaken   = errors.New("This username is not available :O")
+)
+
+// Returns user if exists in DB, otherwise nil
 func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User, error) {
 	user, err := gorm.G[models.User](db).
 		Where("user_id = ?", userID).
@@ -24,7 +31,7 @@ func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User,
 	return &user, nil
 }
 
-// Tries creating user
+// Tries creating given user in DB
 func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.User, error) {
 	err := gorm.G[models.User](db).
 		Create(ctx, &user)
@@ -37,15 +44,54 @@ func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.Use
 	return &user, nil
 }
 
-// Gets or creates user -> true if got
-func GetElseCreateUser(ctx context.Context, db *gorm.DB, user models.User) (bool, error) {
-	_, err := GetUserById(ctx, db, user.UserID)
+// Gets or creates user -> true <=> new user crated
+func GetElseCreateUser(ctx context.Context, db *gorm.DB, input models.User) (bool, models.User, error) {
+	foundUser, err := GetUserById(ctx, db, input.UserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			_, createErr := CreateUser(ctx, db, user)
-			return false, createErr
+			createdUser, createErr := CreateUser(ctx, db, input)
+			if createErr != nil {
+				return false, models.User{}, createErr
+			}
+			return true, *createdUser, nil
 		}
-		return true, err // bool not important
+		return false, models.User{}, err
 	}
-	return true, nil
+
+	return false, *foundUser, nil
+}
+
+// Update FullName or Username of given user
+func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUserDetails models.User) (models.User, error) {
+	// TODO allow changing email in future
+
+	// Guard: |FullName| <= 10
+	if utf8.RuneCountInString(newUserDetails.FullName) > 10 {
+		log.Printf("ERROR updating username %v -> %v (too long)", user.FullName, newUserDetails.FullName)
+		return models.User{}, ErrFullNameTooLong
+	}
+
+	var userToUpdate models.User
+	if err := db.Where("user_id = ?", newUserDetails.UserID).First(&userToUpdate).Error; err != nil {
+		return models.User{}, err
+	}
+
+	updates := map[string]interface{}{
+		"FullName": newUserDetails.FullName,
+		"Username": newUserDetails.Username,
+	}
+
+	if err := db.Model(&userToUpdate).Updates(updates).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return models.User{}, ErrUsernameTaken
+		}
+		return models.User{}, err
+	}
+
+	updatedUser, err := GetUserById(ctx, db, newUserDetails.UserID)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return *updatedUser, nil
 }

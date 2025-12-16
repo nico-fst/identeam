@@ -12,9 +12,11 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var authVM: AuthViewModel
 
-    @AppStorage("currentUserID") private var currentUserID: String?
-    @AppStorage("currentUserEmail") private var currentUserEmail: String?
-    @AppStorage("currentUserFullName") private var currentUserFullName: String?
+    @AppStorage("userID") private var userID: String?
+    @AppStorage("email") private var email: String?
+    @AppStorage("fullName") private var fullName: String?
+    @AppStorage("username") private var username: String?
+
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
 
@@ -23,6 +25,8 @@ struct ContentView: View {
             VStack {
                 Spacer()
 
+                Text("Hello \(fullName ?? "no username") 👋🏼")
+
                 Text("BaseURL: \(AppConfig.apiBaseURL)")
                 Text("DeviceToken: \(deviceToken ?? "no device token")")
                 Text("SessionToken: \(sessionToken ?? "no session token")")
@@ -30,9 +34,10 @@ struct ContentView: View {
                 Spacer()
 
                 Text(authVM.authState.rawValue).bold()
-                Text(currentUserID ?? "no user id")
-                Text(currentUserEmail ?? "no user email")
-                Text(currentUserFullName ?? "no user full name")
+                Text(userID ?? "no user id")
+                Text(email ?? "no user email")
+                Text(fullName ?? "no user full name")
+                Text(username ?? "no user username")
 
                 Spacer()
 
@@ -40,7 +45,7 @@ struct ContentView: View {
                 case .unknown:
                     ProgressView("Checking Session...")
                 case .unauthenticated:
-                    SignInWithAppleButtonView()
+                    SignInWithAppleButtonComponent()
                 case .authenticated:
                     Button("Logout") {
                         authVM.logout()
@@ -53,6 +58,49 @@ struct ContentView: View {
             .task {
                 await authVM.tryLogin()
             }
+        }
+        .sheet(isPresented: $authVM.showLoginSheet) {
+            NavigationStack {
+                VStack {
+                    if !authVM.showEnterUserDetails {
+                        // step 1
+                        SignInWithAppleButtonComponent()
+                    } else {
+                        // step 2 (only after signing up)
+                        VStack {
+                            List {
+                                TextField(
+                                    "Your Name",
+                                    text: $authVM.fullnameInput
+                                )
+                                TextField(
+                                    "Username",
+                                    text: $authVM.usernameInput
+                                )
+                            }
+                            
+                            Text(authVM.signupError ?? "")
+                                .foregroundColor(.red)
+
+                            Button("Sign Up") {
+                                Task { await authVM.tryChangeUserDetails() }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        .padding()
+                    }
+                }
+                .navigationTitle("Login with Apple")
+            }
+            .interactiveDismissDisabled()
+            .presentationDetents([.medium])
+        }
+        .alert(isPresented: $authVM.showAlert) {
+            Alert(
+                title: Text("Auth Response"),
+                message: Text(authVM.alertMessage),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
 }

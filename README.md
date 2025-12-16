@@ -11,7 +11,9 @@ Start your habit challenge now - elevate your **iden**tity as a TEAM!
 - Insert `/backend/apns_key.p8` (created as Key for APNs on Apple Developer)
 - Insert `/backend/siwa_key.p8` (created as Key for SIWA on Apple Developer)
 
-After installing packages with `go mod tidy`, the server can be started via `go run main.go`.
+> Manual: After installing packages with `go mod tidy`, the server can be started via `go run main.go`.
+
+> VSCode: Debug config in `.vscode/launch.json` (uses dlv) allows debugging in VSCode.
 
 # Understanding
 

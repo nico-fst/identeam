@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"errors"
+	"identeam/models"
 	"io"
 	"log"
 	"net/http"
@@ -66,6 +67,7 @@ func ErrorJSON(w http.ResponseWriter, err error, status ...int) error {
 	payload := JSONResponse{
 		Error:   true,
 		Message: err.Error(),
+		Data:    models.Empty{},
 	}
 
 	return WriteJSON(w, statusCode, payload)

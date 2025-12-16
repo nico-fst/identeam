@@ -46,7 +46,7 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := db.UpdateUsersDeviceToken(r.Context(), app.DB, user, newToken)
 	if err != nil {
-		http.Error(w, "Error updating user", http.StatusInternalServerError)
+		http.Error(w, "Error updating DeviceToken", http.StatusInternalServerError)
 		return
 	}
 
@@ -57,6 +57,7 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 			UserID:   updatedUser.UserID,
 			Email:    updatedUser.Email,
 			FullName: updatedUser.FullName,
+			Username: updatedUser.Username,
 		},
 	})
 }

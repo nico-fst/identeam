@@ -1,14 +1,7 @@
 import AuthenticationServices
 import SwiftUI
 
-struct SignInWithAppleButtonView: View {
-    @AppStorage("sessionToken") private var sessionToken: String?
-    @AppStorage("deviceToken") private var deviceToken: String?
-
-    @AppStorage("currentUserID") private var currentUserID: String?
-    @AppStorage("currentUserEmail") private var currentUserEmail: String?
-    @AppStorage("currentUserFullName") private var currentUserFullName: String?
-
+struct SignInWithAppleButtonComponent: View {
     @EnvironmentObject var authVM: AuthViewModel
 
     @Environment(\.colorScheme) private var colorScheme
@@ -63,36 +56,35 @@ struct SignInWithAppleButtonView: View {
                 email: "",  // backend looks manually up after validating JWT against Apple server
                 fullName: PersonNameComponentsFormatter().string(
                     from: appleIDCredential.fullName ?? PersonNameComponents()
-                )
+                ),
+                username: ""
             )
 
             Task {
-                do {
-                    let response = try await AuthService.shared
-                        .sendAuthFlowToBackend(
-                            identityToken: identityToken,
-                            authorizationCode: authorizationCode,
-                            user: user
-                        )
-                    self.sessionToken = response.sessionToken
-                    self.currentUserID = response.user.userID
-                    self.currentUserEmail = response.user.email
-                    self.currentUserFullName = response.user.fullName
+                let response = try await AuthService.shared
+                    .sendAuthFlowToBackend(
+                        identityToken: identityToken,
+                        authorizationCode: authorizationCode,
+                        user: user
+                    )
 
-                    try await TokenService.shared.sendDeviceTokenToBackend()
-                    await authVM.tryLogin()
-                } catch {
-                    authVM.showAlert = true
-                    authVM.alertMessage =
-                        "ERROR sending device token to backend: "
-                        + error.localizedDescription
-                }
+                // not tryLogin() since in async and variables not stable yet
+                authVM.completeLogin(
+                    sessionToken: response.sessionToken,
+                    userID: response.user.userID,
+                    email: response.user.email,
+                    fullName: response.user.fullName,
+                    username: response.user.username,
+                    created: response.created
+                )
+
+                try await TokenService.shared.sendDeviceTokenToBackend()
             }
         }
     }
 }
 
 #Preview {
-    SignInWithAppleButtonView()
+    SignInWithAppleButtonComponent()
         .environmentObject(AuthViewModel())
 }

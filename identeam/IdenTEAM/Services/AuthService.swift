@@ -22,15 +22,16 @@ enum AuthError: LocalizedError {
     }
 }
 
+struct AuthResponse: Decodable {
+    let user: User
+    let sessionToken: String
+    let created: Bool  // == new user was creted in backend
+}
+
 class AuthService {
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
     static let shared = AuthService()
-
-    struct AuthResponse: Decodable {
-        let sessionToken: String
-        let user: User
-    }
 
     /// Exchanges identityToken and authorizationCode for sessionToken
     /// - Returns: custom JWT sessionToken valid for 30d

@@ -19,18 +19,56 @@ class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
 
+    @Published var showLoginSheet: Bool = true
+    @Published var showEnterUserDetails: Bool = false  // after Sign Up: Ask for name, username
+
     @Published var showAlert = false
     @Published var alertMessage: String = ""
 
-    @AppStorage("currentUserID") private var currentUserID: String?
-    @AppStorage("currentUserEmail") private var currentUserEmail: String?
-    @AppStorage("currentUserFullName") private var currentUserFullName: String?
+    @Published var fullnameInput: String = ""
+    @Published var usernameInput: String = ""
+    @Published var signupError: String? = nil
+
+    @AppStorage("userID") private var userID: String?
+    @AppStorage("email") private var email: String?
+    @AppStorage("fullName") private var fullName: String?
+    @AppStorage("username") private var username: String?
+
     @AppStorage("sessionToken") private var sessionToken: String?
+
+    func tryChangeUserDetails() async {
+        do {
+            let newUser = try await UserService.shared
+                .requestUserDetailsChange(
+                    fullName: fullnameInput,
+                    username: usernameInput
+                )
+            completeChangeUserDetails(newUser: newUser)
+        } catch {
+            print("Werde error zeigen: ", error.localizedDescription)
+            signupError = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    func completeChangeUserDetails(newUser: User) {
+        print("Saving NewUser: \(newUser)")
+        self.sessionToken = sessionToken
+
+        self.userID = newUser.userID
+        self.email = newUser.email
+        self.fullName = newUser.fullName
+        self.username = newUser.username
+
+        showLoginSheet = false
+        showEnterUserDetails = false
+    }
 
     /// Sets authState according to backend's response to sessionToken
     func tryLogin() async {
         guard let token = sessionToken, !token.isEmpty else {
             authState = .unauthenticated
+            showLoginSheet = true
             return
         }
 
@@ -39,23 +77,57 @@ class AuthViewModel: ObservableObject {
                 .letBackendValidateSessionToken()
             if response.statusCode == 401 {
                 authState = .unauthenticated
+                showLoginSheet = true
+                return
             }
+
             authState = .authenticated
+            showLoginSheet = false
         } catch {
             alertMessage = "ERROR authenticating: " + error.localizedDescription
             showAlert = true
 
             authState = .unauthenticated
+            showLoginSheet = true
         }
     }
 
     func logout() {
-        currentUserID = nil
-        currentUserEmail = nil
-        currentUserFullName = nil
+        userID = nil
+        email = nil
+        fullName = nil
 
         sessionToken = ""
 
         authState = .unauthenticated
+        showLoginSheet = true
+    }
+
+    // in SIWA button: not tryLogin() since in async and variables not stable yet
+    @MainActor
+    func completeLogin(
+        sessionToken: String,
+        userID: String,
+        email: String,
+        fullName: String,
+        username: String,
+        created: Bool  // == user signed up 1st time
+    ) {
+        print("Saving SessionToken: \(sessionToken)")
+        self.sessionToken = sessionToken
+
+        self.userID = userID
+        self.email = email
+        self.fullName = fullName
+        self.username = username
+
+        if created {
+            // sign up: ask for name, username
+            showEnterUserDetails = true
+        } else {
+            // immediately close login popup
+            showLoginSheet = false
+        }
+        authState = .authenticated
     }
 }
