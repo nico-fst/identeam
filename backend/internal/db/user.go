@@ -95,3 +95,16 @@ func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUs
 
 	return *updatedUser, nil
 }
+
+func DerefUsers(users []*models.User) []models.User {
+	res := make([]models.User, 0, len(users))
+
+	for _, u := range users {
+		if u == nil {
+			continue
+		}
+		res = append(res, *u)
+	}
+
+	return res
+}

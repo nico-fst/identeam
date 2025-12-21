@@ -29,7 +29,6 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload models.UpdateDeviceTokenPayload
-
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return

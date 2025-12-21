@@ -29,7 +29,6 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
 
 	var payload models.SignInPayload
-
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return

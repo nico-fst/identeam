@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/backend/main.go",
-            "preLaunchTask": "delete-sqlite",
+            // "preLaunchTask": "delete-sqlite",
             "env": {},
             "args": []
         }

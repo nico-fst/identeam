@@ -1,7 +1,7 @@
 package apns
 
 import (
-	"fmt"
+	"identeam/models"
 	"log"
 
 	"github.com/sideshow/apns2"
@@ -36,18 +36,33 @@ func (provider *Provider) SetupProvider() *Provider {
 	return provider
 }
 
-// method for Provider
-func (provider *Provider) SendNotification(deviceToken string, message string) (*apns2.Response, error) {
-	notification := &apns2.Notification{
-		DeviceToken: deviceToken,
-		Topic:       provider.Topic,
-		Payload:     []byte(fmt.Sprintf(`{"aps":{"alert":"%s"}}`, message)),
+// pushed Notification to all of user's deviceTokens
+func (provider *Provider) NotifyDeviceTokens(deviceTokens []models.DeviceToken, notification models.NotificationPayload) error {
+	for _, deviceToken := range deviceTokens {
+		notification := &apns2.Notification{
+			DeviceToken: deviceToken.Token,
+			Topic:       provider.Topic,
+			Payload:     notification,
+		}
+
+		_, err := provider.Client.Push(notification)
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
 	}
 
-	res, err := provider.Client.Push(notification)
-	if err != nil {
-		log.Fatal(err)
+	return nil
+}
+
+func (provider *Provider) NotifyUsers(users []models.User, notification models.NotificationPayload) error {
+	for _, user := range users {
+		err := provider.NotifyDeviceTokens(user.DeviceTokens, notification)
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
 	}
 
-	return res, nil
+	return nil
 }

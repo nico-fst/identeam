@@ -51,7 +51,7 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Mount("/swagger", httpSwagger.WrapHandler)
 
-	mux.Get("/trigger/{deviceToken}", app.SendNotification)
+	// mux.Get("/trigger/{deviceToken}", app.SendNotification)
 
 	// Native iOS Flow
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
@@ -62,8 +62,14 @@ func (app *App) SetupRoutes() http.Handler {
 
 		r.Get("/auth/apple/check_session", app.CheckSession)
 		r.Post("/token/update_device_token", app.UpdateDeviceToken)
-		
+
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift
+
+		r.Post("/teams/add", app.AddTeam)
+		r.Post("/teams/join/{slug}", app.JoinTeam)
+		r.Post("/teams/leave/{slug}", app.LeaveTeam)
+
+		r.Post("/notify/team/{slug}", app.NotifyTeam)
 	})
 
 	return mux

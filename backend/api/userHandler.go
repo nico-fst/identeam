@@ -32,7 +32,6 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload models.UpdateUserPayload
-
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
