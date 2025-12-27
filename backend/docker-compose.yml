@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16
+    container_name: identeam_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "2222:5432"
+  backend:
+    build: .
+    container_name: identeam_backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "9090:8080"
+    volumes:
+      # APNs / SIWA Keys (read-only)
+      - ./apns_key.p8:/app/apns_key.p8:ro
+      - ./siwa_key.p8:/app/siwa_key.p8:ro
+    # local: auto loads backend/.env
+    # in Pipeline: env values provided from Github
+    environment:
+      APNS_KEY_ID: ${APNS_KEY_ID}
+      TEAM_ID: ${TEAM_ID}
+      BUNDLE_ID: ${BUNDLE_ID}
+
+      SIWA_CLIENT_ID_APP: ${SIWA_CLIENT_ID_APP}
+      SIWA_KEY_ID: ${SIWA_KEY_ID}
+
+      SESSION_TOKEN_SECRET: ${SESSION_TOKEN_SECRET}
+
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+volumes:
+  pgdata:
