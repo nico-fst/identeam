@@ -17,9 +17,8 @@ var (
 
 // Returns user if exists in DB, otherwise nil
 func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User, error) {
-	user, err := gorm.G[models.User](db).
-		Where("user_id = ?", userID).
-		First(ctx)
+	var user models.User
+	err := db.Model(&models.User{}).Preload("Teams").Where("user_id = ?", userID).First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			log.Printf("Failed to lookup non-existing user in DB: %v", userID)

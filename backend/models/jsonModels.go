@@ -15,7 +15,7 @@ type UserResponse struct {
 type TeamResponse struct {
 	Name        string `json:"name"`
 	Slug        string `json:"slug"`
-	Description string `json:"description"`
+	Details string `json:"details"`
 }
 
 // PAYLOADS (grouped here for swaggo)

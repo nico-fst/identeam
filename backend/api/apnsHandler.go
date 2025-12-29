@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -46,17 +45,20 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload models.UpdateUserPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
-		return
-	}
-
 	memberPointers, err := db.GetTeamMembers(r.Context(), app.DB, user.UserID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 	}
 	members := db.DerefUsers(memberPointers)
 
-	app.Provider.NotifyUsers(members, models.NotificationTemplates[models.NewIdent])
+	err = app.Provider.NotifyUsers(members, models.NotificationTemplates[models.NewIdent])
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+	}
+
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Success notifying team members",
+		Data:    models.Empty{},
+	})
 }

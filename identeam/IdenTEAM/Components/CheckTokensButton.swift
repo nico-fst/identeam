@@ -5,6 +5,7 @@ struct CheckTokensButton: View {
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var vm: AppViewModel
 
     var body: some View {
         Button("Check Tokens") {
@@ -13,12 +14,11 @@ struct CheckTokensButton: View {
                     // if isValid
                     let _ = try await AuthService.shared
                         .letBackendValidateSessionToken()
-                    authVM.alertMessage = "Token is valid"
+                    vm.toastMessage = "Token is valid :)"
+                    vm.showAlert("Token Check", "Token is valid :)")
                 } catch {
-                    authVM.alertMessage = error.localizedDescription
+                    vm.showAlert("Error Checking Token", error.localizedDescription)
                 }
-
-                authVM.showAlert = true
             }
         }
         .padding()

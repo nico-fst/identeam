@@ -11,17 +11,14 @@ import SwiftUI
 @main
 struct identeamApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
+    @StateObject private var vm = AppViewModel()
     @StateObject private var authVM = AuthViewModel()
+    @StateObject private var teamsVM = TeamsViewModel()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            // Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false
-        )
+        let schema = Schema([Team.self])
+        let modelConfiguration = ModelConfiguration(schema: schema)
 
         do {
             return try ModelContainer(
@@ -39,5 +36,7 @@ struct identeamApp: App {
         }
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)
+        .environmentObject(teamsVM)
+        .environmentObject(vm)
     }
 }

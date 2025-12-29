@@ -29,7 +29,7 @@ class RequestService {
 
     func postToBackend<T: Decodable>(
         url: URL,
-        payload: [String: Any],
+        payload: [String: Any]? = nil,
     ) async throws
         -> BackendResponse<T>
     {
@@ -41,13 +41,15 @@ class RequestService {
             forHTTPHeaderField: "Authorization"
         )
 
-        do {
-            request.httpBody = try JSONSerialization.data(
-                withJSONObject: payload
-            )
-        } catch {
-            print("ERROR serializing JSON:", error)
-            throw error
+        if let payload {
+            do {
+                request.httpBody = try JSONSerialization.data(
+                    withJSONObject: payload
+                )
+            } catch {
+                print("ERROR serializing JSON:", error)
+                throw error
+            }
         }
 
         print("POST \(url.absoluteString)")

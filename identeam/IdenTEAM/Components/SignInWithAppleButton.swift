@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SignInWithAppleButtonComponent: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var vm: AppViewModel
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -17,8 +18,7 @@ struct SignInWithAppleButtonComponent: View {
                 case .success(let authResults):
                     handle(authResults)
                 case .failure(let error):
-                    authVM.showAlert = true
-                    authVM.alertMessage = error.localizedDescription
+                    vm.showAlert("SIWA Error", error.localizedDescription)
                 }
             }
         )

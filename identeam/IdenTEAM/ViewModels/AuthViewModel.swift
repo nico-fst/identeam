@@ -5,9 +5,10 @@
 //  Created by Nico Stern on 15.12.25.
 //
 
-internal import Combine
+import Combine
 import Foundation
 import SwiftUI
+import SwiftData
 
 enum AuthState: String {
     case unknown = "Unknown Auth State"
@@ -16,14 +17,13 @@ enum AuthState: String {
 }
 
 class AuthViewModel: ObservableObject {
+    @EnvironmentObject var vm: AppViewModel
+    
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
 
-    @Published var showLoginSheet: Bool = true
+    @Published var showLoginSheet: Bool = false
     @Published var showEnterUserDetails: Bool = false  // after Sign Up: Ask for name, username
-
-    @Published var showAlert = false
-    @Published var alertMessage: String = ""
 
     @Published var fullnameInput: String = ""
     @Published var usernameInput: String = ""
@@ -84,8 +84,7 @@ class AuthViewModel: ObservableObject {
             authState = .authenticated
             showLoginSheet = false
         } catch {
-            alertMessage = "ERROR authenticating: " + error.localizedDescription
-            showAlert = true
+            vm.showAlert("Authenticating Error", error.localizedDescription)
 
             authState = .unauthenticated
             showLoginSheet = true

@@ -65,6 +65,7 @@ func (app *App) SetupRoutes() http.Handler {
 
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift
 
+		r.Get("/teams/me",app.GetMyTeams)
 		r.Post("/teams/add", app.AddTeam)
 		r.Post("/teams/join/{slug}", app.JoinTeam)
 		r.Post("/teams/leave/{slug}", app.LeaveTeam)

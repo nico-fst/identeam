@@ -6,8 +6,8 @@ import (
 	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
-	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -44,7 +44,7 @@ func (app *App) AddTeam(w http.ResponseWriter, r *http.Request) {
 		Data: models.TeamResponse{
 			Name:        newTeam.Name,
 			Slug:        newTeam.Slug,
-			Description: newTeam.Description,
+			Details: newTeam.Details,
 		},
 	})
 }
@@ -73,9 +73,8 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
 		return
 	}
-	log.Println(user)
 
-	slug := chi.URLParam(r, "slug")
+	slug := strings.ToLower(chi.URLParam(r, "slug"))
 
 	team, err := db.AddUserToTeam(r.Context(), app.DB, user.UserID, slug)
 	if err != nil {
@@ -96,7 +95,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 			Team: models.TeamResponse{
 				Name:        team.Name,
 				Slug:        team.Slug,
-				Description: team.Description,
+				Details: team.Details,
 			},
 		},
 	})
@@ -142,8 +141,28 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 			Team: models.TeamResponse{
 				Name:        team.Name,
 				Slug:        team.Slug,
-				Description: team.Description,
+				Details: team.Details,
 			},
+		},
+	})
+}
+
+type GetMyTeamsResponse struct {
+	Teams []models.TeamResponse `json:"teams"`
+}
+
+func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		return
+	}
+
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "Retrieved teams from user successfully",
+		Data: GetMyTeamsResponse{
+			Teams: models.TeamsToResponses(user.Teams),
 		},
 	})
 }

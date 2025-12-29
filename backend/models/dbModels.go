@@ -29,7 +29,7 @@ type Team struct {
 	// Public
 	Name        string `gorm:"not null"`
 	Slug        string `gorm:"uniqueIndex"` // for urls
-	Description string
+	Details string
 
 	// Visibility, Joining
 	// TODO join code
