@@ -10,32 +10,29 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// // @Summary		Send APNs Notification
-// // @Description	Sends a push notification via APNs to the specified device token.
-// // @Tags			APNs
-// // @Accept			json
-// // @Produce		json
-// // @Param			deviceToken	path		string				true	"Device Token to send the notification to"
-// // @Success		200			{object}	util.JSONResponse	"Returns the result of the APNs send call"
-// // @Failure		400			{object}	util.JSONResponse	"Invalid device token or request"
-// // @Failure		500			{object}	util.JSONResponse	"Server error sending the notification"
-// // @Router			/trigger/{deviceToken} [get]
-// func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
-// 	deviceToken := chi.URLParam(r, "deviceToken")
+// @Summary		Send APNs Notification
+// @Description	Sends a push notification via APNs to the specified device token.
+// @Tags			APNs
+// @Accept			json
+// @Produce		json
+// @Param			deviceToken	path		string				true	"Device Token to send the notification to"
+// @Success		200			{object}	util.JSONResponse	"Returns the result of the APNs send call"
+// @Failure		400			{object}	util.JSONResponse	"Invalid device token or request"
+// @Failure		500			{object}	util.JSONResponse	"Server error sending the notification"
+// @Router			/trigger/{deviceToken} [get]
+func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
+	deviceToken := chi.URLParam(r, "deviceToken")
 
-// 	res:= app.Provider.NotifyUser(deviceToken, "OMG das ist go nicht paris!")
-
-// 	payload := util.JSONResponse{
-// 		Error:   false,
-// 		Message: "APNs call result",
-// 		Data:    res.Sent(),
-// 	}
-
-// 	err = util.WriteJSON(w, http.StatusOK, payload)
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-// }
+	err := app.Provider.NotifyString(deviceToken, models.NotificationTemplates[models.NewIdent])
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+	}
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Success notifying user by deviceToken string",
+		Data:    models.Empty{},
+	})
+}
 
 func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
@@ -59,6 +56,6 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Success notifying team members",
-		Data:    models.Empty{},
+		Data:    members,
 	})
 }

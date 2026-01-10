@@ -32,19 +32,16 @@ struct ContentView: View {
             }
         }
         .task {
-            await authVM.tryLogin()
+            await authVM.tryLogin(vm: vm)
         }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let authVM = AuthViewModel()
-        // authVM.showLoginSheet = false
-
         return ContentView()
             .environmentObject(AppViewModel())
-            .environmentObject(authVM)
+            .environmentObject(AuthViewModel())
             .environmentObject(TeamsViewModel())
     }
 }

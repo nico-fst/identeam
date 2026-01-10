@@ -10,6 +10,7 @@ import SwiftUI
 
 struct DebugInfoView: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var vm: AppViewModel
     @Environment(\.modelContext) private var modelContext
 
     @AppStorage("userID") private var userID: String?
@@ -54,7 +55,7 @@ struct DebugInfoView: View {
             Spacer()
         }
         .task {
-            await authVM.tryLogin()
+            await authVM.tryLogin(vm: vm)
         }
     }
 }

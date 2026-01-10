@@ -51,7 +51,7 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Mount("/swagger", httpSwagger.WrapHandler)
 
-	// mux.Get("/trigger/{deviceToken}", app.SendNotification)
+	mux.Get("/notify/{deviceToken}", app.SendNotification)
 
 	// Native iOS Flow
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)

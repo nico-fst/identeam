@@ -17,8 +17,6 @@ enum AuthState: String {
 }
 
 class AuthViewModel: ObservableObject {
-    @EnvironmentObject var vm: AppViewModel
-    
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
 
@@ -65,7 +63,7 @@ class AuthViewModel: ObservableObject {
     }
 
     /// Sets authState according to backend's response to sessionToken
-    func tryLogin() async {
+    func tryLogin(vm: AppViewModel) async {
         guard let token = sessionToken, !token.isEmpty else {
             authState = .unauthenticated
             showLoginSheet = true

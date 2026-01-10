@@ -36,6 +36,22 @@ func (provider *Provider) SetupProvider() *Provider {
 	return provider
 }
 
+func (provider *Provider) NotifyString(deviceToken string, notification models.NotificationPayload) error {
+	notificationPayload := &apns2.Notification{
+		DeviceToken: deviceToken,
+		Topic:       provider.Topic,
+		Payload:     notification,
+	}
+
+	_, err := provider.Client.Push(notificationPayload)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
+}
+
 // pushed Notification to all of user's deviceTokens
 func (provider *Provider) NotifyDeviceTokens(deviceTokens []models.DeviceToken, notification models.NotificationPayload) error {
 	for _, deviceToken := range deviceTokens {
