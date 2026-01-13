@@ -66,9 +66,7 @@ func RemoveUserFromTeam(ctx context.Context, db *gorm.DB, userID string, teamSlu
 func GetTeamMembers(ctx context.Context, db *gorm.DB, userID string, teamSlug string) ([]*models.User, error) {
 	var team models.Team
 	if err := db.
-		// TODO wieder ohne selbst, sobald debugged
-		// Preload("Users", "user_id <> ?", userID).
-		Preload("Users").
+		Preload("Users", "user_id <> ?", userID).
 		Preload("Users.DeviceTokens").
 		Where("slug = ? ", teamSlug). // not userID himself
 		First(&team).Error; err != nil {

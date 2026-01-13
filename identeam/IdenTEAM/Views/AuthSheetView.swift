@@ -14,8 +14,22 @@ struct AuthSheetView: View {
         NavigationStack {
             VStack {
                 if !authVM.showEnterUserDetails {
-                    // step 1
-                    SignInWithAppleButtonComponent()
+                    // step 1: Login / Sign up
+                    VStack {
+                        List {
+                            TextField(
+                                "Email",
+                                text: $authVM.fullnameInput
+                            )
+                            TextField(
+                                "Password",
+                                text: $authVM.fullnameInput
+                            )
+                        }
+
+                        SignInWithAppleButtonComponent()
+                    }
+                    .padding()
                 } else {
                     // step 2 (only after signing up)
                     VStack {

@@ -6,6 +6,7 @@ import (
 	dbpkg "identeam/internal/db"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -19,13 +20,14 @@ func main() {
 	// Local: use .env file
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("No .env found - env values should be set from outside")
+		log.Println("No .env found - env values should be set from outside (okay and normal in container => adapt docker-compose")
 		log.Println(err)
 	}
 	log.Println("Loaded .env")
 
+	// Setup DB
 	db := &gorm.DB{}
-	if os.Getenv("USE_INTERNAL_DB") != "" {
+	if strings.ToLower(os.Getenv("USE_INTERNAL_DB")) == "true" {
 		log.Println("Connecting identeam.sqlite3...")
 		db, err = dbpkg.ConnectSqlite()
 	} else {
@@ -43,8 +45,9 @@ func main() {
 			KeyFile: "./apns_key.p8",
 			Topic:   os.Getenv("BUNDLE_ID"),
 			Client:  nil,
+			IsProd: strings.ToLower(os.Getenv("IS_PROD")) == "true",
 		},
-		DB: db,
+		DB:     db,
 	}
 
 	app.SetupServer()

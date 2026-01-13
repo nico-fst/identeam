@@ -7,8 +7,8 @@
 
 import Combine
 import Foundation
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 enum AuthState: String {
     case unknown = "Unknown Auth State"
@@ -33,6 +33,16 @@ class AuthViewModel: ObservableObject {
     @AppStorage("username") private var username: String?
 
     @AppStorage("sessionToken") private var sessionToken: String?
+
+    private var cancellables = Set<AnyCancellable>()
+    init() {
+        NotificationCenter.default.publisher(for: .didReceiveUnauthorized)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.logout()
+            }
+            .store(in: &cancellables)
+    }
 
     func tryChangeUserDetails() async {
         do {
@@ -93,6 +103,7 @@ class AuthViewModel: ObservableObject {
         userID = nil
         email = nil
         fullName = nil
+        username = nil
 
         sessionToken = ""
 

@@ -16,6 +16,7 @@ type Provider struct {
 	Topic   string
 	// Pointer to APNs client (for sending notifications)
 	Client *apns2.Client
+	IsProd bool // tokens are only valid in "production" or "development" env
 }
 
 func (provider *Provider) SetupProvider() *Provider {
@@ -31,8 +32,12 @@ func (provider *Provider) SetupProvider() *Provider {
 	}
 
 	// generates new dev APNs-client using token
-	provider.Client = apns2.NewTokenClient(newToken).Development()
-	log.Println("APNs client created")
+	if provider.IsProd {
+		provider.Client = apns2.NewTokenClient(newToken).Production()
+	} else {
+		provider.Client = apns2.NewTokenClient(newToken).Development()
+	}
+	log.Printf("APNs client created (IsProd = %v)", provider.IsProd)
 	return provider
 }
 

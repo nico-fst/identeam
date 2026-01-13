@@ -6,6 +6,7 @@ import (
 	"identeam/models"
 	"log"
 	"unicode/utf8"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -37,6 +38,14 @@ func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.Use
 	if err != nil {
 		log.Printf("ERROR creating user %v in DB: %v", user, err)
 		return nil, err
+	}
+
+	if user.FullName != "" {
+		log.Printf("Defaulting user.Username %v with its fullname %v", user.UserID, user.FullName)
+		user.Username = user.FullName
+	} else if at := strings.Index(user.Email, "@"); at != -1 {
+		log.Printf("Defaulting user.Username %v with Email (%v) Prefix %v since FullName is empty", user.UserID, user.Email, user.Email[:at])
+		user.Username = user.Email[:at]
 	}
 
 	log.Printf("Created user with id %v in DB", user.UserID)

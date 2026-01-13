@@ -74,6 +74,10 @@ class RequestService {
                 )
                 decoded = try JSONDecoder().decode(T.self, from: dataJSON)
             }
+        } else if statusCode == 401 {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .didReceiveUnauthorized, object: nil)
+            }
         }
 
         return BackendResponse(

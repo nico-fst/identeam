@@ -15,6 +15,10 @@ import (
 	"github.com/Timothylock/go-signin-with-apple/apple"
 )
 
+func (app *App) AuthClassic(w http.ResponseWriter, r *http.Request) {
+	
+}
+
 // @Summary		Sign in with Apple (native)
 // @Description	Validates the Apple Sign In authorization code, creates or retrieves a user, and returns a session token.
 // @Tags			Auth

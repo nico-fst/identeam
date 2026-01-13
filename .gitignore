@@ -1,6 +1,7 @@
 ios/build
 ios/Pods
 .DS_Store
+UserInterfaceState.xcuserstate
 
 # Docs dynamically generated
 docs/ 

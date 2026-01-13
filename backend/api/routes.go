@@ -53,8 +53,8 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Get("/notify/{deviceToken}", app.SendNotification)
 
-	// Native iOS Flow
-	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative)
+	mux.Post("/auth/classic", app.AuthClassic)
+	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative) // Native iOS Flow
 
 	mux.Route("/", func(r chi.Router) {
 		r.Use(middleware.JWTAuth,
@@ -65,7 +65,7 @@ func (app *App) SetupRoutes() http.Handler {
 
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift
 
-		r.Get("/teams/me",app.GetMyTeams)
+		r.Get("/teams/me", app.GetMyTeams)
 		r.Post("/teams/add", app.AddTeam)
 		r.Post("/teams/join/{slug}", app.JoinTeam)
 		r.Post("/teams/leave/{slug}", app.LeaveTeam)
