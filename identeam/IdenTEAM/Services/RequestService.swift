@@ -36,10 +36,12 @@ class RequestService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(
-            "Bearer \(sessionToken ?? "")",
-            forHTTPHeaderField: "Authorization"
-        )
+        if let token = sessionToken, !token.isEmpty {
+            request.setValue(
+                "Bearer \(sessionToken ?? "")",
+                forHTTPHeaderField: "Authorization"
+            )
+        }
 
         if let payload {
             do {
@@ -76,7 +78,10 @@ class RequestService {
             }
         } else if statusCode == 401 {
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .didReceiveUnauthorized, object: nil)
+                NotificationCenter.default.post(
+                    name: .didReceiveUnauthorized,
+                    object: nil
+                )
             }
         }
 
@@ -91,12 +96,15 @@ class RequestService {
 
     func getToBackend<T: Decodable>(url: URL) async throws -> BackendResponse<T>
     {
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue(
-            "Bearer \(sessionToken ?? "")",
-            forHTTPHeaderField: "Authorization"
-        )
+        if let token = sessionToken, !token.isEmpty {
+            request.setValue(
+                "Bearer \(sessionToken ?? "")",
+                forHTTPHeaderField: "Authorization"
+            )
+        }
 
         print("GET \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(
@@ -119,6 +127,13 @@ class RequestService {
                     withJSONObject: dataObject
                 )
                 decoded = try JSONDecoder().decode(T.self, from: dataJSON)
+            }
+        } else if statusCode == 401 {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: .didReceiveUnauthorized,
+                    object: nil
+                )
             }
         }
 

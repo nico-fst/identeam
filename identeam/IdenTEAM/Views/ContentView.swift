@@ -9,7 +9,9 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var vm: AppViewModel
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         ToastContainer(toastMessage: $vm.toastMessage) {
@@ -21,7 +23,22 @@ struct ContentView: View {
                     DebugInfoView()
                 }
             }
-            .sheet(isPresented: $authVM.showLoginSheet) {
+            .sheet(
+                isPresented: Binding<Bool>(
+                    get: {
+                        (authVM.authState == .unauthenticated) || (authVM.authState == .enteringUserDetails)
+                    },
+                    set: { newValue in
+                        // When the sheet is dismissed (newValue == false), reset auth state if needed
+                        if newValue == false {
+                            // Choose an appropriate state upon dismissal; adjust to your app's logic
+                            if authVM.authState == .enteringUserDetails {
+                                authVM.authState = .authenticated
+                            }
+                        }
+                    }
+                )
+            ) {
                 AuthSheetView()
             }
             .alert(item: $vm.alert) { alert in
@@ -33,6 +50,7 @@ struct ContentView: View {
         }
         .task {
             await authVM.tryLogin(vm: vm)
+            await teamsVM.reloadTeams(ctx: modelContext)
         }
     }
 }

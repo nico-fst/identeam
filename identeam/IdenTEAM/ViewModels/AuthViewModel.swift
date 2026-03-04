@@ -13,6 +13,7 @@ import SwiftUI
 enum AuthState: String {
     case unknown = "Unknown Auth State"
     case unauthenticated = "Not Authenticated"
+    case enteringUserDetails = "Entering UserDetails..."
     case authenticated = "Authenticated"
 }
 
@@ -20,12 +21,12 @@ class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
 
-    @Published var showLoginSheet: Bool = false
-    @Published var showEnterUserDetails: Bool = false  // after Sign Up: Ask for name, username
-
     @Published var fullnameInput: String = ""
     @Published var usernameInput: String = ""
     @Published var signupError: String? = nil
+
+    @Published var emailInput: String = ""
+    @Published var passwordInput: String = ""
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -34,6 +35,7 @@ class AuthViewModel: ObservableObject {
 
     @AppStorage("sessionToken") private var sessionToken: String?
 
+    // triggered by Notification send from RequestService
     private var cancellables = Set<AnyCancellable>()
     init() {
         NotificationCenter.default.publisher(for: .didReceiveUnauthorized)
@@ -68,15 +70,13 @@ class AuthViewModel: ObservableObject {
         self.fullName = newUser.fullName
         self.username = newUser.username
 
-        showLoginSheet = false
-        showEnterUserDetails = false
+        authState = .authenticated
     }
 
     /// Sets authState according to backend's response to sessionToken
     func tryLogin(vm: AppViewModel) async {
         guard let token = sessionToken, !token.isEmpty else {
-            authState = .unauthenticated
-            showLoginSheet = true
+            logout()
             return
         }
 
@@ -84,31 +84,27 @@ class AuthViewModel: ObservableObject {
             let response = try await AuthService.shared
                 .letBackendValidateSessionToken()
             if response.statusCode == 401 {
-                authState = .unauthenticated
-                showLoginSheet = true
+                logout()
                 return
             }
 
             authState = .authenticated
-            showLoginSheet = false
         } catch {
             vm.showAlert("Authenticating Error", error.localizedDescription)
-
-            authState = .unauthenticated
-            showLoginSheet = true
+            logout()
         }
     }
 
+    @MainActor
     func logout() {
         userID = nil
         email = nil
         fullName = nil
         username = nil
 
-        sessionToken = ""
+        sessionToken = nil
 
         authState = .unauthenticated
-        showLoginSheet = true
     }
 
     // in SIWA button: not tryLogin() since in async and variables not stable yet
@@ -131,11 +127,10 @@ class AuthViewModel: ObservableObject {
 
         if created {
             // sign up: ask for name, username
-            showEnterUserDetails = true
+            authState = .enteringUserDetails
         } else {
-            // immediately close login popup
-            showLoginSheet = false
+            // login: immediately close login popup
+            authState = .authenticated
         }
-        authState = .authenticated
     }
 }

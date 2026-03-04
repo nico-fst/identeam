@@ -13,24 +13,23 @@ struct AuthSheetView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if !authVM.showEnterUserDetails {
+                if authVM.authState == .unauthenticated {
                     // step 1: Login / Sign up
                     VStack {
                         List {
                             TextField(
                                 "Email",
-                                text: $authVM.fullnameInput
+                                text: $authVM.emailInput
                             )
                             TextField(
                                 "Password",
-                                text: $authVM.fullnameInput
+                                text: $authVM.passwordInput
                             )
                         }
-
                         SignInWithAppleButtonComponent()
                     }
                     .padding()
-                } else {
+                } else if authVM.authState == .enteringUserDetails {
                     // step 2 (only after signing up)
                     VStack {
                         List {

@@ -45,6 +45,8 @@ struct DebugInfoView: View {
                 ProgressView("Checking Session...")
             case .unauthenticated:
                 SignInWithAppleButtonComponent()
+            case .enteringUserDetails:
+                Text("Entering User Details...")
             case .authenticated:
                 Button("Logout") {
                     authVM.logout()

@@ -65,7 +65,9 @@ func InjectUser(pDB *gorm.DB) func(http.Handler) http.Handler { // returns func(
 
 			user, err := db.GetUserById(r.Context(), pDB, userID)
 			if err != nil {
-				http.Error(w, "user not found in DB", http.StatusUnauthorized)
+				// User has valid JWT but doesn't exist in DB -> return 401
+				log.Printf("[InjectUser Middleware] User with valid JWT not found in DB - userID: %s", userID)
+				http.Error(w, "user not found in database", http.StatusUnauthorized)
 				return
 			}
 
