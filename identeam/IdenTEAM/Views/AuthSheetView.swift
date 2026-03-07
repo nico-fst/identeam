@@ -9,53 +9,91 @@ import SwiftUI
 
 struct AuthSheetView: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var appVM: AppViewModel
+    
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                if authVM.authState == .unauthenticated {
-                    // step 1: Login / Sign up
-                    VStack {
+        VStack {
+            if authVM.authState != .enteringUserDetails {
+                // step 1: Login / Sign up
+                VStack {
+                    SignInWithAppleButtonComponent()
+                    
+                    Text("or")
+                        .opacity(0.5)
+                        .padding()
+                    
+                    VStack(spacing: 5) {
                         List {
                             TextField(
                                 "Email",
                                 text: $authVM.emailInput
                             )
-                            TextField(
+                            SecureField(
                                 "Password",
                                 text: $authVM.passwordInput
                             )
+                            if authVM.authMode == .signup {
+                                TextField(
+                                    "Your Name",
+                                    text: $authVM.fullnameInput
+                                )
+                                TextField(
+                                    "Username",
+                                    text: $authVM.usernameInput
+                                )
+                            }
                         }
-                        SignInWithAppleButtonComponent()
+                        
+                        Button("Login") {
+                            Task {
+                                do {
+                                    try await authVM.tryPasswordLoginOrSignup(
+                                        authMode: .login,
+                                        vm: appVM)
+                                } catch AuthError.userNotFound {
+                                    try await authVM.tryPasswordLoginOrSignup(authMode: .signup, vm: appVM)
+                                } catch {
+                                    authVM.signupError = error.localizedDescription
+                                }
+                            }
+                        }
+                        .padding()
+                        .sensoryFeedback(.selection, trigger: authVM.authState)
+                        .glassEffect(
+                            .regular
+                                .interactive()
+                                .tint(Color("AccentColor").opacity(0.1))
+                        )
                     }
-                    .padding()
-                } else if authVM.authState == .enteringUserDetails {
-                    // step 2 (only after signing up)
-                    VStack {
-                        List {
-                            TextField(
-                                "Your Name",
-                                text: $authVM.fullnameInput
-                            )
-                            TextField(
-                                "Username",
-                                text: $authVM.usernameInput
-                            )
-                        }
-
-                        Text(authVM.signupError ?? "")
-                            .foregroundColor(.red)
-
-                        Button("Sign Up") {
-                            Task { await authVM.tryChangeUserDetails() }
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .padding()
                 }
+                .padding()
+            } else if authVM.authState == .enteringUserDetails {
+                // step 2 (only when signing up)
+                VStack {
+                    List {
+                        TextField(
+                            "Your Name",
+                            text: $authVM.fullnameInput
+                        )
+                        TextField(
+                            "Username",
+                            text: $authVM.usernameInput
+                        )
+                    }
+
+                    Button("Finish Sign up") {
+                        Task { await authVM.tryChangeUserDetails() }
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
             }
-            .navigationTitle("Login with Apple")
+            
+            Text(authVM.signupError ?? "")
+                .foregroundColor(.red)
         }
+        .padding()
         .interactiveDismissDisabled()
         .presentationDetents([.medium])
     }
@@ -65,3 +103,4 @@ struct AuthSheetView: View {
     AuthSheetView()
         .environmentObject(AuthViewModel())
 }
+

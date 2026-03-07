@@ -49,7 +49,7 @@ struct ContentView: View {
             }
         }
         .task {
-            await authVM.tryLogin(vm: vm)
+            await authVM.trySiwaLogin(vm: vm)
             await teamsVM.reloadTeams(ctx: modelContext)
         }
     }

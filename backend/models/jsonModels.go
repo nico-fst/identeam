@@ -13,18 +13,30 @@ type UserResponse struct {
 }
 
 type TeamResponse struct {
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
+	Name    string `json:"name"`
+	Slug    string `json:"slug"`
 	Details string `json:"details"`
 }
 
 // PAYLOADS (grouped here for swaggo)
 
-type SignInPayload struct {
+type AuthApplePayload struct {
 	IdentityToken     string `json:"identityToken"`
 	AuthorizationCode string `json:"authorizationCode"`
 	UserID            string `json:"userID"`
 	FullName          string `json:"fullName"`
+}
+
+type LoginPasswordPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SignupPasswordPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"fullName"`
+	Username string `json:"username"`
 }
 
 type UpdateDeviceTokenPayload struct {

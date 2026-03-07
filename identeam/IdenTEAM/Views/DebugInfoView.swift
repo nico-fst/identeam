@@ -57,7 +57,7 @@ struct DebugInfoView: View {
             Spacer()
         }
         .task {
-            await authVM.tryLogin(vm: vm)
+            await authVM.trySiwaLogin(vm: vm)
         }
     }
 }

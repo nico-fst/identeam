@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0+4] - 2026-03-07
+
+## Added
+
+- User Signup | Login via Email & Password
+
 ## [1.1.1+3] - 2026-03-04
 
 ### Changed

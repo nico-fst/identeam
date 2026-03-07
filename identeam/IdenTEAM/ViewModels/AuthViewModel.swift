@@ -17,16 +17,25 @@ enum AuthState: String {
     case authenticated = "Authenticated"
 }
 
+enum AuthMode: String, CaseIterable, Identifiable {
+    case login = "login"
+    case signup = "sign up"
+    
+    var id: String { self.rawValue }
+}
+
 class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
+    
+    @Published var authMode: AuthMode = .login
 
     @Published var fullnameInput: String = ""
     @Published var usernameInput: String = ""
-    @Published var signupError: String? = nil
-
     @Published var emailInput: String = ""
     @Published var passwordInput: String = ""
+    
+    @Published var signupError: String? = nil
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -47,6 +56,8 @@ class AuthViewModel: ObservableObject {
     }
 
     func tryChangeUserDetails() async {
+        guard fullnameInput != "", usernameInput != "" else { return }
+        
         do {
             let newUser = try await UserService.shared
                 .requestUserDetailsChange(
@@ -74,7 +85,7 @@ class AuthViewModel: ObservableObject {
     }
 
     /// Sets authState according to backend's response to sessionToken
-    func tryLogin(vm: AppViewModel) async {
+    func trySiwaLogin(vm: AppViewModel) async {
         guard let token = sessionToken, !token.isEmpty else {
             logout()
             return
@@ -92,6 +103,33 @@ class AuthViewModel: ObservableObject {
         } catch {
             vm.showAlert("Authenticating Error", error.localizedDescription)
             logout()
+        }
+    }
+    
+    func tryPasswordLoginOrSignup(authMode: AuthMode, vm: AppViewModel) async throws {
+        // Validate inputs first; show feedback on MainActor to avoid publishing during view updates
+        
+        if emailInput.isEmpty || passwordInput.isEmpty {
+            throw AuthError.emailOrPasswordMissing
+        }
+
+        do {
+            let response = try await AuthService.shared.sendPasswordFlowToBackend(
+                authMode: authMode,
+                email: emailInput,
+                password: passwordInput
+            )
+            
+            completeLogin(
+                sessionToken: response.sessionToken,
+                userID: response.user.userID,
+                email: response.user.email,
+                fullName: response.user.fullName,
+                username: response.user.username,
+                created: response.created
+            )
+        } catch {
+            throw error
         }
     }
 
@@ -119,18 +157,18 @@ class AuthViewModel: ObservableObject {
     ) {
         print("Saving SessionToken: \(sessionToken)")
         self.sessionToken = sessionToken
-
-        self.userID = userID
-        self.email = email
-        self.fullName = fullName
-        self.username = username
-
-        if created {
+        
+        if created && self.username != "" {
             // sign up: ask for name, username
             authState = .enteringUserDetails
         } else {
             // login: immediately close login popup
             authState = .authenticated
         }
+
+        self.userID = userID
+        self.email = email
+        self.fullName = fullName
+        self.username = username
     }
 }

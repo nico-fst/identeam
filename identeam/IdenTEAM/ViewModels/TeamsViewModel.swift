@@ -27,7 +27,7 @@ class TeamsViewModel: ObservableObject {
             let newTeams: [Team] = try await TeamService.shared.getMyTeams()
             for team in newTeams { modelContext.insert(team) }
         } catch {
-            print("ERROR replacing cached Kuotes with fetched ones: ", error)
+            print("ERROR replacing cached Teams with fetched ones: ", error)
         }
     }
 

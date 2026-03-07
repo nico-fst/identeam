@@ -2,7 +2,7 @@ ios/build
 ios/Pods
 .DS_Store
 UserInterfaceState.xcuserstate
-xcuserdata/
+/xcuserdata/
 
 # Docs dynamically generated
 docs/ 

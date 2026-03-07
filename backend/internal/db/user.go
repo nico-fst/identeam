@@ -5,24 +5,28 @@ import (
 	"errors"
 	"identeam/models"
 	"log"
-	"unicode/utf8"
 	"strings"
+	"unicode/utf8"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 var (
-	ErrFullNameTooLong = errors.New("'Your Name' is too long (max. 10 chars) >:(")
+	ErrFullNameTooLong = errors.New("'Your Name' is too long (max. 15 chars) >:(")
 	ErrUsernameTaken   = errors.New("This username is not available :O")
 )
 
 // Returns user if exists in DB, otherwise nil
 func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User, error) {
 	var user models.User
-	err := db.Model(&models.User{}).Preload("Teams").Where("user_id = ?", userID).First(&user).Error
+	err := db.Model(&models.User{}).
+		Preload("Teams").
+		Where("user_id = ?", userID).
+		First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Printf("Failed to lookup non-existing user in DB: %v", userID)
+			log.Printf("Failed to lookup non-existing user in DB with user_id %v", userID)
 		}
 		return nil, err
 	}
@@ -31,16 +35,34 @@ func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User,
 	return &user, nil
 }
 
+func GetUserByMail(ctx context.Context, db *gorm.DB, email string) (*models.User, error) {
+	var user models.User
+	err := db.Model(&models.User{}).
+		Preload("Teams").
+		Where("email", strings.ToLower(strings.TrimSpace(email))).
+		First(&user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Printf("Failed to lookup non-existing uesr in DB with email %v", email)
+		}
+		return nil, err
+	}
+
+	log.Printf("Looked up user with email %v in DB", email)
+	return &user, nil
+}
+
 // Tries creating given user in DB
 func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.User, error) {
 	if user.FullName != "" {
 		log.Printf("Defaulting user.Username %v with its fullname %v", user.UserID, user.FullName)
 		user.Username = user.FullName
-	} else if at := strings.Index(user.Email, "@"); at != -1 {
+	}
+	if at := strings.Index(user.Email, "@"); at != -1 {
 		log.Printf("Defaulting user.Username %v with Email (%v) Prefix %v since FullName is empty", user.UserID, user.Email, user.Email[:at])
 		user.Username = user.Email[:at]
 	}
-	
+
 	err := gorm.G[models.User](db).
 		Create(ctx, &user)
 	if err != nil {
@@ -73,8 +95,8 @@ func GetElseCreateUser(ctx context.Context, db *gorm.DB, input models.User) (boo
 func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUserDetails models.User) (models.User, error) {
 	// TODO allow changing email in future
 
-	// Guard: |FullName| <= 10
-	if utf8.RuneCountInString(newUserDetails.FullName) > 10 {
+	// Guard: |FullName| <= 15
+	if utf8.RuneCountInString(newUserDetails.FullName) > 15 {
 		log.Printf("ERROR updating username %v -> %v (too long)", user.FullName, newUserDetails.FullName)
 		return models.User{}, ErrFullNameTooLong
 	}
@@ -115,4 +137,21 @@ func DerefUsers(users []*models.User) []models.User {
 	}
 
 	return res
+}
+
+func DoesEmailMatchPassword(ctx context.Context, db *gorm.DB, email string, password string) (bool, *models.User, error) {
+	user, err := GetUserByMail(ctx, db, email)
+	if err != nil {
+		return false, nil, err
+	}
+
+	if user.PasswordHash == nil {
+		return false, nil, errors.New("user has no password set")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false, nil, err
+	}
+	return err == nil, user, err
 }

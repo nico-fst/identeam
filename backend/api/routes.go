@@ -53,7 +53,8 @@ func (app *App) SetupRoutes() http.Handler {
 
 	mux.Get("/notify/{deviceToken}", app.SendNotification)
 
-	mux.Post("/auth/classic", app.AuthClassic)
+	mux.Post("/auth/password/login", app.LoginPassword)
+	mux.Post("/auth/password/signup", app.SignupPassword)
 	mux.Post("/auth/apple/native/callback", app.AuthCallbackNative) // Native iOS Flow
 
 	mux.Route("/", func(r chi.Router) {
@@ -61,6 +62,7 @@ func (app *App) SetupRoutes() http.Handler {
 			middleware.InjectUser(app.DB))
 
 		r.Get("/auth/apple/check_session", app.CheckSession)
+
 		r.Post("/token/update_device_token", app.UpdateDeviceToken)
 
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift

@@ -1,19 +1,31 @@
 package models
 
 import (
+	"strings"
+
 	"gorm.io/gorm"
 )
 
 type User struct {
-	UserID   string `gorm:"uniqueIndex;not null"`
-	Email    string `gorm:"uniqueIndex;not null"`
+	UserID string `gorm:"uniqueIndex;not null"`
+	Email  string `gorm:"uniqueIndex;not null"`
+
+	AuthProvider string  // "apple" | "password"
+	PasswordHash *string // Pointer is nullable
+
 	FullName string
 	Username string `gorm:"unique"`
 
 	// GORM & Relations
 	gorm.Model                 // provides ID, CreatedAt, UpdatedAt, DeletedAt
 	DeviceTokens []DeviceToken // 1:N - GORM expectes for DeviceToken.UserID
-	Teams       []*Team      `gorm:"many2many:users_teams;"`
+	Teams        []*Team       `gorm:"many2many:users_teams;"`
+}
+
+func (user *User) BeforeSave(tx *gorm.DB) (err error) {
+	user.Email = strings.ToLower(user.Email)
+	user.Username = strings.ToLower(user.Username)
+	return nil
 }
 
 type DeviceToken struct {
@@ -27,8 +39,8 @@ type DeviceToken struct {
 
 type Team struct {
 	// Public
-	Name        string `gorm:"not null"`
-	Slug        string `gorm:"uniqueIndex"` // for urls
+	Name    string `gorm:"not null"`
+	Slug    string `gorm:"uniqueIndex"` // for urls
 	Details string
 
 	// Visibility, Joining

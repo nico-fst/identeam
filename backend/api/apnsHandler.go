@@ -26,6 +26,7 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 	err := app.Provider.NotifyString(deviceToken, models.NotificationTemplates[models.NewIdent])
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
 	}
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,

@@ -3,20 +3,135 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"identeam/internal/auth"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
+	"log"
 	"net/http"
+	"net/mail"
 	"os"
 
 	"github.com/Timothylock/go-signin-with-apple/apple"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-func (app *App) AuthClassic(w http.ResponseWriter, r *http.Request) {
-	
+func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
+	var payload models.LoginPasswordPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if payload.Email == "" || payload.Password == "" {
+		http.Error(w, "email and password are required in body", http.StatusBadRequest)
+		return
+	}
+	if _, err := mail.ParseAddress(payload.Email); err != nil {
+		util.ErrorJSON(w, errors.New("invalid email"), http.StatusBadRequest)
+		return
+	}
+
+	user, err := db.GetUserByMail(r.Context(), app.DB, payload.Email)
+	if err == gorm.ErrRecordNotFound {
+		log.Printf("User with mail %v tried logging in but has to signup first", payload.Email)
+		util.ErrorJSON(w, errors.New("no account found for this email - signup instead"), http.StatusNotFound)
+		return
+	}
+
+	passwordMatches, user, err := db.DoesEmailMatchPassword(r.Context(), app.DB, payload.Email, payload.Password)
+	if !passwordMatches {
+		util.ErrorJSON(w, errors.New("did not find any user for combination of email and password"))
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
+	if err != nil {
+		fmt.Println("failed to create session token:", err)
+		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		return
+	}
+
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "Auth successful",
+		Data: map[string]interface{}{
+			"user": models.UserResponse{
+				UserID:   user.UserID,
+				Email:    user.Email,
+				FullName: user.FullName,
+				Username: user.Username,
+			},
+			"sessionToken": sessionToken,
+			"created":      false,
+		},
+	})
+
+}
+
+func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
+	var payload models.SignupPasswordPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if payload.Email == "" {
+		http.Error(w, "email is required for signup", http.StatusBadRequest)
+		return
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 14)
+	hashStr := string(passwordHash)
+	if err != nil {
+		http.Error(w, "error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	user := models.User{
+		UserID:       uuid.NewString(),
+		Email:        payload.Email,
+		AuthProvider: "password",
+		PasswordHash: &hashStr,
+		FullName:     payload.FullName,
+		Username:     payload.Username,
+	}
+
+	foundUser, err := db.CreateUser(r.Context(), app.DB, user)
+	if err != nil {
+		fmt.Println("failed to create user:", foundUser, err)
+		util.ErrorJSON(w, errors.New("Failed to create user: "+err.Error()))
+		return
+	}
+
+	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
+	if err != nil {
+		fmt.Println("failed to create session token:", err)
+		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		return
+	}
+
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "Auth successful",
+		Data: map[string]interface{}{
+			"user": models.UserResponse{
+				UserID:   foundUser.UserID,
+				Email:    foundUser.Email,
+				FullName: foundUser.FullName,
+				Username: foundUser.Username,
+			},
+			"sessionToken": sessionToken,
+			"created":      true,
+		},
+	})
 }
 
 // @Summary		Sign in with Apple (native)
@@ -24,7 +139,7 @@ func (app *App) AuthClassic(w http.ResponseWriter, r *http.Request) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		models.SignInPayload	true	"SignIn Payload"
+// @Param			payload	body		models.AuthApplePayload	true	"SignIn Payload"
 // @Success		200		{object}	util.JSONResponse		"Returns the created/retrieved user, a session token and a boolean if the user is new"
 // @Failure		400		{object}	util.JSONResponse		"Invalid JSON or missing authorizationCode"
 // @Failure		500		{object}	util.JSONResponse		"Server error during user creation or session token generation"
@@ -32,7 +147,7 @@ func (app *App) AuthClassic(w http.ResponseWriter, r *http.Request) {
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
 
-	var payload models.SignInPayload
+	var payload models.AuthApplePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
@@ -94,9 +209,11 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.User{
-		UserID:   (*claims)["sub"].(string), // Apple's unique stable UserID
-		Email:    (*claims)["email"].(string),
-		FullName: payload.FullName,
+		UserID:       (*claims)["sub"].(string), // Apple's unique stable UserID
+		Email:        (*claims)["email"].(string),
+		AuthProvider: "apple",
+		FullName:     payload.FullName,
+		// Username set afterwards updating User details
 	}
 
 	// Create or retrieve User; Return Session Token
