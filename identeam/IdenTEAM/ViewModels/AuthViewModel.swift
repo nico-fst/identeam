@@ -27,9 +27,8 @@ enum AuthMode: String, CaseIterable, Identifiable {
 class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
+    @Published var isAuthing: Bool = false
     
-    @Published var authMode: AuthMode = .login
-
     @Published var fullnameInput: String = ""
     @Published var usernameInput: String = ""
     @Published var emailInput: String = ""
@@ -107,6 +106,9 @@ class AuthViewModel: ObservableObject {
     }
     
     func tryPasswordLoginOrSignup(authMode: AuthMode, vm: AppViewModel) async throws {
+        isAuthing = true
+        defer { isAuthing = false }
+        
         // Validate inputs first; show feedback on MainActor to avoid publishing during view updates
         
         if emailInput.isEmpty || passwordInput.isEmpty {
@@ -128,6 +130,8 @@ class AuthViewModel: ObservableObject {
                 username: response.user.username,
                 created: response.created
             )
+            
+            try await TokenService.shared.sendDeviceTokenToBackend()
         } catch {
             throw error
         }
@@ -170,5 +174,7 @@ class AuthViewModel: ObservableObject {
         self.email = email
         self.fullName = fullName
         self.username = username
+        
+        self.isAuthing = false
     }
 }

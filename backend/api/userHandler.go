@@ -11,19 +11,19 @@ import (
 )
 
 // UpdateUser godoc
-// @Summary      Update user information
-// @Description  Updates the current user's FullName and Username. FullName must be at most 10 characters.
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param        payload  body      models.UpdateUserPayload  true  "User update payload"
-// @Success      200      {object}  models.UserResponse       "User updated successfully"
-// @Failure      400      {string}  string                    "Invalid JSON"
-// @Failure      422      {string}  string                    "fullname too long"
-// @Failure      409      {string}  string                    "Username already taken"
-// @Failure      500      {string}  string                    "Database or internal server error"
-// @Security     ApiKeyAuth
-// @Router       /user [put]
+// @Summary		Update user information
+// @Description	Updates the current user's full name and username.
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		models.UpdateUserPayload	true	"User update payload"
+// @Success		200		{object}	util.JSONResponse{data=models.UserResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		409		{object}	util.JSONResponse
+// @Failure		422		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Security		BearerAuth
+// @Router			/me/update_user [post]
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -37,7 +37,11 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, err := db.UpdateUserDetails(r.Context(), app.DB, user, payload.User)
+	newUser, err := db.UpdateUserDetails(r.Context(), app.DB, user, models.User{
+		UserID:   user.UserID,
+		FullName: payload.User.FullName,
+		Username: payload.User.Username,
+	})
 	if err != nil {
 		switch err {
 		case db.ErrFullNameTooLong:

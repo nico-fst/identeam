@@ -48,3 +48,14 @@ func UpdateUsersDeviceToken(ctx context.Context, db *gorm.DB, user models.User, 
 	}
 	return updatedUser, nil
 }
+
+func DeleteDeviceToken(ctx context.Context, db *gorm.DB, token string) error {
+	_, err := gorm.G[models.DeviceToken](db).
+		Where("token = ?", token).
+		Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -8,6 +8,7 @@ Start your habit challenge now - elevate your **iden**tity as a TEAM!
 
 - Create `/backend/.env` (like `.example.env`) with values from Apple Developer
   - Use Ngrok if a HTTPS redirect URL for WebAuth is necessary (enforced by Apple)
+    - the `API_BASE_URL` in Swift has different values for Debug and Release Build (as specified in Build-Settings)
 - Insert `/backend/apns_key.p8` (created as Key for APNs on Apple Developer)
 - Insert `/backend/siwa_key.p8` (created as Key for SIWA on Apple Developer)
 

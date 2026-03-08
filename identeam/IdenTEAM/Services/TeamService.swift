@@ -9,6 +9,17 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+enum TeamError: LocalizedError {
+    case backend(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .backend(let message):
+            return message
+        }
+    }
+}
+
 class TeamService {
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
@@ -86,6 +97,26 @@ class TeamService {
                     NSLocalizedDescriptionKey: response.message
                 ]
             )
+        }
+    }
+    
+    func createTeam(name: String, details: String) async throws -> TeamDecodable {
+        let url = AppConfig.apiBaseURL.appendingPathComponent("teams/add")
+        let payload: [String: Any] = [
+            "name": name,
+            "details": details
+        ]
+        
+        let response: BackendResponse<TeamDecodable> = try await RequestService.shared.postToBackend(
+            url: url,
+            payload: payload
+        )
+        
+        switch response.statusCode {
+        case 200:
+            return response.data!
+        default:
+            throw TeamError.backend(response.message)
         }
     }
 

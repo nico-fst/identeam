@@ -28,6 +28,11 @@ func (user *User) BeforeSave(tx *gorm.DB) (err error) {
 	return nil
 }
 
+func (team *Team) BeforeSave(tx *gorm.DB) (err error) {
+	team.Slug = strings.ToLower(team.Slug)
+	return nil
+}
+
 type DeviceToken struct {
 	Token    string `gorm:"unique"`
 	Platform string // ios | iPadOS | macOS
@@ -42,9 +47,6 @@ type Team struct {
 	Name    string `gorm:"not null"`
 	Slug    string `gorm:"uniqueIndex"` // for urls
 	Details string
-
-	// Visibility, Joining
-	// TODO join code
 
 	// GORM & Relations
 	gorm.Model

@@ -98,7 +98,7 @@ class AuthService {
         let url = AppConfig.apiBaseURL.appendingPathComponent(endpoint)
         print(url.absoluteString)
         
-        var payload: [String: Any] = [
+        let payload: [String: Any] = [
             "email": email,
             "password": password,
         ]

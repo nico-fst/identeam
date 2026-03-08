@@ -34,7 +34,7 @@ class TokenService {
 
         let payload: [String: Any] = [
             "newToken": deviceToken,
-            "platform": "ios",  // TODO make dynamic if planning to extend to other OS
+            "platform": "ios",
         ]
 
         let _: BackendResponse<User> = try await RequestService.shared

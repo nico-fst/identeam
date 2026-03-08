@@ -33,19 +33,9 @@ struct AuthSheetView: View {
                                 "Password",
                                 text: $authVM.passwordInput
                             )
-                            if authVM.authMode == .signup {
-                                TextField(
-                                    "Your Name",
-                                    text: $authVM.fullnameInput
-                                )
-                                TextField(
-                                    "Username",
-                                    text: $authVM.usernameInput
-                                )
-                            }
                         }
                         
-                        Button("Login") {
+                        Button {
                             Task {
                                 do {
                                     try await authVM.tryPasswordLoginOrSignup(
@@ -57,14 +47,15 @@ struct AuthSheetView: View {
                                     authVM.signupError = error.localizedDescription
                                 }
                             }
+                        } label: {
+                            if authVM.isAuthing {
+                                ProgressView().padding(10)
+                            } else {
+                                Text("Login").padding(10)
+                            }
                         }
-                        .padding()
-                        .sensoryFeedback(.selection, trigger: authVM.authState)
-                        .glassEffect(
-                            .regular
-                                .interactive()
-                                .tint(Color("AccentColor").opacity(0.1))
-                        )
+                        .buttonStyle(.borderedProminent)
+                        .glassEffect(.regular.interactive())
                     }
                 }
                 .padding()
@@ -82,10 +73,18 @@ struct AuthSheetView: View {
                         )
                     }
 
-                    Button("Finish Sign up") {
+                    Button {
                         Task { await authVM.tryChangeUserDetails() }
+                    } label: {
+                        // show Loading icon waiting for backend
+                        if authVM.isAuthing {
+                            ProgressView().padding(10)
+                        } else {
+                            Text("Finish Sign Up").padding(10)
+                        }
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderedProminent)
+                    .glassEffect(.regular.interactive())
                 }
                 .padding()
             }

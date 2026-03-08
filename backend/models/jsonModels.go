@@ -45,11 +45,17 @@ type UpdateDeviceTokenPayload struct {
 }
 
 type UpdateUserPayload struct {
-	User User `json:"user"`
+	User UpdateUserData `json:"user"`
+}
+
+type UpdateUserData struct {
+	FullName string `json:"fullName"`
+	Username string `json:"username"`
 }
 
 type AddTeamPayload struct {
-	Team Team `json:"team"`
+	Name    string `json:"name"`
+	Details string `json:"details"`
 }
 
 type NotifyGroupPayload struct {

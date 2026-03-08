@@ -26,7 +26,6 @@ class UserService {
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
 
-    // TODO extend to email being editable
     func requestUserDetailsChange(fullName: String, username: String)
         async throws -> User
     {

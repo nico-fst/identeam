@@ -23,27 +23,45 @@ import (
 //	@Param			payload	body		models.AddTeamPayload	true	"Team data"
 //	@Success		200		{object}	util.JSONResponse{data=models.TeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
-//	@Failure		401		{object}	util.JSONResponse
+//	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/add [post]
 func (app *App) AddTeam(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		return
+	}
+
 	var payload models.AddTeamPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	newTeam, err := db.CreateTeam(r.Context(), app.DB, payload.Team)
+	team := models.Team{
+		Name:    payload.Name,
+		Slug:    util.MakeValidSlug(payload.Name),
+		Details: payload.Details,
+	}
+
+	newTeam, err := db.CreateTeam(r.Context(), app.DB, team)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
+	_, err = db.AddUserToTeam(r.Context(), app.DB, user.UserID, newTeam.Slug)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
-		Message: "Created team successfully",
+		Message: "Created, joined team successfully",
 		Data: models.TeamResponse{
-			Name:        newTeam.Name,
-			Slug:        newTeam.Slug,
+			Name:    newTeam.Name,
+			Slug:    newTeam.Slug,
 			Details: newTeam.Details,
 		},
 	})
@@ -64,8 +82,7 @@ type AddUserToTeamResponse struct {
 //	@Param			slug	path		string	true	"Team slug"
 //	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
-//	@Failure		401		{object}	util.JSONResponse
-//	@Failure		404		{object}	util.JSONResponse
+//	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/join/{slug} [post]
 func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -93,8 +110,8 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 				Username: user.Username,
 			},
 			Team: models.TeamResponse{
-				Name:        team.Name,
-				Slug:        team.Slug,
+				Name:    team.Name,
+				Slug:    team.Slug,
 				Details: team.Details,
 			},
 		},
@@ -111,8 +128,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 //	@Param			slug	path		string	true	"Team slug"
 //	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
-//	@Failure		401		{object}	util.JSONResponse
-//	@Failure		404		{object}	util.JSONResponse
+//	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/leave/{slug} [post]
 func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
@@ -139,8 +155,8 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 				Username: user.Username,
 			},
 			Team: models.TeamResponse{
-				Name:        team.Name,
-				Slug:        team.Slug,
+				Name:    team.Name,
+				Slug:    team.Slug,
 				Details: team.Details,
 			},
 		},
@@ -151,6 +167,16 @@ type GetMyTeamsResponse struct {
 	Teams []models.TeamResponse `json:"teams"`
 }
 
+// GetMyTeams godoc
+//
+//	@Summary		Get my teams
+//	@Description	Returns all teams of the authenticated user.
+//	@Tags			Teams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	util.JSONResponse{data=GetMyTeamsResponse}
+//	@Failure		500	{object}	util.JSONResponse
+//	@Router			/teams/me [get]
 func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {

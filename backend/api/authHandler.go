@@ -21,6 +21,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type AuthResponseData struct {
+	User         models.UserResponse `json:"user"`
+	SessionToken string              `json:"sessionToken"`
+	Created      bool                `json:"created"`
+}
+
+// LoginPassword godoc
+// @Summary		Login with email and password
+// @Description	Authenticates a user with email/password and returns a session token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		models.LoginPasswordPayload	true	"Login payload"
+// @Success		200		{object}	util.JSONResponse{data=AuthResponseData}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		404		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/auth/password/login [post]
 func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 	var payload models.LoginPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -63,20 +81,31 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Auth successful",
-		Data: map[string]interface{}{
-			"user": models.UserResponse{
+		Data: AuthResponseData{
+			User: models.UserResponse{
 				UserID:   user.UserID,
 				Email:    user.Email,
 				FullName: user.FullName,
 				Username: user.Username,
 			},
-			"sessionToken": sessionToken,
-			"created":      false,
+			SessionToken: sessionToken,
+			Created:      false,
 		},
 	})
 
 }
 
+// SignupPassword godoc
+// @Summary		Sign up with email and password
+// @Description	Creates a password-based user account and returns a session token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		models.SignupPasswordPayload	true	"Signup payload"
+// @Success		200		{object}	util.JSONResponse{data=AuthResponseData}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/auth/password/signup [post]
 func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 	var payload models.SignupPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -121,15 +150,15 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Auth successful",
-		Data: map[string]interface{}{
-			"user": models.UserResponse{
+		Data: AuthResponseData{
+			User: models.UserResponse{
 				UserID:   foundUser.UserID,
 				Email:    foundUser.Email,
 				FullName: foundUser.FullName,
 				Username: foundUser.Username,
 			},
-			"sessionToken": sessionToken,
-			"created":      true,
+			SessionToken: sessionToken,
+			Created:      true,
 		},
 	})
 }
@@ -140,9 +169,9 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		models.AuthApplePayload	true	"SignIn Payload"
-// @Success		200		{object}	util.JSONResponse		"Returns the created/retrieved user, a session token and a boolean if the user is new"
-// @Failure		400		{object}	util.JSONResponse		"Invalid JSON or missing authorizationCode"
-// @Failure		500		{object}	util.JSONResponse		"Server error during user creation or session token generation"
+// @Success		200		{object}	util.JSONResponse{data=AuthResponseData}	"Returns the created/retrieved user, a session token and a boolean if the user is new"
+// @Failure		400		{object}	util.JSONResponse					"Invalid JSON or missing authorizationCode"
+// @Failure		500		{object}	util.JSONResponse					"Server error during user creation or session token generation"
 // @Router			/auth/apple/native/callback [post]
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
@@ -235,25 +264,26 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Auth successful",
-		Data: map[string]interface{}{
-			"user": models.UserResponse{
+		Data: AuthResponseData{
+			User: models.UserResponse{
 				UserID:   foundUser.UserID,
 				Email:    foundUser.Email,
 				FullName: foundUser.FullName,
 				Username: foundUser.Username,
 			},
-			"sessionToken": sessionToken,
-			"created":      created,
+			SessionToken: sessionToken,
+			Created:      created,
 		},
 	})
 }
 
-// @Summary		Check Session
-// @Description	Middleware tries authenticating user using its Bearer JWT
+// @Summary		Check session
+// @Description	Verifies that the Bearer session token is valid.
 // @Tags			Auth
-// @Accept			json
 // @Produce		json
-// @Success		200	{object}	util.JSONResponse
+// @Security		BearerAuth
+// @Success		200	{object}	util.JSONResponse{data=models.Empty}
+// @Failure		401	{object}	util.JSONResponse
 // @Router			/auth/apple/check_session [get]
 func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.GetUserIDFromContext(r.Context())

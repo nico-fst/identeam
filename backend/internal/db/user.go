@@ -93,8 +93,6 @@ func GetElseCreateUser(ctx context.Context, db *gorm.DB, input models.User) (boo
 
 // Update FullName or Username of given user
 func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUserDetails models.User) (models.User, error) {
-	// TODO allow changing email in future
-
 	// Guard: |FullName| <= 15
 	if utf8.RuneCountInString(newUserDetails.FullName) > 15 {
 		log.Printf("ERROR updating username %v -> %v (too long)", user.FullName, newUserDetails.FullName)
@@ -108,7 +106,7 @@ func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUs
 
 	updates := map[string]interface{}{
 		"FullName": newUserDetails.FullName,
-		"Username": newUserDetails.Username,
+		"Username": strings.ToLower(strings.TrimSpace(newUserDetails.Username)),
 	}
 
 	if err := db.Model(&userToUpdate).Updates(updates).Error; err != nil {

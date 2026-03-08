@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0+5] - 2026-04-09
+
+## Added
+
+- Frontend: Team Creation
+
 ## [1.2.0+4] - 2026-03-07
 
 ## Added

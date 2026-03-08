@@ -14,15 +14,20 @@ class TeamsViewModel: ObservableObject {
     @Published var showingJoinSheet: Bool = false
     @Published var joinSlugInput: String = ""
     @Published var joinError: String = ""
-
-    @Published var isFetching: Bool = false
-
+    
+    @Published var showingCreateSheet: Bool = false
+    @Published var createNameInput: String = ""
+    @Published var createDetailsInput: String = ""
+    @Published var createError: String = ""
+    
+    @Published var isFetching: Bool = false // used for creating, joining
+    
     func reloadTeams(ctx modelContext: ModelContext) async {
         do {
             //  delete old teams
             let oldTeams = try modelContext.fetch(FetchDescriptor<Team>())
             for team in oldTeams { modelContext.delete(team) }
-
+            
             // save new teams
             let newTeams: [Team] = try await TeamService.shared.getMyTeams()
             for team in newTeams { modelContext.insert(team) }
@@ -30,7 +35,7 @@ class TeamsViewModel: ObservableObject {
             print("ERROR replacing cached Teams with fetched ones: ", error)
         }
     }
-
+    
     func clearTeams(ctx modelContext: ModelContext) async {
         do {
             //  delete old teams
@@ -40,64 +45,79 @@ class TeamsViewModel: ObservableObject {
             print("ERROR deleting all teams: ", error)
         }
     }
-
+    
     // allow only letters and "-"
-    var isValidJoinSlug: Bool {
+    func isValidSlug(slug: String) -> Bool {
         let pattern = "^[A-Za-z-]+$"
         let regex = try! NSRegularExpression(pattern: pattern)
-        let range = NSRange(location: 0, length: joinSlugInput.utf16.count)
-        return regex.firstMatch(in: joinSlugInput, range: range) != nil
+        let range = NSRange(location: 0, length: slug.utf16.count)
+        
+        return regex.firstMatch(in: slug, range: range) != nil
     }
-
+    
     func tryJoiningTeam(vm: AppViewModel) async {
         isFetching = true
         defer { isFetching = false }
-
+        
         guard !joinSlugInput.isEmpty else {
             joinError = "No Join Slug, no Team..."
             return
         }
-        guard isValidJoinSlug else {
+        guard isValidSlug(slug: joinSlugInput) else {
             joinError =
-                "Only A-Z, a-z, and - without spaces as Slug are allowed."
+            "Only A-Z, a-z, and - without spaces as Slug are allowed."
             return
         }
-
+        
         do {
             try await Task.sleep(nanoseconds: 500_000_000)  // debugging ProgressView() in ToolbarItem
             let resp = try await TeamService.shared.joinTeam(
                 slug: joinSlugInput
             )
-
+            
             vm.toastMessage =
-                "Yay, you joined '\(resp.team.name)'"
+            "Yay, you joined '\(resp.team.name)'"
             showingJoinSheet = false
         } catch {
             joinError = error.localizedDescription
         }
     }
-
+    
     func tryLeavingTeam(ctx: ModelContext, vm: AppViewModel, slug: String) async
     {
         isFetching = true
         defer { isFetching = false }
-
+        
         guard !slug.isEmpty else {
             vm.showAlert("Error leaving Team", "No Team specified")
             return
         }
-
+        
         do {
             let resp = try await TeamService.shared.leaveTeam(slug: slug)
             await reloadTeams(ctx: ctx)
             vm.toastMessage =
-                "You just left '\(resp.team.name)' (heartbreaking)"
+            "You just left '\(resp.team.name)' (heartbreaking)"
         } catch {
             vm.showAlert("Error leaving Team", error.localizedDescription)
         }
     }
-
-    func showCreateNewTeamModal() {
-        return  // TODO
+    
+    func tryCreatingTeam(ctx: ModelContext, vm: AppViewModel) async throws {
+        isFetching = true
+        defer { isFetching = false }
+        
+        guard !createNameInput.isEmpty, !createDetailsInput.isEmpty else {
+            createError = "Name  and Details must be specified"
+            return
+        }
+        
+        do {
+            let resp = try await TeamService.shared.createTeam(name: createNameInput, details: createDetailsInput)
+            await reloadTeams(ctx: ctx)
+            vm.toastMessage = "Let's go! You just created team '\(resp.name)'"
+        } catch {
+            throw error
+        }
     }
 }

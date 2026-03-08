@@ -67,13 +67,18 @@ struct TeamsView: View {
             .navigationTitle("Teams")
             .toolbar {
                 ToolbarItem {
-                    Button(action: teamsVM.showCreateNewTeamModal) {
+                    Button(action: {
+                        teamsVM.showingCreateSheet.toggle()
+                    }) {
                         Label("Create", systemImage: "plus")
                     }
                 }
             }
             .sheet(isPresented: $teamsVM.showingJoinSheet) {
                 JoinTeamSheet
+            }
+            .sheet(isPresented: $teamsVM.showingCreateSheet) {
+                CreateTeamSheet
             }
         }
     }
@@ -83,17 +88,17 @@ struct TeamsView: View {
             VStack {
                 Text("Enter Team Slug")
                     .font(.headline)
-
+                
                 TextField(
                     "e.g. 'die-kanten'",
                     text: $teamsVM.joinSlugInput
                 )
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-
+                .textFieldStyle(.roundedBorder)
+                
                 Text(teamsVM.joinError).foregroundColor(.red)
             }
-            .navigationTitle("Join existing Team")
+            .padding(25)
+            .navigationTitle("Join Team")
             .toolbar {
                 // Left: X
                 ToolbarItem(placement: .cancellationAction) {
@@ -126,10 +131,82 @@ struct TeamsView: View {
         }
         .presentationDetents([.medium])
     }
+    
+    var CreateTeamSheet: some View {
+        NavigationStack {
+            VStack(spacing: 25) {
+                Text("The name has to be globally unique since it will be used to invite friends.")
+                
+                List {
+                    TextField("Name", text: $teamsVM.createNameInput)
+                    TextField("Details", text: $teamsVM.createDetailsInput)
+                    
+                }
+                
+                Text(teamsVM.createError).foregroundStyle(.red)
+            }
+            .padding(25)
+            .navigationTitle("New Team")
+            .toolbar {
+                // Left: X
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        teamsVM.showingJoinSheet = false
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+                
+                // Right: Check => Join
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        Task {
+                            do {
+                                try await teamsVM.tryCreatingTeam(ctx: modelContext, vm: vm)
+                                teamsVM.showingCreateSheet = false
+                            } catch {
+                                teamsVM.createError = error.localizedDescription
+                            }
+                        }
+                    } label: {
+                        // show Loading icon waiting for backend
+                        if teamsVM.isFetching {
+                            ProgressView()
+                        } else {
+                            Text("Create")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
 }
 
-#Preview {
+#Preview("Teams List") {
     TeamsView()
         .environmentObject(AppViewModel())
         .environmentObject(TeamsViewModel())
+        .environmentObject(AuthViewModel())
+}
+
+#Preview("Join Team Sheet") {
+    let teamsVM = TeamsViewModel()
+    teamsVM.showingJoinSheet = true
+
+    return TeamsView()
+        .environmentObject(AppViewModel())
+        .environmentObject(teamsVM)
+        .environmentObject(AuthViewModel())
+}
+
+#Preview("Create Team Sheet") {
+    let teamsVM = TeamsViewModel()
+    teamsVM.showingCreateSheet = true
+
+    return TeamsView()
+        .environmentObject(AppViewModel())
+        .environmentObject(teamsVM)
+        .environmentObject(AuthViewModel())
 }

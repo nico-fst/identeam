@@ -10,16 +10,19 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// @Summary		Send APNs Notification
+type NotifyTeamResponse struct {
+	Members []models.UserResponse `json:"members"`
+}
+
+// SendNotification godoc
+// @Summary		Send APNs notification to one device
 // @Description	Sends a push notification via APNs to the specified device token.
 // @Tags			APNs
-// @Accept			json
 // @Produce		json
-// @Param			deviceToken	path		string				true	"Device Token to send the notification to"
-// @Success		200			{object}	util.JSONResponse	"Returns the result of the APNs send call"
-// @Failure		400			{object}	util.JSONResponse	"Invalid device token or request"
-// @Failure		500			{object}	util.JSONResponse	"Server error sending the notification"
-// @Router			/trigger/{deviceToken} [get]
+// @Param			deviceToken	path		string	true	"Device token"
+// @Success		200			{object}	util.JSONResponse{data=models.Empty}
+// @Failure		500			{object}	util.JSONResponse
+// @Router			/notify/{deviceToken} [get]
 func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 	deviceToken := chi.URLParam(r, "deviceToken")
 
@@ -35,6 +38,17 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// NotifyTeam godoc
+// @Summary		Send APNs notification to team
+// @Description	Sends a push notification to all members of a team the authenticated user belongs to.
+// @Tags			APNs
+// @Produce		json
+// @Security		BearerAuth
+// @Param			slug	path		string	true	"Team slug"
+// @Success		200			{object}	util.JSONResponse{data=NotifyTeamResponse}
+// @Failure		400			{object}	util.JSONResponse
+// @Failure		500			{object}	util.JSONResponse
+// @Router			/notify/team/{slug} [post]
 func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -54,9 +68,21 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 	}
 
+	membersResponse := make([]models.UserResponse, 0, len(members))
+	for _, member := range members {
+		membersResponse = append(membersResponse, models.UserResponse{
+			UserID:   member.UserID,
+			Email:    member.Email,
+			FullName: member.FullName,
+			Username: member.Username,
+		})
+	}
+
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Success notifying team members",
-		Data:    members,
+		Data: NotifyTeamResponse{
+			Members: membersResponse,
+		},
 	})
 }
