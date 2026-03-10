@@ -1,6 +1,7 @@
 package apns
 
 import (
+	"fmt"
 	"identeam/models"
 	"log"
 
@@ -48,27 +49,20 @@ func (provider *Provider) NotifyString(deviceToken string, notification models.N
 		Payload:     notification,
 	}
 
-	_, err := provider.Client.Push(notificationPayload)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
+	return provider.push(notificationPayload)
 }
 
 // pushed Notification to all of user's deviceTokens
 func (provider *Provider) NotifyDeviceTokens(deviceTokens []models.DeviceToken, notification models.NotificationPayload) error {
 	for _, deviceToken := range deviceTokens {
-		notification := &apns2.Notification{
+		notificationPayload := &apns2.Notification{
 			DeviceToken: deviceToken.Token,
 			Topic:       provider.Topic,
 			Payload:     notification,
 		}
 
-		_, err := provider.Client.Push(notification)
+		err := provider.push(notificationPayload)
 		if err != nil {
-			log.Fatal(err)
 			return err
 		}
 	}
@@ -80,10 +74,32 @@ func (provider *Provider) NotifyUsers(users []models.User, notification models.N
 	for _, user := range users {
 		err := provider.NotifyDeviceTokens(user.DeviceTokens, notification)
 		if err != nil {
-			log.Fatal(err)
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (provider *Provider) push(notification *apns2.Notification) error {
+	res, err := provider.Client.Push(notification)
+	if err != nil {
+		log.Printf("APNs transport error for token %s: %v", notification.DeviceToken, err)
+		return err
+	}
+
+	if !res.Sent() {
+		err = fmt.Errorf(
+			"apns rejected notification for token %s: status=%d reason=%s apns_id=%s",
+			notification.DeviceToken,
+			res.StatusCode,
+			res.Reason,
+			res.ApnsID,
+		)
+		log.Println(err)
+		return err
+	}
+
+	log.Printf("APNs accepted notification for token %s (apns_id=%s)", notification.DeviceToken, res.ApnsID)
 	return nil
 }

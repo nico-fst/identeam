@@ -2,11 +2,45 @@ package db
 
 import (
 	"context"
+	"errors"
 	"identeam/models"
 	"log"
 
 	"gorm.io/gorm"
 )
+
+func EnsureDefaultTeams(ctx context.Context, db *gorm.DB) error {
+	defaultTeams := []models.Team{
+		{
+			Name:    "Die Kanten",
+			Slug:    "die-kanten",
+			Details: "Hier sind Kanten drin",
+		},
+		{
+			Name:    "Wir4",
+			Slug:    "wir4",
+			Details: "Hier sind wir vier drin",
+		},
+	}
+
+	for _, team := range defaultTeams {
+		var existing models.Team
+
+		err := db.Where("slug = ?", team.Slug).First(&existing).Error
+		if err == nil {
+			continue
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		if _, err := CreateTeam(ctx, db, team); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func CreateTeam(ctx context.Context, db *gorm.DB, team models.Team) (*models.Team, error) {
 	err := gorm.G[models.Team](db).

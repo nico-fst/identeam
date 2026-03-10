@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"identeam/docs"
 	"identeam/internal/apns"
+	"identeam/internal/db"
 	"identeam/middleware"
 	"log"
 	"net/http"
@@ -78,6 +80,13 @@ func (app *App) SetupRoutes() http.Handler {
 	return mux
 }
 
+func (app *App) SetupDB() {
+	err := db.EnsureDefaultTeams(context.Background(), app.DB)
+	if err != nil {
+		log.Fatalf("failed to ensure default teams: %v", err)
+	}
+}
+
 func (app *App) SetupServer() {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", "8080"),
@@ -85,10 +94,11 @@ func (app *App) SetupServer() {
 	}
 
 	app.Provider = *app.Provider.SetupProvider()
+	app.SetupDB()
 
 	log.Println("Starting server on 8080...")
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Println(err)
+		log.Fatalf(err.Error())
 	}
 }
