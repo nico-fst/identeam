@@ -5,6 +5,7 @@ import (
 	"errors"
 	"identeam/models"
 	"log"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -92,6 +93,19 @@ func RemoveUserFromTeam(ctx context.Context, db *gorm.DB, userID string, teamSlu
 		Delete(&team)
 	if err != nil {
 		return &models.Team{}, err
+	}
+
+	return &team, nil
+}
+
+func GetTeamBySlug(ctx context.Context, db *gorm.DB, slug string) (*models.Team, error) {
+	var team models.Team
+	err := db.Model(&models.Team{}).
+		Where("slug = ?", strings.ToLower(slug)).
+		First(&team).Error
+	if err != nil {
+		log.Printf("ERROR looking up team with slug %v", slug)
+		return nil, err
 	}
 
 	return &team, nil

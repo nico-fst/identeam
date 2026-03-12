@@ -26,7 +26,7 @@ func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User,
 		First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Printf("Failed to lookup non-existing user in DB with user_id %v", userID)
+			log.Printf("ERROR looking up non-existing user in DB with user_id %v", userID)
 		}
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func GetUserByMail(ctx context.Context, db *gorm.DB, email string) (*models.User
 		First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Printf("Failed to lookup non-existing uesr in DB with email %v", email)
+			log.Printf("ERROR looking up non-existing uesr in DB with email %v", email)
 		}
 		return nil, err
 	}

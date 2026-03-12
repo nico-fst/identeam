@@ -2,6 +2,7 @@ package models
 
 import (
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ type User struct {
 
 	// GORM & Relations
 	gorm.Model                 // provides ID, CreatedAt, UpdatedAt, DeletedAt
-	DeviceTokens []DeviceToken // 1:N - GORM expectes for DeviceToken.UserID
+	DeviceTokens []DeviceToken // 1:N - GORM expects for DeviceToken.UserID
 	Teams        []*Team       `gorm:"many2many:users_teams;"`
 }
 
@@ -29,12 +30,12 @@ func (user *User) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 type DeviceToken struct {
-	Token    string `gorm:"unique"`
+	Token    string `gorm:"uniqueIndex"`
 	Platform string // ios | iPadOS | macOS
-	UserID   uint   // standard FK for GORM
 
 	// GORM & Relations
 	gorm.Model
+	UserID uint // standard FK for GORM
 }
 
 type Team struct {
@@ -51,4 +52,27 @@ type Team struct {
 func (team *Team) BeforeSave(tx *gorm.DB) (err error) {
 	team.Slug = strings.ToLower(team.Slug)
 	return nil
+}
+
+type UserWeeklyTarget struct {
+	// Composite Unique Index with UserID, TeamID
+	TimeStart time.Time `gorm:"not null;uniqueIndex:idx_user_team_week"`
+	UserID    uint      `gorm:"not null;uniqueIndex:idx_user_team_week"`
+	TeamID    uint      `gorm:"not null;uniqueIndex:idx_user_team_week"`
+
+	TargetCount uint `gorm:"not null"`
+
+	// GORM & Relations
+	gorm.Model
+	Team   Team    // gorm-idiomatic: allows .Joins("Team")
+	Idents []Ident // UserWeeklyTarget has many Idents
+}
+
+type Ident struct {
+	Time     time.Time `gorm:"not null"`
+	UserText string
+
+	// GORM & Relations
+	gorm.Model
+	UserWeeklyTargetID uint // UserWeeklyTarget has many Idents
 }

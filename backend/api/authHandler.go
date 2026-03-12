@@ -73,8 +73,8 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
-		fmt.Println("failed to create session token:", err)
-		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		fmt.Println("ERROR creating session token:", err)
+		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
 		return
 	}
 
@@ -135,15 +135,15 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 
 	foundUser, err := db.CreateUser(r.Context(), app.DB, user)
 	if err != nil {
-		fmt.Println("failed to create user:", foundUser, err)
-		util.ErrorJSON(w, errors.New("Failed to create user: "+err.Error()))
+		fmt.Println("ERROR creating user:", foundUser, err)
+		util.ErrorJSON(w, errors.New("ERROR creating user: "+err.Error()))
 		return
 	}
 
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
-		fmt.Println("failed to create session token:", err)
-		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		fmt.Println("ERROR creating session token:", err)
+		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
 		return
 	}
 
@@ -233,7 +233,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// claims: *map[string]interface{} contains claims = content of JWT as Map
 	claims, err := apple.GetClaims(resp.IDToken)
 	if err != nil {
-		fmt.Println("failed to get claims: " + err.Error())
+		fmt.Println("ERROR getting claims: " + err.Error())
 		return
 	}
 
@@ -249,15 +249,15 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	created, foundUser, err := db.GetElseCreateUser(r.Context(), app.DB, user)
 	if err != nil {
-		fmt.Println("failed to get (true)) or create (false) user:", foundUser, err)
-		http.Error(w, "Failed to get or create user", http.StatusInternalServerError)
+		fmt.Println("ERROR getting (true)) or create (false) user:", foundUser, err)
+		http.Error(w, "ERROR getting or create user", http.StatusInternalServerError)
 		return
 	}
 
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
-		fmt.Println("failed to create session token:", err)
-		http.Error(w, "Failed to create session token", http.StatusInternalServerError)
+		fmt.Println("ERROR creating session token:", err)
+		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
 		return
 	}
 

@@ -61,3 +61,15 @@ type AddTeamPayload struct {
 type NotifyGroupPayload struct {
 	Content string `json:"content"`
 }
+
+type AddUserTargetPayload struct {
+	TimeStart   string `json:"timeStart"`
+	TeamSlug    string `json:"teamSlug"`
+	TargetCount uint   `json:"targetCount"`
+}
+
+type AddIdentPayload struct {
+	Time     string `json:"time"`
+	TeamSlug string `json:"teamSlug"`
+	UserText string `json:"userText"`
+}

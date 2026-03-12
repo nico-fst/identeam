@@ -29,7 +29,7 @@ func initSwagger() {
 	cmd := exec.Command("go", "run", "github.com/swaggo/swag/cmd/swag@latest", "init")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Failed to generate swagger docs: %v\nOutput: %s", err, string(output))
+		log.Printf("ERROR generating swagger docs: %v\nOutput: %s", err, string(output))
 		return
 	}
 	log.Println("Swagger docs generated successfully")
@@ -74,6 +74,10 @@ func (app *App) SetupRoutes() http.Handler {
 		r.Post("/teams/join/{slug}", app.JoinTeam)
 		r.Post("/teams/leave/{slug}", app.LeaveTeam)
 
+		r.Post("/targets/add", app.AddUserTarget)
+
+		r.Post("/idents/add", app.AddIdent)
+
 		r.Post("/notify/team/{slug}", app.NotifyTeam)
 	})
 
@@ -83,7 +87,7 @@ func (app *App) SetupRoutes() http.Handler {
 func (app *App) SetupDB() {
 	err := db.EnsureDefaultTeams(context.Background(), app.DB)
 	if err != nil {
-		log.Fatalf("failed to ensure default teams: %v", err)
+		log.Fatalf("ERROR ensuring default teams: %v", err)
 	}
 }
 
@@ -99,6 +103,6 @@ func (app *App) SetupServer() {
 	log.Println("Starting server on 8080...")
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("ERROR starting server: %v", err)
 	}
 }

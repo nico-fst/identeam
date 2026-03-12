@@ -30,6 +30,9 @@ func ConnectPostgres() (*gorm.DB, error) {
 	db.AutoMigrate(
 		&models.User{},
 		&models.DeviceToken{},
+		&models.Team{},
+		&models.UserWeeklyTarget{},
+		&models.Ident{},
 	)
 
 	return db, nil
@@ -45,7 +48,11 @@ func ConnectSqlite() (*gorm.DB, error) {
 
 	db.AutoMigrate(
 		&models.User{},
-		&models.DeviceToken{})
+		&models.DeviceToken{},
+		&models.Team{},
+		&models.UserWeeklyTarget{},
+		&models.Ident{},
+	)
 
 	return db, nil
 }
