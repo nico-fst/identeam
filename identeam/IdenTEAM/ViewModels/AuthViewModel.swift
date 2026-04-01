@@ -71,7 +71,7 @@ class AuthViewModel: ObservableObject {
     }
 
     @MainActor
-    func completeChangeUserDetails(newUser: User) {
+    func completeChangeUserDetails(newUser: UserDTO) {
         print("Saving NewUser: \(newUser)")
         self.sessionToken = sessionToken
 

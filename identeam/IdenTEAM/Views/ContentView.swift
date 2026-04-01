@@ -6,20 +6,22 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var navVM: NavigationViewModel
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         ToastContainer(toastMessage: $vm.toastMessage) {
-            TabView {
-                Tab("Teams", systemImage: "person.2.fill") {
+            TabView(selection: $navVM.selectedTab) {
+                Tab("Teams", systemImage: "person.2.fill", value: AppTab.teams) {
                     TeamsView()
                 }
-                Tab("Debug Info", systemImage: "info.circle.fill") {
+                Tab("Debug", systemImage: "info.circle.fill", value: AppTab.debug) {
                     DebugInfoView()
                 }
             }
@@ -61,5 +63,6 @@ struct ContentView_Previews: PreviewProvider {
             .environmentObject(AppViewModel())
             .environmentObject(AuthViewModel())
             .environmentObject(TeamsViewModel())
+            .environmentObject(NavigationViewModel())
     }
 }

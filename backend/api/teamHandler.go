@@ -2,12 +2,14 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -24,8 +26,8 @@ import (
 //	@Success		200		{object}	util.JSONResponse{data=models.TeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
-//	@Router			/teams/add [post]
-func (app *App) AddTeam(w http.ResponseWriter, r *http.Request) {
+//	@Router			/teams/create [post]
+func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
@@ -190,5 +192,77 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 		Data: GetMyTeamsResponse{
 			Teams: models.TeamsToResponses(user.Teams),
 		},
+	})
+}
+
+type TeamWeekMember struct {
+	User        models.UserResponse    `json:"user"`
+	TargetCount uint                   `json:"targetCount"`
+	Idents      []models.IdentResponse `json:"idents"`
+}
+
+type GetTeamWeekResponse struct {
+	Slug      string           `json:"slug"`
+	TargetSum uint             `json:"targetSum"`
+	IdentSum  uint             `json:"identSum"`
+	Members   []TeamWeekMember `json:"members"`
+}
+
+func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	dateParam := r.URL.Query().Get("date")
+	date, err := time.Parse(time.RFC3339, dateParam)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+	if slug == "" || dateParam == "" {
+		util.ErrorJSON(w, errors.New("{slug} and ?date= must be specified"), http.StatusBadRequest)
+		return
+	}
+
+	targets, err := db.GetTeamsWeekTargets(r.Context(), app.DB, slug, date)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	resp := GetTeamWeekResponse{
+		Slug:      slug,
+		TargetSum: 0,
+		IdentSum:  0,
+		Members:   []TeamWeekMember{},
+	}
+	if len(targets) > 0 {
+		resp.Slug = targets[0].Team.Slug
+	}
+
+	for _, target := range targets {
+		resp.TargetSum += target.TargetCount
+		resp.IdentSum += uint(len(target.Idents))
+
+		collectedIdents := []models.IdentResponse{}
+		for _, ident := range target.Idents {
+			collectedIdents = append(collectedIdents, models.IdentResponse{
+				Time:     ident.Time,
+				UserText: ident.UserText,
+			})
+		}
+		resp.Members = append(resp.Members, TeamWeekMember{
+			User: models.UserResponse{
+				UserID:   target.User.UserID,
+				Email:    target.User.Email,
+				FullName: target.User.FullName,
+				Username: target.User.Username,
+			},
+			TargetCount: target.TargetCount,
+			Idents:      collectedIdents,
+		})
+	}
+
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Retrieved team week successfully",
+		Data:    resp,
 	})
 }

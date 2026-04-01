@@ -15,9 +15,10 @@ struct identeamApp: App {
     @StateObject private var vm = AppViewModel()
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var teamsVM = TeamsViewModel()
+    @StateObject private var navVM = NavigationViewModel()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Team.self])
+        let schema = Schema([Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self])
         let modelConfiguration = ModelConfiguration(schema: schema)
 
         do {
@@ -31,12 +32,15 @@ struct identeamApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup {
+        LaunchScreen {
+            Image(.logoLong)
+        } rootContent: {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)
         .environmentObject(teamsVM)
         .environmentObject(vm)
+        .environmentObject(navVM)
     }
 }

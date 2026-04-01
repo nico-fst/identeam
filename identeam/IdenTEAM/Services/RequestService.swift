@@ -26,6 +26,12 @@ class RequestService {
     @AppStorage("sessionToken") private var sessionToken: String?
 
     static let shared = RequestService()
+    
+    private var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
 
     func postToBackend<T: Decodable>(
         url: URL,
@@ -74,7 +80,7 @@ class RequestService {
                 let dataJSON = try JSONSerialization.data(
                     withJSONObject: dataObject
                 )
-                decoded = try JSONDecoder().decode(T.self, from: dataJSON)
+                decoded = try decoder.decode(T.self, from: dataJSON)
             }
         } else if statusCode == 401 {
             DispatchQueue.main.async {
@@ -126,7 +132,7 @@ class RequestService {
                 let dataJSON = try JSONSerialization.data(
                     withJSONObject: dataObject
                 )
-                decoded = try JSONDecoder().decode(T.self, from: dataJSON)
+                decoded = try decoder.decode(T.self, from: dataJSON)
             }
         } else if statusCode == 401 {
             DispatchQueue.main.async {

@@ -1,23 +1,5 @@
 package models
 
-type Empty struct{}
-
-// API RESPONSES
-
-// since different notations and []DeviceTokens would complicate decoding in Swift
-type UserResponse struct {
-	UserID   string `json:"userID"`
-	Email    string `json:"email"`
-	FullName string `json:"fullName"`
-	Username string `json:"username"`
-}
-
-type TeamResponse struct {
-	Name    string `json:"name"`
-	Slug    string `json:"slug"`
-	Details string `json:"details"`
-}
-
 // PAYLOADS (grouped here for swaggo)
 
 type AuthApplePayload struct {
@@ -72,4 +54,8 @@ type AddIdentPayload struct {
 	Time     string `json:"time"`
 	TeamSlug string `json:"teamSlug"`
 	UserText string `json:"userText"`
+}
+
+type DeleteIdentPayload struct {
+	IdentID uint `json:"identID"`
 }

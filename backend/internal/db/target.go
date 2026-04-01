@@ -11,6 +11,9 @@ import (
 )
 
 func CreateUserWeeklyTarget(ctx context.Context, db *gorm.DB, target models.UserWeeklyTarget) (*models.UserWeeklyTarget, error) {
+	// ensure timeStart is start of week
+	target.TimeStart = util.TimeToWeekStart(target.TimeStart)
+
 	err := gorm.G[models.UserWeeklyTarget](db).
 		Create(ctx, &target)
 	if err != nil {
@@ -34,4 +37,20 @@ func GetUserWeeklyTargetByTimeUserTeam(ctx context.Context, db *gorm.DB, time ti
 	}
 
 	return &target, nil
+}
+
+func GetTeamsWeekTargets(ctx context.Context, db *gorm.DB, teamSlug string, timeStart time.Time) ([]models.UserWeeklyTarget, error) {
+	var targets []models.UserWeeklyTarget
+	err := db.Model(&models.UserWeeklyTarget{}).
+		Joins("Team").
+		Preload("User").
+		Preload("Idents").
+		Where("team.slug = ? AND user_weekly_targets.time_start = ?", teamSlug, util.TimeToWeekStart(timeStart)).
+		Find(&targets).Error
+	if err != nil {
+		log.Printf("ERROR looking up TeamsWeekTargets for slug %v in week of %v: %v", teamSlug, timeStart, err)
+		return nil, db.Error
+	}
+
+	return targets, nil
 }

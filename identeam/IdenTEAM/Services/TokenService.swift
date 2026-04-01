@@ -37,7 +37,7 @@ class TokenService {
             "platform": "ios",
         ]
 
-        let _: BackendResponse<User> = try await RequestService.shared
+        let _: BackendResponse<UserDTO> = try await RequestService.shared
             .postToBackend(
                 url: url,
                 payload: payload

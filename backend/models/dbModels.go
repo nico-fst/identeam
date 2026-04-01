@@ -64,7 +64,8 @@ type UserWeeklyTarget struct {
 
 	// GORM & Relations
 	gorm.Model
-	Team   Team    // gorm-idiomatic: allows .Joins("Team")
+	User   User // gorm-idiomatic: allows .Joins("Team")
+	Team   Team
 	Idents []Ident // UserWeeklyTarget has many Idents
 }
 

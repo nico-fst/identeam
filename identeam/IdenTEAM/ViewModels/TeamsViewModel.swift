@@ -20,6 +20,9 @@ class TeamsViewModel: ObservableObject {
     @Published var createDetailsInput: String = ""
     @Published var createError: String = ""
     
+    // TeamWeek
+    let selectedWeek = Date()
+    
     @Published var isFetching: Bool = false // used for creating, joining
     
     func reloadTeams(ctx modelContext: ModelContext) async {
@@ -29,10 +32,40 @@ class TeamsViewModel: ObservableObject {
             for team in oldTeams { modelContext.delete(team) }
             
             // save new teams
-            let newTeams: [Team] = try await TeamService.shared.getMyTeams()
+            let newTeams: [Team] = try await TeamService.shared.fetchMyTeams()
             for team in newTeams { modelContext.insert(team) }
         } catch {
             print("ERROR replacing cached Teams with fetched ones: ", error)
+        }
+    }
+    
+    @MainActor
+    func reloadTeamWeek(slug: String, vm: AppViewModel, ctx modelContext: ModelContext) async {
+        do {
+            let descriptor = FetchDescriptor<TeamWeek>(
+                predicate: #Predicate<TeamWeek> { teamWeek in
+                    teamWeek.slug == slug
+                }
+            )
+            
+            let oldTeamWeek: TeamWeek? = try modelContext.fetch(descriptor).first
+            if let team = oldTeamWeek {
+                print("Deleting old teamWeek with slug:", team.slug)
+                modelContext.delete(team)
+            }
+
+            let newTeamWeek: TeamWeek = try await TeamService.shared.fetchTeamWeek(
+                slug: slug,
+                date: selectedWeek
+            )
+            modelContext.insert(newTeamWeek)
+            try modelContext.save()
+
+            vm.toastMessage = "Refreshed TeamWeek :)"
+        } catch is CancellationError {
+            return
+        } catch {
+            vm.showAlert("ERROR fetching TeamWeek", error.localizedDescription)
         }
     }
     

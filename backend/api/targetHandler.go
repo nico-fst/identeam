@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (app *App) AddUserTarget(w http.ResponseWriter, r *http.Request) {
+func (app *App) CreateUserTarget(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)

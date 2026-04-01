@@ -51,7 +51,7 @@ struct SignInWithAppleButtonComponent: View {
                 return
             }
 
-            let user = User(
+            let user = UserDTO(
                 userID: appleIDCredential.user,
                 email: "",  // backend looks manually up after validating JWT against Apple server
                 fullName: PersonNameComponentsFormatter().string(

@@ -26,10 +26,10 @@ class TeamService {
     static let shared = TeamService()
 
     struct GetMyTeamsResponse: Decodable {
-        let teams: [TeamDecodable]
+        let teams: [TeamDTO]
     }
 
-    func getMyTeams() async throws -> [Team] {
+    func fetchMyTeams() async throws -> [Team] {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "teams/me"
         )
@@ -52,8 +52,8 @@ class TeamService {
     }
 
     struct UserAndTeamResponse: Decodable {
-        let user: User
-        let team: TeamDecodable
+        let user: UserDTO
+        let team: TeamDTO
     }
 
     func joinTeam(slug: String) async throws -> UserAndTeamResponse {
@@ -100,14 +100,14 @@ class TeamService {
         }
     }
     
-    func createTeam(name: String, details: String) async throws -> TeamDecodable {
-        let url = AppConfig.apiBaseURL.appendingPathComponent("teams/add")
+    func createTeam(name: String, details: String) async throws -> TeamDTO {
+        let url = AppConfig.apiBaseURL.appendingPathComponent("teams/create")
         let payload: [String: Any] = [
             "name": name,
             "details": details
         ]
         
-        let response: BackendResponse<TeamDecodable> = try await RequestService.shared.postToBackend(
+        let response: BackendResponse<TeamDTO> = try await RequestService.shared.postToBackend(
             url: url,
             payload: payload
         )
@@ -115,6 +115,30 @@ class TeamService {
         switch response.statusCode {
         case 200:
             return response.data!
+        default:
+            throw TeamError.backend(response.message)
+        }
+    }
+    
+    func fetchTeamWeek(slug: String, date: Date) async throws -> TeamWeek {
+        let base = AppConfig.apiBaseURL.appendingPathComponent("teams/\(slug)/week")
+        var components = URLComponents(url: base, resolvingAgainstBaseURL: false)!
+        
+        let formatter = ISO8601DateFormatter()
+        components.queryItems = [
+            URLQueryItem(name: "date", value: formatter.string(from: date))
+        ]
+        
+        let url = components.url!
+
+        let response: BackendResponse<TeamWeekDTO> =
+            try await RequestService.shared.getToBackend(url: url)
+
+        print(response)
+        switch response.statusCode {
+        case 200:
+            let teamWeek = TeamWeek(dto: response.data!)
+            return teamWeek
         default:
             throw TeamError.backend(response.message)
         }

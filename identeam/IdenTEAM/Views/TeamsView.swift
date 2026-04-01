@@ -12,34 +12,16 @@ struct TeamsView: View {
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var navVM: NavigationViewModel
     @Environment(\.modelContext) private var modelContext
 
     @Query private var teams: [Team]
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navVM.teamPath) {
             List {
                 ForEach(teams) { team in
-                    NavigationLink {
-                        Text("Name: \(team.name)")
-                        Text("Details: \(team.details)")
-                        Text("Slug: \(team.slug)")
-
-                        Button("Notify Team") {
-                            Task {
-                                do {
-                                    try await TeamService.shared.NotifyTeam(
-                                        slug: team.slug
-                                    )
-                                } catch {
-                                    vm.showAlert(
-                                        "Error notifying team",
-                                        error.localizedDescription
-                                    )
-                                }
-                            }
-                        }
-                    } label: {
+                    NavigationLink(value: Route.team(slug: team.slug)) {
                         Text(team.name)
                     }
                     .swipeActions(edge: .trailing) {
@@ -64,12 +46,21 @@ struct TeamsView: View {
             .refreshable {
                 await teamsVM.reloadTeams(ctx: modelContext)
             }
+            .task {
+                await teamsVM.reloadTeams(ctx: modelContext)
+            }
             .navigationTitle("Teams")
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .team(let slug):
+                    TeamView(slug: slug)
+                }
+            }
             .toolbar {
                 ToolbarItem {
-                    Button(action: {
+                    Button {
                         teamsVM.showingCreateSheet.toggle()
-                    }) {
+                    } label: {
                         Label("Create", systemImage: "plus")
                     }
                 }
@@ -189,6 +180,7 @@ struct TeamsView: View {
         .environmentObject(AppViewModel())
         .environmentObject(TeamsViewModel())
         .environmentObject(AuthViewModel())
+        .environmentObject(NavigationViewModel())
 }
 
 #Preview("Join Team Sheet") {
@@ -199,6 +191,7 @@ struct TeamsView: View {
         .environmentObject(AppViewModel())
         .environmentObject(teamsVM)
         .environmentObject(AuthViewModel())
+        .environmentObject(NavigationViewModel())
 }
 
 #Preview("Create Team Sheet") {
@@ -209,4 +202,5 @@ struct TeamsView: View {
         .environmentObject(AppViewModel())
         .environmentObject(teamsVM)
         .environmentObject(AuthViewModel())
+        .environmentObject(NavigationViewModel())
 }

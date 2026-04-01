@@ -7,10 +7,13 @@ import (
 	"identeam/models"
 	"identeam/util"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (app *App) AddIdent(w http.ResponseWriter, r *http.Request) {
+func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
@@ -50,6 +53,32 @@ func (app *App) AddIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created Ident successfully",
+		Data:    ident,
+	})
+}
+
+func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
+	identID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	ident, err := db.GetIdentById(r.Context(), app.DB, uint(identID))
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = db.DeleteIdent(r.Context(), app.DB, *ident)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "Deleted Ident successfully",
 		Data:    ident,
 	})
 }

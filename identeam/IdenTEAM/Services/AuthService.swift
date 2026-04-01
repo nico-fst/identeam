@@ -35,7 +35,7 @@ enum AuthError: LocalizedError {
 }
 
 struct AuthResponse: Decodable {
-    let user: User
+    let user: UserDTO
     let sessionToken: String
     let created: Bool  // == new user was creted in backend
 }
@@ -50,7 +50,7 @@ class AuthService {
     func sendAuthFlowToBackend(
         identityToken: String,
         authorizationCode: String,
-        user: User
+        user: UserDTO
     ) async throws -> AuthResponse {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "auth/apple/native/callback"

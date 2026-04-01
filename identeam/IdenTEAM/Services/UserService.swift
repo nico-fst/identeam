@@ -27,7 +27,7 @@ class UserService {
     @AppStorage("email") private var email: String?
 
     func requestUserDetailsChange(fullName: String, username: String)
-        async throws -> User
+        async throws -> UserDTO
     {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me/update_user")
 
@@ -44,7 +44,7 @@ class UserService {
             ]
         ]
 
-        let response: BackendResponse<User> = try await RequestService.shared
+        let response: BackendResponse<UserDTO> = try await RequestService.shared
             .postToBackend(url: url, payload: payload)
 
         switch response.statusCode {
