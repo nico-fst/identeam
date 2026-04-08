@@ -26,6 +26,12 @@
       ],
       "lighting" : "individual",
       "name" : "subject",
+      "opacity-specializations" : [
+        {
+          "appearance" : "tinted",
+          "value" : 1
+        }
+      ],
       "position" : {
         "scale" : 1.03,
         "translation-in-points" : [
@@ -119,7 +125,7 @@
       "opacity-specializations" : [
         {
           "appearance" : "tinted",
-          "value" : 1
+          "value" : 0
         }
       ],
       "position" : {

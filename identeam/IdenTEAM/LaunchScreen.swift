@@ -77,10 +77,10 @@ struct LaunchScreenConfig {
     var backgroundColor: Color = .accent
     
     var forceHideLogo: Bool = false
-    var logoScale: CGFloat = 1
+    var logoScale: CGFloat = 1.1
     
-    var initialOffset: CGFloat = 200
-    var bounceOffset: CGFloat = 100
+    var initialOffset: CGFloat = 300
+    var bounceOffset: CGFloat = 150
     var flyOutOffset: CGFloat = 1200
     
     var bounceAnimation: Animation = .interpolatingSpring(duration: 0.38, bounce: 0.45)
@@ -101,9 +101,17 @@ fileprivate struct LaunchScreenView<Logo: View>: View {
             .fill(config.backgroundColor.opacity(flyOut ? 0 : 1))
             .overlay {
                 if !config.forceHideLogo {
-                    logo
-                        .scaleEffect(config.logoScale)
-                        .offset(y: flyOut ? config.flyOutOffset : (bounceUp ? config.bounceOffset : config.initialOffset))
+                    HStack {
+                        Spacer(minLength: 0)
+
+                        logo
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(config.logoScale)
+                            .offset(y: flyOut ? config.flyOutOffset : (bounceUp ? config.bounceOffset : config.initialOffset))
+
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
             }
             .ignoresSafeArea()
