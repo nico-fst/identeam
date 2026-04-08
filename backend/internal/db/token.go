@@ -35,7 +35,9 @@ func UpdateUsersDeviceToken(ctx context.Context, db *gorm.DB, user models.User, 
 			}
 			log.Printf("Inserted deviceToken into DB: %v", token.Token)
 		}
-		return models.User{}, err
+		if err != gorm.ErrRecordNotFound {
+			return models.User{}, err
+		}
 	}
 
 	updatedUser, err := gorm.G[models.User](db).

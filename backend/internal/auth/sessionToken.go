@@ -8,7 +8,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var sessionSecret = []byte(os.Getenv("SESSION_TOKEN_SECRET"))
+func sessionSecret() []byte {
+	return []byte(os.Getenv("SESSION_TOKEN_SECRET"))
+}
 
 type MyClaims struct {
 	UserID string `json:"userID"`
@@ -27,12 +29,12 @@ func CreateSessionToken(userID, email string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(sessionSecret)
+	return token.SignedString(sessionSecret())
 }
 
 func VerifySessionToken(tokenString string) (*MyClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return sessionSecret, nil
+		return sessionSecret(), nil
 	})
 	if err != nil {
 		return nil, err

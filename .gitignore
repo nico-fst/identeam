@@ -3,6 +3,9 @@ ios/Pods
 .DS_Store
 UserInterfaceState.xcuserstate
 /xcuserdata/
+coverage.out
+coverage-summary.txt
+test-output.txt
 
 # Docs dynamically generated
 docs/ 

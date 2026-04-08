@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"identeam/docs"
 	"identeam/internal/apns"
 	"identeam/internal/db"
 	"identeam/middleware"
@@ -33,12 +32,16 @@ func initSwagger() {
 		return
 	}
 	log.Println("Swagger docs generated successfully")
-
-	docs.SwaggerInfo.BasePath = "/"
 }
 
 func (app *App) SetupRoutes() http.Handler {
-	initSwagger()
+	return app.setupRoutes(true)
+}
+
+func (app *App) setupRoutes(enableSwagger bool) http.Handler {
+	if enableSwagger {
+		initSwagger()
+	}
 
 	mux := chi.NewRouter()
 
@@ -51,7 +54,14 @@ func (app *App) SetupRoutes() http.Handler {
 		MaxAge:           300,
 	}))
 
-	mux.Mount("/swagger", httpSwagger.WrapHandler)
+	if enableSwagger {
+		mux.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./docs/swagger.json")
+		})
+		mux.Mount("/swagger", httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+		))
+	}
 
 	mux.Get("/notify/{deviceToken}", app.SendNotification)
 

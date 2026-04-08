@@ -1,0 +1,74 @@
+name: Backend Feature Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  backend-feature-tests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache: true
+
+      - name: Run backend tests with coverage
+        env:
+          SESSION_TOKEN_SECRET: ci-test-secret
+          CI: "true"
+        run: |
+          set -o pipefail
+          go test ./... -v -coverprofile=coverage.out -covermode=atomic | tee test-output.txt
+
+      - name: Summarize test results
+        if: always()
+        run: |
+          pass_count=$(grep -c '^--- PASS:' test-output.txt || true)
+          fail_count=$(grep -c '^--- FAIL:' test-output.txt || true)
+          skip_count=$(grep -c '^--- SKIP:' test-output.txt || true)
+
+          if [ -f coverage.out ]; then
+            go tool cover -func=coverage.out | tee coverage-summary.txt
+            total_coverage=$(tail -n1 coverage-summary.txt | awk '{print $3}')
+          else
+            total_coverage="n/a"
+          fi
+
+          {
+            echo "## Backend Test Summary"
+            echo
+            echo "| Metric | Value |"
+            echo "| --- | --- |"
+            echo "| Succeeded | ${pass_count} |"
+            echo "| Failed | ${fail_count} |"
+            echo "| Skipped | ${skip_count} |"
+            echo "| Line coverage | ${total_coverage} |"
+            echo
+            if [ -f coverage-summary.txt ]; then
+              echo "### Coverage Details"
+              echo
+              echo '```text'
+              cat coverage-summary.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload backend test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-artifacts
+          path: |
+            backend/test-output.txt
+            backend/coverage.out
+            backend/coverage-summary.txt
