@@ -42,11 +42,11 @@ type AuthResponseData struct {
 func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 	var payload models.LoginPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 	if payload.Email == "" || payload.Password == "" {
-		http.Error(w, "email and password are required in body", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("email and password are required in body"), http.StatusBadRequest)
 		return
 	}
 	if _, err := mail.ParseAddress(payload.Email); err != nil {
@@ -67,14 +67,14 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
 		fmt.Println("ERROR creating session token:", err)
-		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("ERROR creating session token"), http.StatusInternalServerError)
 		return
 	}
 
@@ -82,12 +82,7 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User: models.UserResponse{
-				UserID:   user.UserID,
-				Email:    user.Email,
-				FullName: user.FullName,
-				Username: user.Username,
-			},
+			User:         user.ToResponse(),
 			SessionToken: sessionToken,
 			Created:      false,
 		},
@@ -109,18 +104,18 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 	var payload models.SignupPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 	if payload.Email == "" {
-		http.Error(w, "email is required for signup", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("email is required for signup"), http.StatusBadRequest)
 		return
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 14)
 	hashStr := string(passwordHash)
 	if err != nil {
-		http.Error(w, "error hashing password", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("error hashing password"), http.StatusInternalServerError)
 		return
 	}
 
@@ -143,7 +138,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
 		fmt.Println("ERROR creating session token:", err)
-		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("ERROR creating session token"), http.StatusInternalServerError)
 		return
 	}
 
@@ -151,12 +146,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User: models.UserResponse{
-				UserID:   foundUser.UserID,
-				Email:    foundUser.Email,
-				FullName: foundUser.FullName,
-				Username: foundUser.Username,
-			},
+			User:         foundUser.ToResponse(),
 			SessionToken: sessionToken,
 			Created:      true,
 		},
@@ -178,11 +168,11 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	var payload models.AuthApplePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 	if payload.AuthorizationCode == "" {
-		http.Error(w, "authorizationCode is required", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("authorizationCode is required"), http.StatusBadRequest)
 		return
 	}
 
@@ -194,7 +184,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	keyBytes, err := os.ReadFile("./siwa_key.p8")
 	if err != nil {
-		http.Error(w, "Server key missing", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("Server key missing"), http.StatusInternalServerError)
 		return
 	}
 	keyString := string(keyBytes)
@@ -250,14 +240,14 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	created, foundUser, err := db.GetElseCreateUser(r.Context(), app.DB, user)
 	if err != nil {
 		fmt.Println("ERROR getting (true)) or create (false) user:", foundUser, err)
-		http.Error(w, "ERROR getting or create user", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("ERROR getting or create user"), http.StatusInternalServerError)
 		return
 	}
 
 	sessionToken, err := auth.CreateSessionToken(user.UserID, user.Email)
 	if err != nil {
 		fmt.Println("ERROR creating session token:", err)
-		http.Error(w, "ERROR creating session token", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("ERROR creating session token"), http.StatusInternalServerError)
 		return
 	}
 
@@ -265,12 +255,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User: models.UserResponse{
-				UserID:   foundUser.UserID,
-				Email:    foundUser.Email,
-				FullName: foundUser.FullName,
-				Username: foundUser.Username,
-			},
+			User:         foundUser.ToResponse(),
 			SessionToken: sessionToken,
 			Created:      created,
 		},
@@ -288,7 +273,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 

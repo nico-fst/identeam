@@ -5,11 +5,7 @@ func TeamToResponse(t *Team) TeamResponse {
 		return TeamResponse{}
 	}
 
-	return TeamResponse{
-		Name:        t.Name,
-		Slug:        t.Slug,
-		Details: t.Details,
-	}
+	return t.ToResponse()
 }
 
 func TeamsToResponses(teams []*Team) []TeamResponse {
@@ -20,6 +16,26 @@ func TeamsToResponses(teams []*Team) []TeamResponse {
 			continue
 		}
 		res = append(res, TeamToResponse(t))
+	}
+
+	return res
+}
+
+func UsersToResponses(users []User) []UserResponse {
+	res := make([]UserResponse, 0, len(users))
+
+	for _, user := range users {
+		res = append(res, user.ToResponse())
+	}
+
+	return res
+}
+
+func IdentsToResponses(idents []Ident) []IdentResponse {
+	res := make([]IdentResponse, 0, len(idents))
+
+	for _, ident := range idents {
+		res = append(res, ident.ToResponse())
 	}
 
 	return res

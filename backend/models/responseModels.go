@@ -48,3 +48,15 @@ func (i Ident) ToResponse() IdentResponse {
 		UserText: i.UserText,
 	}
 }
+
+type UserWeeklyTargetResponse struct {
+	TimeStart   time.Time `json:"timeStart"`
+	TargetCount uint      `json:"targetCount"`
+}
+
+func (t UserWeeklyTarget) ToResponse() UserWeeklyTargetResponse {
+	return UserWeeklyTargetResponse{
+		TimeStart:   t.TimeStart,
+		TargetCount: t.TargetCount,
+	}
+}

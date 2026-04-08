@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"identeam/internal/auth"
 	"identeam/internal/db"
 	"identeam/models"
+	"identeam/util"
 	"log"
 	"net/http"
 	"strings"
@@ -21,24 +23,24 @@ func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "missing authorization header", http.StatusUnauthorized)
+			util.ErrorJSON(w, errors.New("missing authorization header"), http.StatusUnauthorized)
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) == 1 && parts[0] == "Bearer" {
-			http.Error(w, "bearer token empty", http.StatusUnauthorized)
+			util.ErrorJSON(w, errors.New("bearer token empty"), http.StatusUnauthorized)
 			return
 		}
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "invalid authorization header format", http.StatusUnauthorized)
+			util.ErrorJSON(w, errors.New("invalid authorization header format"), http.StatusUnauthorized)
 			return
 		}
 
 		tokenString := parts[1]
 		claims, err := auth.VerifySessionToken(tokenString)
 		if err != nil {
-			http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+			util.ErrorJSON(w, errors.New("invalid or expired token"), http.StatusUnauthorized)
 			return
 		}
 
@@ -59,7 +61,7 @@ func InjectUser(pDB *gorm.DB) func(http.Handler) http.Handler { // returns func(
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userID, ok := GetUserIDFromContext(r.Context())
 			if !ok {
-				http.Error(w, "user id missing in context for middleware", http.StatusUnauthorized)
+				util.ErrorJSON(w, errors.New("user id missing in context for middleware"), http.StatusUnauthorized)
 				return
 			}
 
@@ -67,7 +69,7 @@ func InjectUser(pDB *gorm.DB) func(http.Handler) http.Handler { // returns func(
 			if err != nil {
 				// User has valid JWT but doesn't exist in DB -> return 401
 				log.Printf("[InjectUser Middleware] User with valid JWT not found in DB - userID: %s", userID)
-				http.Error(w, "user not found in database", http.StatusUnauthorized)
+				util.ErrorJSON(w, errors.New("user not found in database"), http.StatusUnauthorized)
 				return
 			}
 

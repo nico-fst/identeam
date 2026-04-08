@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -53,7 +54,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
@@ -70,21 +71,11 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	membersResponse := make([]models.UserResponse, 0, len(members))
-	for _, member := range members {
-		membersResponse = append(membersResponse, models.UserResponse{
-			UserID:   member.UserID,
-			Email:    member.Email,
-			FullName: member.FullName,
-			Username: member.Username,
-		})
-	}
-
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Success notifying team members",
 		Data: NotifyTeamResponse{
-			Members: membersResponse,
+			Members: models.UsersToResponses(members),
 		},
 	})
 }

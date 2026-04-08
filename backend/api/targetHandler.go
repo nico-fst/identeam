@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -10,16 +11,28 @@ import (
 	"time"
 )
 
+// CreateUserTarget godoc
+// @Summary		Create weekly target
+// @Description	Creates a weekly target for the authenticated user in the specified team.
+// @Tags			Targets
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			payload	body		models.AddUserTargetPayload	true	"Weekly target payload"
+// @Success		200		{object}	util.JSONResponse{data=models.UserWeeklyTargetResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/targets/create [post]
 func (app *App) CreateUserTarget(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
 	var payload models.AddUserTargetPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -53,6 +66,6 @@ func (app *App) CreateUserTarget(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created UserWeeklyGoal successfully",
-		Data:    target,
+		Data:    target.ToResponse(),
 	})
 }

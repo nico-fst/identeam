@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -24,17 +25,17 @@ import (
 func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
 	var payload models.UpdateDeviceTokenPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 	if payload.NewToken == "" || payload.Platform == "" {
-		http.Error(w, "newToken and platform are required in body", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("newToken and platform are required in body"), http.StatusBadRequest)
 		return
 	}
 
@@ -45,18 +46,13 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := db.UpdateUsersDeviceToken(r.Context(), app.DB, user, newToken)
 	if err != nil {
-		http.Error(w, "Error updating DeviceToken", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("Error updating DeviceToken"), http.StatusInternalServerError)
 		return
 	}
 
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Updated DeviceToken successfully",
-		Data: models.UserResponse{
-			UserID:   updatedUser.UserID,
-			Email:    updatedUser.Email,
-			FullName: updatedUser.FullName,
-			Username: updatedUser.Username,
-		},
+		Data:    updatedUser.ToResponse(),
 	})
 }

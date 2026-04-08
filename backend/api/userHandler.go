@@ -27,13 +27,13 @@ import (
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
 	var payload models.UpdateUserPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -57,11 +57,6 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Updated user details successfully",
-		Data: models.UserResponse{
-			UserID:   newUser.UserID,
-			Email:    newUser.Email,
-			FullName: newUser.FullName,
-			Username: newUser.Username,
-		},
+		Data:    newUser.ToResponse(),
 	})
 }

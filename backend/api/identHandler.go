@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -13,16 +14,28 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// CreateIdent godoc
+// @Summary		Create ident
+// @Description	Creates an ident for the authenticated user in the team week identified by the payload time and slug.
+// @Tags			Idents
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			payload	body		models.AddIdentPayload	true	"Ident payload"
+// @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/idents/create [post]
 func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
 	var payload models.AddIdentPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -53,10 +66,21 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created Ident successfully",
-		Data:    ident,
+		Data:    ident.ToResponse(),
 	})
 }
 
+// DeleteIdent godoc
+// @Summary		Delete ident
+// @Description	Deletes an ident by ID and returns the deleted ident.
+// @Tags			Idents
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int	true	"Ident ID"
+// @Success		200	{object}	util.JSONResponse{data=models.IdentResponse}
+// @Failure		400	{object}	util.JSONResponse
+// @Failure		500	{object}	util.JSONResponse
+// @Router			/idents/{id} [delete]
 func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	identID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -79,6 +103,6 @@ func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Deleted Ident successfully",
-		Data:    ident,
+		Data:    ident.ToResponse(),
 	})
 }

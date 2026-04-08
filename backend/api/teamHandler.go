@@ -30,13 +30,13 @@ import (
 func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
 	var payload models.AddTeamPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -61,11 +61,7 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created, joined team successfully",
-		Data: models.TeamResponse{
-			Name:    newTeam.Name,
-			Slug:    newTeam.Slug,
-			Details: newTeam.Details,
-		},
+		Data:    newTeam.ToResponse(),
 	})
 }
 
@@ -89,7 +85,7 @@ type AddUserToTeamResponse struct {
 func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
@@ -105,17 +101,8 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Added user to team successfully or already joined",
 		Data: AddUserToTeamResponse{
-			User: models.UserResponse{
-				UserID:   user.UserID,
-				Email:    user.Email,
-				FullName: user.FullName,
-				Username: user.Username,
-			},
-			Team: models.TeamResponse{
-				Name:    team.Name,
-				Slug:    team.Slug,
-				Details: team.Details,
-			},
+			User: user.ToResponse(),
+			Team: team.ToResponse(),
 		},
 	})
 }
@@ -136,7 +123,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
@@ -150,17 +137,8 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Removed user from team successfully or was no member",
 		Data: AddUserToTeamResponse{
-			User: models.UserResponse{
-				UserID:   user.UserID,
-				Email:    user.Email,
-				FullName: user.FullName,
-				Username: user.Username,
-			},
-			Team: models.TeamResponse{
-				Name:    team.Name,
-				Slug:    team.Slug,
-				Details: team.Details,
-			},
+			User: user.ToResponse(),
+			Team: team.ToResponse(),
 		},
 	})
 }
@@ -182,7 +160,7 @@ type GetMyTeamsResponse struct {
 func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unable to retrieve userID from context", http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
@@ -208,6 +186,18 @@ type GetTeamWeekResponse struct {
 	Members   []TeamWeekMember `json:"members"`
 }
 
+// GetTeamWeek godoc
+//
+//	@Summary		Get team week overview
+//	@Description	Returns the weekly target and ident summary for all members of a team for the provided week.
+//	@Tags			Teams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			slug	path		string	true	"Team slug"
+//	@Param			date	query		string	true	"Week date in RFC3339 format"
+//	@Success		200		{object}	util.JSONResponse{data=GetTeamWeekResponse}
+//	@Failure		400		{object}	util.JSONResponse
+//	@Router			/teams/{slug}/week [get]
 func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	dateParam := r.URL.Query().Get("date")
@@ -241,22 +231,10 @@ func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 		resp.TargetSum += target.TargetCount
 		resp.IdentSum += uint(len(target.Idents))
 
-		collectedIdents := []models.IdentResponse{}
-		for _, ident := range target.Idents {
-			collectedIdents = append(collectedIdents, models.IdentResponse{
-				Time:     ident.Time,
-				UserText: ident.UserText,
-			})
-		}
 		resp.Members = append(resp.Members, TeamWeekMember{
-			User: models.UserResponse{
-				UserID:   target.User.UserID,
-				Email:    target.User.Email,
-				FullName: target.User.FullName,
-				Username: target.User.Username,
-			},
+			User:        target.User.ToResponse(),
 			TargetCount: target.TargetCount,
-			Idents:      collectedIdents,
+			Idents:      models.IdentsToResponses(target.Idents),
 		})
 	}
 
