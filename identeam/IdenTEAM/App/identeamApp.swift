@@ -15,6 +15,7 @@ struct identeamApp: App {
     @StateObject private var vm = AppViewModel()
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var teamsVM = TeamsViewModel()
+    @StateObject private var teamVM = TeamViewModel()
     @StateObject private var navVM = NavigationViewModel()
 
     var sharedModelContainer: ModelContainer = {
@@ -40,6 +41,7 @@ struct identeamApp: App {
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)
         .environmentObject(teamsVM)
+        .environmentObject(teamVM)
         .environmentObject(vm)
         .environmentObject(navVM)
     }

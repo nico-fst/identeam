@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"identeam/internal/apns"
 	"identeam/models"
 	"log"
 	"strings"
@@ -122,4 +123,19 @@ func GetTeamMembers(ctx context.Context, db *gorm.DB, userID string, teamSlug st
 	}
 
 	return team.Users, nil
+}
+
+func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider, userID string, slug string) ([]models.User, error) {
+	memberPointers, err := GetTeamMembers(ctx, db, userID, slug)
+	if err != nil {
+		return nil, err
+	}
+	members := DerefUsers(memberPointers)
+
+	err = provider.NotifyUsers(members, models.NotificationTemplates[models.NewIdent])
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
 }

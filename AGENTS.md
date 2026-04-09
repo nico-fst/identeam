@@ -13,6 +13,16 @@ All code changes must be verified by tests.
 - If tests cannot be executed, explicitly state why.
 - A task is only complete when tests pass.
 
+## Codebase Notes
+- The repo has two main parts: the Go backend in `backend/` and the iOS app in `identeam/`.
+- Backend entrypoint is `backend/main.go`; HTTP routes and handlers live in `backend/api/`.
+- Database access is organized in `backend/internal/db/`; shared request/response and DB models live in `backend/models/`.
+- Auth middleware lives in `backend/middleware/`; helper utilities live in `backend/util/`.
+- The backend can run with SQLite for local/dev flows (`USE_INTERNAL_DB=true`) or Postgres otherwise.
+- Backend tests should live under `backend/test/`.
+- Integration-style backend tests currently live in `backend/test/integration/feature_flow_test.go` and use a temporary SQLite DB via `app.setupRoutes(false)`.
+- For backend work, prefer running tests from `backend/` with `go test ./...` or a targeted package test.
+
 ## Output Requirements
 In the final response, always include:
 1. What was changed

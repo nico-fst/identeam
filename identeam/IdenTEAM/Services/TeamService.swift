@@ -43,11 +43,7 @@ class TeamService {
             let teams = Team.fromDTOs(response.data?.teams ?? [])
             return teams
         default:
-            throw NSError(
-                domain: "TeamService",
-                code: response.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: response.message]
-            )
+            throw TeamError.backend(response.message)
         }
     }
 
@@ -68,13 +64,7 @@ class TeamService {
         case 200:
             return response.data!
         default:
-            throw NSError(
-                domain: "",
-                code: response.statusCode,
-                userInfo: [
-                    NSLocalizedDescriptionKey: response.message
-                ]
-            )
+            throw TeamError.backend(response.message)
         }
     }
 
@@ -90,13 +80,7 @@ class TeamService {
         case 200:
             return response.data!
         default:
-            throw NSError(
-                domain: "",
-                code: response.statusCode,
-                userInfo: [
-                    NSLocalizedDescriptionKey: response.message
-                ]
-            )
+            throw TeamError.backend(response.message)
         }
     }
     
@@ -134,7 +118,6 @@ class TeamService {
         let response: BackendResponse<TeamWeekDTO> =
             try await RequestService.shared.getToBackend(url: url)
 
-        print(response)
         switch response.statusCode {
         case 200:
             let teamWeek = TeamWeek(dto: response.data!)
@@ -152,18 +135,34 @@ class TeamService {
         let response: BackendResponse<Empty> =
             try await RequestService.shared.postToBackend(url: url)
 
-        print(response)
         switch response.statusCode {
         case 200:
             return
         default:
-            throw NSError(
-                domain: "",
-                code: response.statusCode,
-                userInfo: [
-                    NSLocalizedDescriptionKey: response.message
-                ]
-            )
+            throw TeamError.backend(response.message)
+        }
+    }
+    
+    func createIdent(slug: String, text: String) async throws {
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "idents/create"
+        )
+        
+        let formatter = ISO8601DateFormatter()
+        let payload: [String: Any] = [
+            "time": formatter.string(from: Date()),
+            "teamSlug": slug,
+            "userText": text
+        ]
+
+        let response: BackendResponse<IdentDTO> =
+        try await RequestService.shared.postToBackend(url: url, payload: payload)
+
+        switch response.statusCode {
+        case 200:
+            return
+        default:
+            throw TeamError.backend(response.message)
         }
     }
 }

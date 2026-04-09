@@ -27,20 +27,25 @@ type AuthResponseData struct {
 	Created      bool                `json:"created"`
 }
 
+type LoginPasswordPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 // LoginPassword godoc
 // @Summary		Login with email and password
 // @Description	Authenticates a user with email/password and returns a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		models.LoginPasswordPayload	true	"Login payload"
+// @Param			payload	body		LoginPasswordPayload	true	"Login payload"
 // @Success		200		{object}	util.JSONResponse{data=AuthResponseData}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		404		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/auth/password/login [post]
 func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
-	var payload models.LoginPasswordPayload
+	var payload LoginPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
@@ -90,19 +95,26 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type SignupPasswordPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"fullName"`
+	Username string `json:"username"`
+}
+
 // SignupPassword godoc
 // @Summary		Sign up with email and password
 // @Description	Creates a password-based user account and returns a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		models.SignupPasswordPayload	true	"Signup payload"
+// @Param			payload	body		SignupPasswordPayload	true	"Signup payload"
 // @Success		200		{object}	util.JSONResponse{data=AuthResponseData}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/auth/password/signup [post]
 func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
-	var payload models.SignupPasswordPayload
+	var payload SignupPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
@@ -153,12 +165,19 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type AuthApplePayload struct {
+	IdentityToken     string `json:"identityToken"`
+	AuthorizationCode string `json:"authorizationCode"`
+	UserID            string `json:"userID"`
+	FullName          string `json:"fullName"`
+}
+
 // @Summary		Sign in with Apple (native)
 // @Description	Validates the Apple Sign In authorization code, creates or retrieves a user, and returns a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		models.AuthApplePayload	true	"SignIn Payload"
+// @Param			payload	body		AuthApplePayload	true	"SignIn Payload"
 // @Success		200		{object}	util.JSONResponse{data=AuthResponseData}	"Returns the created/retrieved user, a session token and a boolean if the user is new"
 // @Failure		400		{object}	util.JSONResponse					"Invalid JSON or missing authorizationCode"
 // @Failure		500		{object}	util.JSONResponse					"Server error during user creation or session token generation"
@@ -166,7 +185,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
 
-	var payload models.AuthApplePayload
+	var payload AuthApplePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return

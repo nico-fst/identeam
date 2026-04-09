@@ -14,6 +14,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type AddTeamPayload struct {
+	Name    string `json:"name"`
+	Details string `json:"details"`
+}
+
 // AddTeam godoc
 //
 //	@Summary		Create a new team
@@ -22,7 +27,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			payload	body		models.AddTeamPayload	true	"Team data"
+//	@Param			payload	body		AddTeamPayload	true	"Team data"
 //	@Success		200		{object}	util.JSONResponse{data=models.TeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
@@ -34,7 +39,7 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload models.AddTeamPayload
+	var payload AddTeamPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
@@ -168,7 +173,7 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Retrieved teams from user successfully",
 		Data: GetMyTeamsResponse{
-			Teams: models.TeamsToResponses(user.Teams),
+			Teams: models.Teams(user.Teams).ToResponses(),
 		},
 	})
 }
@@ -234,7 +239,7 @@ func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 		resp.Members = append(resp.Members, TeamWeekMember{
 			User:        target.User.ToResponse(),
 			TargetCount: target.TargetCount,
-			Idents:      models.IdentsToResponses(target.Idents),
+			Idents:      models.Idents(target.Idents).ToResponses(),
 		})
 	}
 

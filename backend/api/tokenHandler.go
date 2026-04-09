@@ -10,13 +10,18 @@ import (
 	"net/http"
 )
 
+type UpdateDeviceTokenPayload struct {
+	NewToken string `json:"newToken"`
+	Platform string `json:"platform"`
+}
+
 // UpdateDeviceToken godoc
 // @Summary		Update device token
 // @Description	Updates the device token for the authenticated user. Used for push notifications.
 // @Tags			Device
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		models.UpdateDeviceTokenPayload	true	"UpdateDeviceToken payload"
+// @Param			payload	body		UpdateDeviceTokenPayload	true	"UpdateDeviceToken payload"
 // @Success		200		{object}	util.JSONResponse{data=models.UserResponse}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
@@ -29,7 +34,7 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload models.UpdateDeviceTokenPayload
+	var payload UpdateDeviceTokenPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return

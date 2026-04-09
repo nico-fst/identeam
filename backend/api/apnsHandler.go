@@ -58,16 +58,8 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	memberPointers, err := db.GetTeamMembers(r.Context(), app.DB, user.UserID, slug)
+	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user.UserID, slug)
 	if err != nil {
-		util.ErrorJSON(w, err, http.StatusInternalServerError)
-		return
-	}
-	members := db.DerefUsers(memberPointers)
-
-	err = app.Provider.NotifyUsers(members, models.NotificationTemplates[models.NewIdent])
-	if err != nil {
-		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -75,7 +67,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Success notifying team members",
 		Data: NotifyTeamResponse{
-			Members: models.UsersToResponses(members),
+			Members: models.Users(members).ToResponses(),
 		},
 	})
 }

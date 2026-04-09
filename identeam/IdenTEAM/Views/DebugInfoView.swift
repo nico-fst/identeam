@@ -19,45 +19,64 @@ struct DebugInfoView: View {
     @AppStorage("username") private var username: String?
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
+    
+    struct TextLabeled: View {
+        let label: String
+        let value: String
+        
+        init(_ label: String, _ value: String) {
+            self.label = label
+            self.value = value
+        }
+        
+        var body: some View {
+            VStack(alignment: .leading) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Text(value)
+                    .textSelection(.enabled)
+                    .lineLimit(1)
+            }
+        }
+    }
 
     var body: some View {
-        VStack {
-            Spacer()
-
-            Text("Hello \(fullName ?? "no username") 👋🏼")
-
-            Text("BaseURL: \(AppConfig.apiBaseURL)")
-            Text("DeviceToken: \(deviceToken ?? "no device token")")
-            Text("SessionToken: \(sessionToken ?? "no session token")")
-
-            Spacer()
-
-            Text(authVM.authState.rawValue).bold()
-            Text(userID ?? "no user id")
-            Text(email ?? "no user email")
-            Text(fullName ?? "no user full name")
-            Text(username ?? "no user username")
-
-            Spacer()
-
-            switch authVM.authState {
-            case .unknown:
-                ProgressView("Checking Session...")
-            case .unauthenticated:
-                SignInWithAppleButtonComponent()
-            case .enteringUserDetails:
-                Text("Entering User Details...")
-            case .authenticated:
-                Button("Logout") {
-                    authVM.logout()
+        NavigationStack {
+            List {
+                Section("Device Config") {
+                    TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
+                    TextLabeled("Device Token", deviceToken ?? "")
+                    TextLabeled("Session Token", sessionToken ?? "")
+                }
+                
+                Section("Authentication ⋅ \(authVM.authState.rawValue)") {
+                    TextLabeled("UserID", userID ?? "")
+                    TextLabeled("Email", email ?? "")
+                    TextLabeled("Full Name", fullName ?? "")
+                    TextLabeled("Username", username ?? "")
+                }
+                
+                switch authVM.authState {
+                case .unknown:
+                    ProgressView("Checking Session...")
+                case .unauthenticated:
+                    Text("Please restart the app to log in again")
+                        .foregroundStyle(.red).bold()
+                case .enteringUserDetails:
+                    Text("Entering User Details...")
+                case .authenticated:
+                    CheckTokensButton()
+                    Button("Logout") {
+                        authVM.logout()
+                    }
+                    .foregroundStyle(.red)
                 }
             }
-            CheckTokensButton()
-
-            Spacer()
-        }
-        .task {
-            await authVM.trySiwaLogin(vm: vm)
+            .navigationTitle("Hello \(fullName ?? "(no username)") 👋🏼")
+            .task {
+                await authVM.trySiwaLogin(vm: vm)
+            }
         }
     }
 }
@@ -65,4 +84,5 @@ struct DebugInfoView: View {
 #Preview {
     DebugInfoView()
         .environmentObject(AuthViewModel())
+        .environmentObject(AppViewModel())
 }

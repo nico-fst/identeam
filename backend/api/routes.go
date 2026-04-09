@@ -38,6 +38,10 @@ func (app *App) SetupRoutes() http.Handler {
 	return app.setupRoutes(true)
 }
 
+func (app *App) SetupRoutesWithoutSwagger() http.Handler {
+	return app.setupRoutes(false)
+}
+
 func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 	if enableSwagger {
 		initSwagger()

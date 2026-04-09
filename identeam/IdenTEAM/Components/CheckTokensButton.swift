@@ -21,9 +21,5 @@ struct CheckTokensButton: View {
                 }
             }
         }
-        .padding()
-        .background(Color.blue)
-        .foregroundColor(.white)
-        .cornerRadius(8)
     }
 }

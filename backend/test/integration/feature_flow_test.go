@@ -1,10 +1,11 @@
-package api
+package integration_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"identeam/api"
 	dbpkg "identeam/internal/db"
 	"identeam/models"
 	"net/http"
@@ -51,7 +52,7 @@ type getTeamWeekResponse struct {
 	Members   []teamWeekMemberResponse `json:"members"`
 }
 
-func newFeatureTestApp(t *testing.T) *App {
+func newFeatureTestApp(t *testing.T) *api.App {
 	t.Helper()
 	t.Setenv("SESSION_TOKEN_SECRET", "feature-test-secret")
 
@@ -76,13 +77,13 @@ func newFeatureTestApp(t *testing.T) *App {
 		t.Fatalf("ensure default teams: %v", err)
 	}
 
-	return &App{DB: db}
+	return &api.App{DB: db}
 }
 
 func newFeatureTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	app := newFeatureTestApp(t)
-	return httptest.NewServer(app.setupRoutes(false))
+	return httptest.NewServer(app.SetupRoutesWithoutSwagger())
 }
 
 func doJSONRequest(t *testing.T, client *http.Client, method string, url string, body any, token string) *http.Response {
@@ -145,7 +146,7 @@ func decodeData[T any](t *testing.T, envelope jsonResponseEnvelope) T {
 func signupUser(t *testing.T, serverURL string, email string) authResponseData {
 	t.Helper()
 
-	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/auth/password/signup", models.SignupPasswordPayload{
+	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/auth/password/signup", api.SignupPasswordPayload{
 		Email:    email,
 		Password: "supersafe-password",
 		FullName: "Test User",
@@ -168,7 +169,7 @@ func signupUser(t *testing.T, serverURL string, email string) authResponseData {
 func createTeam(t *testing.T, serverURL string, token string, name string) models.TeamResponse {
 	t.Helper()
 
-	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/teams/create", models.AddTeamPayload{
+	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/teams/create", api.AddTeamPayload{
 		Name:    name,
 		Details: "Flow-Test-Team",
 	}, token)
@@ -258,7 +259,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 
 	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
 
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", models.AddUserTargetPayload{
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
 		TimeStart:   weekDate.Format("2006-01-02"),
 		TeamSlug:    team.Slug,
 		TargetCount: 3,
@@ -279,7 +280,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("expected target count 3, got %d", targetData.TargetCount)
 	}
 
-	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", models.AddIdentPayload{
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Format(time.RFC3339),
 		TeamSlug: team.Slug,
 		UserText: "Completed a meaningful weekly ident.",
@@ -336,8 +337,8 @@ func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
 
 	authData := signupUser(t, server.URL, "profile@example.com")
 
-	updateUserResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/me/update_user", models.UpdateUserPayload{
-		User: models.UpdateUserData{
+	updateUserResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/me/update_user", api.UpdateUserPayload{
+		User: api.UpdateUserData{
 			FullName: "Profile User",
 			Username: "profile-updated",
 		},
@@ -358,7 +359,7 @@ func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
 		t.Fatalf("expected updated username %q, got %q", "profile-updated", updatedUser.Username)
 	}
 
-	updateTokenResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", models.UpdateDeviceTokenPayload{
+	updateTokenResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
 		NewToken: "device-token-123",
 		Platform: "ios",
 	}, authData.SessionToken)
