@@ -8,14 +8,14 @@ import (
 	"identeam/models"
 )
 
-func TestTeamsToResponsesSkipsNilEntries(t *testing.T) {
+func TestTeamsToDTOsSkipsNilEntries(t *testing.T) {
 	teams := models.Teams{
 		{Name: "Alpha", Slug: "alpha", Details: "first"},
 		nil,
 		{Name: "Beta", Slug: "beta", Details: "second"},
 	}
 
-	got := teams.ToResponses()
+	got := teams.ToDTOs()
 	want := []models.TeamResponse{
 		{Name: "Alpha", Slug: "alpha", Details: "first"},
 		{Name: "Beta", Slug: "beta", Details: "second"},
@@ -26,13 +26,13 @@ func TestTeamsToResponsesSkipsNilEntries(t *testing.T) {
 	}
 }
 
-func TestUsersToResponses(t *testing.T) {
+func TestUsersToDTOs(t *testing.T) {
 	users := models.Users{
 		{UserID: "1", Email: "one@example.com", FullName: "One", Username: "one"},
 		{UserID: "2", Email: "two@example.com", FullName: "Two", Username: "two"},
 	}
 
-	got := users.ToResponses()
+	got := users.ToDTOs()
 	want := []models.UserResponse{
 		{UserID: "1", Email: "one@example.com", FullName: "One", Username: "one"},
 		{UserID: "2", Email: "two@example.com", FullName: "Two", Username: "two"},
@@ -43,14 +43,14 @@ func TestUsersToResponses(t *testing.T) {
 	}
 }
 
-func TestIdentsToResponses(t *testing.T) {
+func TestIdentsToDTOs(t *testing.T) {
 	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
 	idents := models.Idents{
 		{Time: now, UserText: "first"},
 		{Time: now.Add(time.Hour), UserText: "second"},
 	}
 
-	got := idents.ToResponses()
+	got := idents.ToDTOs()
 	want := []models.IdentResponse{
 		{Time: now, UserText: "first"},
 		{Time: now.Add(time.Hour), UserText: "second"},

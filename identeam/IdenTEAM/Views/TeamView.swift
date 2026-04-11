@@ -31,8 +31,8 @@ struct TeamView: View {
             if let team {
                 List {
                     Section("Info") {
-                        Text("Slug: \(team.slug)")
-                        Text("Details: \(team.details)")
+                        TextLabeled("Slug", team.slug)
+                        TextLabeled("Details", team.details)
                     }
                     
                     if let teamWeek {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AuthSheetView: View {
     @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var appVM: AppViewModel
+    @EnvironmentObject var vm: AppViewModel
     
 
     var body: some View {
@@ -40,9 +40,9 @@ struct AuthSheetView: View {
                                 do {
                                     try await authVM.tryPasswordLoginOrSignup(
                                         authMode: .login,
-                                        vm: appVM)
+                                        vm: vm)
                                 } catch AuthError.userNotFound {
-                                    try await authVM.tryPasswordLoginOrSignup(authMode: .signup, vm: appVM)
+                                    try await authVM.tryPasswordLoginOrSignup(authMode: .signup, vm: vm)
                                 } catch {
                                     authVM.signupError = error.localizedDescription
                                 }
@@ -101,5 +101,6 @@ struct AuthSheetView: View {
 #Preview {
     AuthSheetView()
         .environmentObject(AuthViewModel())
+        .environmentObject(AppViewModel())
 }
 

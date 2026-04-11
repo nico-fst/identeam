@@ -42,6 +42,8 @@ struct ContentView: View {
                 )
             ) {
                 AuthSheetView()
+                    .environmentObject(authVM)
+                    .environmentObject(vm)
             }
             .alert(item: $vm.alert) { alert in
                 Alert(

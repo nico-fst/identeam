@@ -66,6 +66,6 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Updated user details successfully",
-		Data:    newUser.ToResponse(),
+		Data:    newUser.ToDTO(),
 	})
 }

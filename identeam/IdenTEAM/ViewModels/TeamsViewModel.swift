@@ -18,6 +18,7 @@ class TeamsViewModel: ObservableObject {
     @Published var showingCreateSheet: Bool = false
     @Published var createNameInput: String = ""
     @Published var createDetailsInput: String = ""
+    @Published var createNotificationTemplate: String = ""
     @Published var createError: String = ""
     
     // TeamWeek
@@ -146,7 +147,10 @@ class TeamsViewModel: ObservableObject {
         }
         
         do {
-            let resp = try await TeamService.shared.createTeam(name: createNameInput, details: createDetailsInput)
+            let resp = try await TeamService.shared.createTeam(
+                name: createNameInput,
+                details: createDetailsInput,
+                notificationTemplate: createNotificationTemplate)
             await reloadTeams(ctx: ctx)
             vm.toastMessage = "Let's go! You just created team '\(resp.name)'"
         } catch {

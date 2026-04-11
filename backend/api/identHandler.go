@@ -70,7 +70,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify team about new ident
-	_, err = db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user.UserID, payload.TeamSlug)
+	_, err = db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, payload.TeamSlug, newIdent.UserText)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -79,7 +79,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created Ident, notified team successfully",
-		Data:    ident.ToResponse(),
+		Data:    ident.ToDTO(),
 	})
 }
 
@@ -116,6 +116,6 @@ func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Deleted Ident successfully",
-		Data:    ident.ToResponse(),
+		Data:    ident.ToDTO(),
 	})
 }

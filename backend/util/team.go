@@ -25,3 +25,4 @@ func MakeValidSlug(input string) string {
 
 	return strings.Trim(b.String(), "-")
 }
+

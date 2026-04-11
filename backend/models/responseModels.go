@@ -14,7 +14,7 @@ type UserResponse struct {
 	Username string `json:"username"`
 }
 
-func (u User) ToResponse() UserResponse {
+func (u User) ToDTO() UserResponse {
 	return UserResponse{
 		UserID:   u.UserID,
 		Email:    u.Email,
@@ -25,11 +25,11 @@ func (u User) ToResponse() UserResponse {
 
 type Users []User
 
-func (users Users) ToResponses() []UserResponse {
+func (users Users) ToDTOs() []UserResponse {
 	res := make([]UserResponse, 0, len(users))
 
 	for _, user := range users {
-		res = append(res, user.ToResponse())
+		res = append(res, user.ToDTO())
 	}
 
 	return res
@@ -41,7 +41,7 @@ type TeamResponse struct {
 	Details string `json:"details"`
 }
 
-func (t Team) ToResponse() TeamResponse {
+func (t Team) ToDTO() TeamResponse {
 	return TeamResponse{
 		Name:    t.Name,
 		Slug:    t.Slug,
@@ -51,14 +51,14 @@ func (t Team) ToResponse() TeamResponse {
 
 type Teams []*Team
 
-func (teams Teams) ToResponses() []TeamResponse {
+func (teams Teams) ToDTOs() []TeamResponse {
 	res := make([]TeamResponse, 0, len(teams))
 
 	for _, team := range teams {
 		if team == nil {
 			continue
 		}
-		res = append(res, team.ToResponse())
+		res = append(res, team.ToDTO())
 	}
 
 	return res
@@ -69,7 +69,7 @@ type IdentResponse struct {
 	UserText string    `json:"userText"`
 }
 
-func (i Ident) ToResponse() IdentResponse {
+func (i Ident) ToDTO() IdentResponse {
 	return IdentResponse{
 		Time:     i.Time,
 		UserText: i.UserText,
@@ -78,11 +78,11 @@ func (i Ident) ToResponse() IdentResponse {
 
 type Idents []Ident
 
-func (idents Idents) ToResponses() []IdentResponse {
+func (idents Idents) ToDTOs() []IdentResponse {
 	res := make([]IdentResponse, 0, len(idents))
 
 	for _, ident := range idents {
-		res = append(res, ident.ToResponse())
+		res = append(res, ident.ToDTO())
 	}
 
 	return res
@@ -93,7 +93,7 @@ type UserWeeklyTargetResponse struct {
 	TargetCount uint      `json:"targetCount"`
 }
 
-func (t UserWeeklyTarget) ToResponse() UserWeeklyTargetResponse {
+func (t UserWeeklyTarget) ToDTO() UserWeeklyTargetResponse {
 	return UserWeeklyTargetResponse{
 		TimeStart:   t.TimeStart,
 		TargetCount: t.TargetCount,

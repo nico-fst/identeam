@@ -25,7 +25,7 @@ All code changes must be verified by tests.
 
 ## Output Requirements
 In the final response, always include:
-1. What was changed
-2. Which tests were run
-3. The result of those tests
-4. Any remaining risks or uncertainties
+1. What was changed (if you changed something)
+2. Which tests were run (if you ran tests)
+3. The result of those tests (if you ran tests)
+Discuss remaining risks or uncertainties if there are any.

@@ -331,6 +331,52 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	}
 }
 
+func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T) {
+	server := newFeatureTestServer(t)
+	defer server.Close()
+
+	owner := signupUser(t, server.URL, "owner-no-template@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "No Template Team")
+
+	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
+		TimeStart:   weekDate.Format("2006-01-02"),
+		TeamSlug:    team.Slug,
+		TargetCount: 1,
+	}, owner.SessionToken)
+	if targetResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, targetResp)
+		t.Fatalf("create target failed with status %d: %s", targetResp.StatusCode, envelope.Message)
+	}
+
+	targetEnvelope := decodeEnvelope(t, targetResp)
+	if targetEnvelope.Error {
+		t.Fatalf("create target returned error: %s", targetEnvelope.Message)
+	}
+
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+		Time:     weekDate.Format(time.RFC3339),
+		TeamSlug: team.Slug,
+		UserText: "This ident should not panic.",
+	}, owner.SessionToken)
+
+	if identResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, identResp)
+		t.Fatalf("create ident failed with status %d: %s", identResp.StatusCode, envelope.Message)
+	}
+
+	identEnvelope := decodeEnvelope(t, identResp)
+	if identEnvelope.Error {
+		t.Fatalf("create ident returned error: %s", identEnvelope.Message)
+	}
+
+	identData := decodeData[models.IdentResponse](t, identEnvelope)
+	if identData.UserText != "This ident should not panic." {
+		t.Fatalf("unexpected ident userText: %q", identData.UserText)
+	}
+}
+
 func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
 	server := newFeatureTestServer(t)
 	defer server.Close()
@@ -377,5 +423,65 @@ func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
 	deviceTokenUser := decodeData[models.UserResponse](t, updateTokenEnvelope)
 	if deviceTokenUser.UserID != authData.User.UserID {
 		t.Fatalf("expected device token update for user %q, got %q", authData.User.UserID, deviceTokenUser.UserID)
+	}
+}
+
+func TestFeatureFlow_UpdateDeviceTokenReassignsTokenToNewUserOnSameDevice(t *testing.T) {
+	app := newFeatureTestApp(t)
+	server := httptest.NewServer(app.SetupRoutesWithoutSwagger())
+	defer server.Close()
+
+	firstUser := signupUser(t, server.URL, "siwa@example.com")
+	secondUser := signupUser(t, server.URL, "pass@example.com")
+
+	const sharedDeviceToken = "shared-device-token-123"
+
+	firstResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
+		NewToken: sharedDeviceToken,
+		Platform: "ios",
+	}, firstUser.SessionToken)
+	if firstResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, firstResp)
+		t.Fatalf("first device token update failed with status %d: %s", firstResp.StatusCode, envelope.Message)
+	}
+
+	firstEnvelope := decodeEnvelope(t, firstResp)
+	if firstEnvelope.Error {
+		t.Fatalf("first device token update returned error: %s", firstEnvelope.Message)
+	}
+
+	secondResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
+		NewToken: sharedDeviceToken,
+		Platform: "ios",
+	}, secondUser.SessionToken)
+	if secondResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, secondResp)
+		t.Fatalf("second device token update failed with status %d: %s", secondResp.StatusCode, envelope.Message)
+	}
+
+	secondEnvelope := decodeEnvelope(t, secondResp)
+	if secondEnvelope.Error {
+		t.Fatalf("second device token update returned error: %s", secondEnvelope.Message)
+	}
+
+	var tokens []models.DeviceToken
+	if err := app.DB.Order("id asc").Find(&tokens).Error; err != nil {
+		t.Fatalf("load device tokens: %v", err)
+	}
+
+	if len(tokens) != 1 {
+		t.Fatalf("expected exactly one persisted device token, got %d", len(tokens))
+	}
+	if tokens[0].Token != sharedDeviceToken {
+		t.Fatalf("expected shared device token %q, got %q", sharedDeviceToken, tokens[0].Token)
+	}
+
+	var secondUserModel models.User
+	if err := app.DB.Where("user_id = ?", secondUser.User.UserID).First(&secondUserModel).Error; err != nil {
+		t.Fatalf("load second user: %v", err)
+	}
+
+	if tokens[0].UserID != secondUserModel.ID {
+		t.Fatalf("expected device token to belong to second user id %d, got %d", secondUserModel.ID, tokens[0].UserID)
 	}
 }

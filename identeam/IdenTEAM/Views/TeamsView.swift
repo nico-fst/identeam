@@ -126,12 +126,12 @@ struct TeamsView: View {
     var CreateTeamSheet: some View {
         NavigationStack {
             VStack(spacing: 25) {
-                Text("The name has to be globally unique since it will be used to invite friends.")
+                Text("The Notification Template has to contain {{name}} for the user (e.g.: 'OMG {{name}} ist mies am Gym hitten 🔥).")
                 
                 List {
-                    TextField("Name", text: $teamsVM.createNameInput)
+                    TextField("Unique Name", text: $teamsVM.createNameInput)
                     TextField("Details", text: $teamsVM.createDetailsInput)
-                    
+                    TextField("Notification Template (optional)", text: $teamsVM.createNotificationTemplate)
                 }
                 
                 Text(teamsVM.createError).foregroundStyle(.red)

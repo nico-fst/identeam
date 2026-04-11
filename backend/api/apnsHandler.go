@@ -27,7 +27,16 @@ type NotifyTeamResponse struct {
 func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 	deviceToken := chi.URLParam(r, "deviceToken")
 
-	err := app.Provider.NotifyString(deviceToken, models.NotificationTemplates[models.NewIdent])
+	notification := models.NotificationPayload{
+		APS: models.APS{
+			Alert: models.Alert{
+				Title: "IdenTEAM",
+				Body:  "A notification for your DeviceToken was triggered",
+			},
+		},
+	}
+
+	err := app.Provider.NotifyString(deviceToken, notification)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -58,7 +67,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user.UserID, slug)
+	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, slug, "")
 	if err != nil {
 		return
 	}
@@ -67,7 +76,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Success notifying team members",
 		Data: NotifyTeamResponse{
-			Members: models.Users(members).ToResponses(),
+			Members: models.Users(members).ToDTOs(),
 		},
 	})
 }

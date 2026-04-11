@@ -84,11 +84,12 @@ class TeamService {
         }
     }
     
-    func createTeam(name: String, details: String) async throws -> TeamDTO {
+    func createTeam(name: String, details: String, notificationTemplate: String) async throws -> TeamDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("teams/create")
         let payload: [String: Any] = [
             "name": name,
-            "details": details
+            "details": details,
+            "notificationTemplate": notificationTemplate
         ]
         
         let response: BackendResponse<TeamDTO> = try await RequestService.shared.postToBackend(

@@ -87,7 +87,7 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User:         user.ToResponse(),
+			User:         user.ToDTO(),
 			SessionToken: sessionToken,
 			Created:      false,
 		},
@@ -158,7 +158,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User:         foundUser.ToResponse(),
+			User:         foundUser.ToDTO(),
 			SessionToken: sessionToken,
 			Created:      true,
 		},
@@ -274,7 +274,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Auth successful",
 		Data: AuthResponseData{
-			User:         foundUser.ToResponse(),
+			User:         foundUser.ToDTO(),
 			SessionToken: sessionToken,
 			Created:      created,
 		},

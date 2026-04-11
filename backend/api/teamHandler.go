@@ -15,8 +15,9 @@ import (
 )
 
 type AddTeamPayload struct {
-	Name    string `json:"name"`
-	Details string `json:"details"`
+	Name                 string `json:"name"`
+	Details              string `json:"details"`
+	NotificationTemplate string `json:"notificationTemplate"`
 }
 
 // AddTeam godoc
@@ -46,9 +47,10 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	team := models.Team{
-		Name:    payload.Name,
-		Slug:    util.MakeValidSlug(payload.Name),
-		Details: payload.Details,
+		Name:                 payload.Name,
+		Slug:                 util.MakeValidSlug(payload.Name),
+		Details:              payload.Details,
+		NotificationTemplate: &payload.NotificationTemplate,
 	}
 
 	newTeam, err := db.CreateTeam(r.Context(), app.DB, team)
@@ -66,7 +68,7 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created, joined team successfully",
-		Data:    newTeam.ToResponse(),
+		Data:    newTeam.ToDTO(),
 	})
 }
 
@@ -106,8 +108,8 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Added user to team successfully or already joined",
 		Data: AddUserToTeamResponse{
-			User: user.ToResponse(),
-			Team: team.ToResponse(),
+			User: user.ToDTO(),
+			Team: team.ToDTO(),
 		},
 	})
 }
@@ -142,8 +144,8 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Removed user from team successfully or was no member",
 		Data: AddUserToTeamResponse{
-			User: user.ToResponse(),
-			Team: team.ToResponse(),
+			User: user.ToDTO(),
+			Team: team.ToDTO(),
 		},
 	})
 }
@@ -173,7 +175,7 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Retrieved teams from user successfully",
 		Data: GetMyTeamsResponse{
-			Teams: models.Teams(user.Teams).ToResponses(),
+			Teams: models.Teams(user.Teams).ToDTOs(),
 		},
 	})
 }
@@ -237,9 +239,9 @@ func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 		resp.IdentSum += uint(len(target.Idents))
 
 		resp.Members = append(resp.Members, TeamWeekMember{
-			User:        target.User.ToResponse(),
+			User:        target.User.ToDTO(),
 			TargetCount: target.TargetCount,
-			Idents:      models.Idents(target.Idents).ToResponses(),
+			Idents:      models.Idents(target.Idents).ToDTOs(),
 		})
 	}
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -40,9 +41,10 @@ type DeviceToken struct {
 
 type Team struct {
 	// Public
-	Name    string `gorm:"not null"`
-	Slug    string `gorm:"uniqueIndex"` // for urls
-	Details string
+	Name                 string `gorm:"not null"`
+	Slug                 string `gorm:"uniqueIndex"` // for urls
+	Details              string
+	NotificationTemplate *string
 
 	// GORM & Relations
 	gorm.Model
@@ -51,6 +53,20 @@ type Team struct {
 
 func (team *Team) BeforeSave(tx *gorm.DB) (err error) {
 	team.Slug = strings.ToLower(team.Slug)
+
+	if team.NotificationTemplate != nil {
+		trimmed := strings.TrimSpace(*team.NotificationTemplate)
+		if trimmed == "" {
+			team.NotificationTemplate = nil
+			return nil
+		}
+		team.NotificationTemplate = &trimmed
+
+		if strings.Count(trimmed, "{{name}}") != 1 {
+			return errors.New("notification template must contain {{name}} exactly once")
+		}
+	}
+
 	return nil
 }
 

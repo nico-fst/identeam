@@ -72,6 +72,6 @@ func (app *App) CreateUserTarget(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created UserWeeklyGoal successfully",
-		Data:    target.ToResponse(),
+		Data:    target.ToDTO(),
 	})
 }

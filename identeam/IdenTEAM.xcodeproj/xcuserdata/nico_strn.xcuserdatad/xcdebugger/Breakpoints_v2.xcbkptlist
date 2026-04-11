@@ -14,9 +14,9 @@
             filePath = "identeam/Services/TeamService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "137"
-            endingLineNumber = "137"
-            landmarkName = "fetchTeamWeek(slug:date:)"
+            startingLineNumber = "138"
+            endingLineNumber = "138"
+            landmarkName = "NotifyTeam(slug:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -30,8 +30,8 @@
             filePath = "identeam/ViewModels/TeamsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "35"
-            endingLineNumber = "35"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
             landmarkName = "reloadTeams(ctx:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,9 +46,9 @@
             filePath = "identeam/Services/TeamService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "141"
-            endingLineNumber = "141"
-            landmarkName = "fetchTeamWeek(slug:date:)"
+            startingLineNumber = "142"
+            endingLineNumber = "142"
+            landmarkName = "NotifyTeam(slug:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
