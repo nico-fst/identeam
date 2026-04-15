@@ -19,7 +19,7 @@ type AddUserTargetPayload struct {
 
 // CreateUserTarget godoc
 // @Summary		Create weekly target
-// @Description	Creates a weekly target for the authenticated user in the specified team.
+// @Description	Creates a weekly target for the authenticated user in the specified team using a YYYY-MM-DD start date.
 // @Tags			Targets
 // @Accept			json
 // @Produce		json
@@ -27,6 +27,7 @@ type AddUserTargetPayload struct {
 // @Param			payload	body		AddUserTargetPayload	true	"Weekly target payload"
 // @Success		200		{object}	util.JSONResponse{data=models.UserWeeklyTargetResponse}
 // @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/targets/create [post]
 func (app *App) CreateUserTarget(w http.ResponseWriter, r *http.Request) {

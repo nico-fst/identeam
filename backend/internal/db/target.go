@@ -54,3 +54,13 @@ func GetTeamsWeekTargets(ctx context.Context, db *gorm.DB, teamSlug string, time
 
 	return targets, nil
 }
+
+func GetTeamWeek(ctx context.Context, db *gorm.DB, teamSlug string, timeStart time.Time) (*models.TeamWeekResponse, error) {
+	targets, err := GetTeamsWeekTargets(ctx, db, teamSlug, timeStart)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := models.NewTeamWeekResponse(teamSlug, targets)
+	return &resp, nil
+}

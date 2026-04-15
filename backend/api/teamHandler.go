@@ -23,7 +23,7 @@ type AddTeamPayload struct {
 // AddTeam godoc
 //
 //	@Summary		Create a new team
-//	@Description	Creates a new team owned by the authenticated user
+//	@Description	Creates a new team and immediately adds the authenticated user to it.
 //	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
@@ -31,6 +31,7 @@ type AddTeamPayload struct {
 //	@Param			payload	body		AddTeamPayload	true	"Team data"
 //	@Success		200		{object}	util.JSONResponse{data=models.TeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
+//	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/create [post]
 func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
@@ -80,13 +81,14 @@ type AddUserToTeamResponse struct {
 // JoinTeam godoc
 //
 //	@Summary		Join a team
-//	@Description	Adds the authenticated user to a team identified by its slug
+//	@Description	Adds the authenticated user to the team identified by the slug and returns both user and team data.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
 //	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
+//	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/join/{slug} [post]
 func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
@@ -117,13 +119,14 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 // LeaveTeam godoc
 //
 //	@Summary		Leave a team
-//	@Description	Removes the authenticated user from a team identified by its slug
+//	@Description	Removes the authenticated user from the team identified by the slug and returns both user and team data.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
 //	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
 //	@Failure		400		{object}	util.JSONResponse
+//	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/leave/{slug} [post]
 func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
@@ -157,11 +160,12 @@ type GetMyTeamsResponse struct {
 // GetMyTeams godoc
 //
 //	@Summary		Get my teams
-//	@Description	Returns all teams of the authenticated user.
+//	@Description	Returns all teams currently associated with the authenticated user.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Success		200	{object}	util.JSONResponse{data=GetMyTeamsResponse}
+//	@Failure		401	{object}	util.JSONResponse
 //	@Failure		500	{object}	util.JSONResponse
 //	@Router			/teams/me [get]
 func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
@@ -180,30 +184,18 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type TeamWeekMember struct {
-	User        models.UserResponse    `json:"user"`
-	TargetCount uint                   `json:"targetCount"`
-	Idents      []models.IdentResponse `json:"idents"`
-}
-
-type GetTeamWeekResponse struct {
-	Slug      string           `json:"slug"`
-	TargetSum uint             `json:"targetSum"`
-	IdentSum  uint             `json:"identSum"`
-	Members   []TeamWeekMember `json:"members"`
-}
-
 // GetTeamWeek godoc
 //
 //	@Summary		Get team week overview
-//	@Description	Returns the weekly target and ident summary for all members of a team for the provided week.
+//	@Description	Returns the team week overview, including weekly targets and idents for the provided RFC3339 date.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
 //	@Param			date	query		string	true	"Week date in RFC3339 format"
-//	@Success		200		{object}	util.JSONResponse{data=GetTeamWeekResponse}
+//	@Success		200		{object}	util.JSONResponse{data=models.TeamWeekResponse}
 //	@Failure		400		{object}	util.JSONResponse
+//	@Failure		401		{object}	util.JSONResponse
 //	@Router			/teams/{slug}/week [get]
 func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
@@ -218,36 +210,15 @@ func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targets, err := db.GetTeamsWeekTargets(r.Context(), app.DB, slug, date)
+	teamWeek, err := db.GetTeamWeek(r.Context(), app.DB, slug, date)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
-	resp := GetTeamWeekResponse{
-		Slug:      slug,
-		TargetSum: 0,
-		IdentSum:  0,
-		Members:   []TeamWeekMember{},
-	}
-	if len(targets) > 0 {
-		resp.Slug = targets[0].Team.Slug
-	}
-
-	for _, target := range targets {
-		resp.TargetSum += target.TargetCount
-		resp.IdentSum += uint(len(target.Idents))
-
-		resp.Members = append(resp.Members, TeamWeekMember{
-			User:        target.User.ToDTO(),
-			TargetCount: target.TargetCount,
-			Idents:      models.Idents(target.Idents).ToDTOs(),
-		})
-	}
-
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Retrieved team week successfully",
-		Data:    resp,
+		Data:    teamWeek,
 	})
 }

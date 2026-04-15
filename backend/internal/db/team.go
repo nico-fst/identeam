@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"identeam/internal/apns"
 	"identeam/models"
 	"log"
@@ -10,8 +11,6 @@ import (
 
 	"gorm.io/gorm"
 )
-
-const defaultTeamNotificationTemplate = "{{name}} hat ein neues Ident erstellt."
 
 func stringPtr(s string) *string {
 	return &s
@@ -135,34 +134,54 @@ func GetTeamMembers(ctx context.Context, db *gorm.DB, userID string, teamSlug st
 	return team.Users, nil
 }
 
-func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider, user models.User, slug string, subtitle string) ([]models.User, error) {
+func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider, user models.User, slug string, alert models.Alert) ([]models.User, error) {
 	team, err := GetTeamBySlug(ctx, db, slug)
 	if err != nil {
 		return nil, err
 	}
-
 	members := DerefUsers(team.Users)
-	notificationTemplate := defaultTeamNotificationTemplate
-	if team.NotificationTemplate != nil {
-		notificationTemplate = *team.NotificationTemplate
-	}
-
-	notificationBody := strings.ReplaceAll(notificationTemplate, "{{name}}", user.FullName)
 
 	notification := models.NotificationPayload{
 		APS: models.APS{
-			Alert: models.Alert{
-				Title: "Neuer Ident",
-				Body:  notificationBody,
-			},
+			Alert: alert,
 		},
 	}
 
-	if subtitle != "" {
-		notification.APS.Alert.Subtitle = subtitle
+	err = provider.NotifyUsers(members, notification)
+	if err != nil {
+		return nil, err
 	}
 
-	err = provider.NotifyUsers(members, notification)
+	return members, nil
+}
+
+func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *apns.Provider, ident models.Ident) ([]models.User, error) {
+	var target models.UserWeeklyTarget
+	err := db.Model(&models.UserWeeklyTarget{}).
+		Preload("User").
+		Preload("Team").
+		First(&target, ident.UserWeeklyTargetID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	teamWeek, err := GetTeamWeek(ctx, db, target.Team.Slug, target.TimeStart)
+	if err != nil {
+		return nil, err
+	}
+
+	notificationTemplate := "New Ident from {{name}} 🔥"
+	if target.Team.NotificationTemplate != nil {
+		notificationTemplate = *target.Team.NotificationTemplate
+	}
+
+	alert := models.Alert{
+		Title:    fmt.Sprintf("🔥 [%d/%d] @ %v 🔥", teamWeek.IdentSum, teamWeek.TargetSum, target.Team.Name),
+		Subtitle: strings.ReplaceAll(notificationTemplate, "{{name}}", target.User.FullName),
+		Body:     ident.UserText,
+	}
+
+	members, err := NotifyTeamMembers(ctx, db, provider, target.User, target.Team.Slug, alert)
 	if err != nil {
 		return nil, err
 	}

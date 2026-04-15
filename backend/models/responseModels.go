@@ -88,6 +88,44 @@ func (idents Idents) ToDTOs() []IdentResponse {
 	return res
 }
 
+type TeamWeekMemberResponse struct {
+	User        UserResponse    `json:"user"`
+	TargetCount uint            `json:"targetCount"`
+	Idents      []IdentResponse `json:"idents"`
+}
+
+type TeamWeekResponse struct {
+	Slug      string                   `json:"slug"`
+	TargetSum uint                     `json:"targetSum"`
+	IdentSum  uint                     `json:"identSum"`
+	Members   []TeamWeekMemberResponse `json:"members"`
+}
+
+func NewTeamWeekResponse(teamSlug string, targets []UserWeeklyTarget) TeamWeekResponse {
+	resp := TeamWeekResponse{
+		Slug:      teamSlug,
+		TargetSum: 0,
+		IdentSum:  0,
+		Members:   make([]TeamWeekMemberResponse, 0, len(targets)),
+	}
+
+	if len(targets) > 0 {
+		resp.Slug = targets[0].Team.Slug
+	}
+
+	for _, target := range targets {
+		resp.TargetSum += target.TargetCount
+		resp.IdentSum += uint(len(target.Idents))
+		resp.Members = append(resp.Members, TeamWeekMemberResponse{
+			User:        target.User.ToDTO(),
+			TargetCount: target.TargetCount,
+			Idents:      Idents(target.Idents).ToDTOs(),
+		})
+	}
+
+	return resp
+}
+
 type UserWeeklyTargetResponse struct {
 	TimeStart   time.Time `json:"timeStart"`
 	TargetCount uint      `json:"targetCount"`

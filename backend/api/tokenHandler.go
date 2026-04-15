@@ -17,13 +17,14 @@ type UpdateDeviceTokenPayload struct {
 
 // UpdateDeviceToken godoc
 // @Summary		Update device token
-// @Description	Updates the device token for the authenticated user. Used for push notifications.
+// @Description	Updates the device token and platform for the authenticated user for push notifications.
 // @Tags			Device
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		UpdateDeviceTokenPayload	true	"UpdateDeviceToken payload"
 // @Success		200		{object}	util.JSONResponse{data=models.UserResponse}
 // @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Security		BearerAuth
 // @Router			/token/update_device_token [post]

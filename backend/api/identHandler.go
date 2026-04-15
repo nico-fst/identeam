@@ -22,7 +22,7 @@ type AddIdentPayload struct {
 
 // CreateIdent godoc
 // @Summary		Create ident
-// @Description	Creates an ident for the authenticated user in the team week identified by the payload time and slug.
+// @Description	Creates an ident for the authenticated user in the team week identified by the payload time and team slug, then notifies the team.
 // @Tags			Idents
 // @Accept			json
 // @Produce		json
@@ -30,6 +30,7 @@ type AddIdentPayload struct {
 // @Param			payload	body		AddIdentPayload	true	"Ident payload"
 // @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
 // @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/idents/create [post]
 func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +71,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify team about new ident
-	_, err = db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, payload.TeamSlug, newIdent.UserText)
+	_, err = db.NotifyTeamMembersAboutNewIdent(r.Context(), app.DB, &app.Provider, *ident)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -85,13 +86,14 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 
 // DeleteIdent godoc
 // @Summary		Delete ident
-// @Description	Deletes an ident by ID and returns the deleted ident.
+// @Description	Deletes the ident identified by the path ID and returns the deleted ident.
 // @Tags			Idents
 // @Produce		json
 // @Security		BearerAuth
 // @Param			id	path		int	true	"Ident ID"
 // @Success		200	{object}	util.JSONResponse{data=models.IdentResponse}
 // @Failure		400	{object}	util.JSONResponse
+// @Failure		401	{object}	util.JSONResponse
 // @Failure		500	{object}	util.JSONResponse
 // @Router			/idents/{id} [delete]
 func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {

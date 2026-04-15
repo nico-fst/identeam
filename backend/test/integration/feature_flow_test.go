@@ -377,6 +377,90 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 	}
 }
 
+func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
+	server := newFeatureTestServer(t)
+	defer server.Close()
+
+	owner := signupUser(t, server.URL, "teamweek-owner@example.com")
+	member := signupUser(t, server.URL, "teamweek-member@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "Week Aggregate Team")
+	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/join/"+team.Slug, nil, member.SessionToken)
+	if joinResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, joinResp)
+		t.Fatalf("join team failed with status %d: %s", joinResp.StatusCode, envelope.Message)
+	}
+
+	joinEnvelope := decodeEnvelope(t, joinResp)
+	if joinEnvelope.Error {
+		t.Fatalf("join team returned error: %s", joinEnvelope.Message)
+	}
+
+	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+
+	ownerTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
+		TimeStart:   weekDate.Format("2006-01-02"),
+		TeamSlug:    team.Slug,
+		TargetCount: 3,
+	}, owner.SessionToken)
+	if ownerTargetResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, ownerTargetResp)
+		t.Fatalf("create owner target failed with status %d: %s", ownerTargetResp.StatusCode, envelope.Message)
+	}
+
+	memberTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
+		TimeStart:   weekDate.Format("2006-01-02"),
+		TeamSlug:    team.Slug,
+		TargetCount: 2,
+	}, member.SessionToken)
+	if memberTargetResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, memberTargetResp)
+		t.Fatalf("create member target failed with status %d: %s", memberTargetResp.StatusCode, envelope.Message)
+	}
+
+	ownerIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+		Time:     weekDate.Format(time.RFC3339),
+		TeamSlug: team.Slug,
+		UserText: "Owner ident one.",
+	}, owner.SessionToken)
+	if ownerIdentResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, ownerIdentResp)
+		t.Fatalf("create owner ident failed with status %d: %s", ownerIdentResp.StatusCode, envelope.Message)
+	}
+
+	memberIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+		Time:     weekDate.Add(time.Hour).Format(time.RFC3339),
+		TeamSlug: team.Slug,
+		UserText: "Member ident one.",
+	}, member.SessionToken)
+	if memberIdentResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, memberIdentResp)
+		t.Fatalf("create member ident failed with status %d: %s", memberIdentResp.StatusCode, envelope.Message)
+	}
+
+	weekURL := fmt.Sprintf("%s/teams/%s/week?date=%s", server.URL, team.Slug, weekDate.Format(time.RFC3339))
+	weekResp := doJSONRequest(t, http.DefaultClient, http.MethodGet, weekURL, nil, owner.SessionToken)
+	if weekResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, weekResp)
+		t.Fatalf("get team week failed with status %d: %s", weekResp.StatusCode, envelope.Message)
+	}
+
+	weekEnvelope := decodeEnvelope(t, weekResp)
+	if weekEnvelope.Error {
+		t.Fatalf("get team week returned error: %s", weekEnvelope.Message)
+	}
+
+	weekData := decodeData[getTeamWeekResponse](t, weekEnvelope)
+	if weekData.TargetSum != 5 {
+		t.Fatalf("expected target sum 5, got %d", weekData.TargetSum)
+	}
+	if weekData.IdentSum != 2 {
+		t.Fatalf("expected ident sum 2, got %d", weekData.IdentSum)
+	}
+	if len(weekData.Members) != 2 {
+		t.Fatalf("expected 2 members, got %d", len(weekData.Members))
+	}
+}
+
 func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
 	server := newFeatureTestServer(t)
 	defer server.Close()

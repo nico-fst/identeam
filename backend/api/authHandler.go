@@ -104,7 +104,7 @@ type SignupPasswordPayload struct {
 
 // SignupPassword godoc
 // @Summary		Sign up with email and password
-// @Description	Creates a password-based user account and returns a session token.
+// @Description	Creates a password-based user account and returns the created user plus a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
@@ -173,7 +173,7 @@ type AuthApplePayload struct {
 }
 
 // @Summary		Sign in with Apple (native)
-// @Description	Validates the Apple Sign In authorization code, creates or retrieves a user, and returns a session token.
+// @Description	Exchanges the Apple Sign In authorization code, creates or retrieves the user, and returns a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
@@ -282,12 +282,13 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		Check session
-// @Description	Verifies that the Bearer session token is valid.
+// @Description	Verifies that the Bearer session token is valid and the user can be resolved from the database.
 // @Tags			Auth
 // @Produce		json
 // @Security		BearerAuth
 // @Success		200	{object}	util.JSONResponse{data=models.Empty}
 // @Failure		401	{object}	util.JSONResponse
+// @Failure		500	{object}	util.JSONResponse
 // @Router			/auth/apple/check_session [get]
 func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.GetUserIDFromContext(r.Context())

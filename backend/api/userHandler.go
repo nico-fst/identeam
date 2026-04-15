@@ -21,13 +21,14 @@ type UpdateUserPayload struct {
 
 // UpdateUser godoc
 // @Summary		Update user information
-// @Description	Updates the current user's full name and username.
+// @Description	Updates the current user's full name and username from the nested user payload.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		UpdateUserPayload	true	"User update payload"
 // @Success		200		{object}	util.JSONResponse{data=models.UserResponse}
 // @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
 // @Failure		409		{object}	util.JSONResponse
 // @Failure		422		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse

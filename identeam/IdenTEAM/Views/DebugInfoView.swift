@@ -26,10 +26,10 @@ struct DebugInfoView: View {
                 Section("Device Config") {
                     TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
                     TextLabeled("Device Token", deviceToken ?? "")
-                    TextLabeled("Session Token", sessionToken ?? "")
                 }
                 
                 Section("Authentication ⋅ \(authVM.authState.rawValue)") {
+                    TextLabeled("Session Token", sessionToken ?? "")
                     TextLabeled("UserID", userID ?? "")
                     TextLabeled("Email", email ?? "")
                     TextLabeled("Full Name", fullName ?? "")

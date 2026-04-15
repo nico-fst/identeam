@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"identeam/internal/db"
 	"identeam/middleware"
 	"identeam/models"
@@ -50,13 +51,13 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 
 // NotifyTeam godoc
 // @Summary		Send APNs notification to team
-// @Description	Sends a push notification to all members of a team the authenticated user belongs to.
+// @Description	Sends a push notification to the members of the specified team and returns the notified members.
 // @Tags			APNs
 // @Produce		json
 // @Security		BearerAuth
 // @Param			slug	path		string	true	"Team slug"
 // @Success		200			{object}	util.JSONResponse{data=NotifyTeamResponse}
-// @Failure		400			{object}	util.JSONResponse
+// @Failure		401			{object}	util.JSONResponse
 // @Failure		500			{object}	util.JSONResponse
 // @Router			/notify/team/{slug} [post]
 func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
@@ -67,9 +68,14 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, slug, "")
+	alert := models.Alert{
+		Title: "Notified Team " + slug,
+		Body: "Triggered by " + user.FullName,
+	}
+
+	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, slug, alert)
 	if err != nil {
-		return
+		util.ErrorJSON(w, fmt.Errorf("unable to notify team members about new ident: %v", err), http.StatusInternalServerError)
 	}
 
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
