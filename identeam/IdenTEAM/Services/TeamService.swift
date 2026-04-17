@@ -54,7 +54,7 @@ class TeamService {
 
     func joinTeam(slug: String) async throws -> UserAndTeamResponse {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "teams/join/\(slug)"
+            "teams/\(slug)/join"
         )
 
         let response: BackendResponse<UserAndTeamResponse> =
@@ -70,7 +70,7 @@ class TeamService {
 
     func leaveTeam(slug: String) async throws -> UserAndTeamResponse {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "teams/leave/\(slug)"
+            "teams/\(slug)/leave"
         )
 
         let response: BackendResponse<UserAndTeamResponse> =
@@ -106,15 +106,12 @@ class TeamService {
     }
     
     func fetchTeamWeek(slug: String, date: Date) async throws -> TeamWeek {
-        let base = AppConfig.apiBaseURL.appendingPathComponent("teams/\(slug)/week")
-        var components = URLComponents(url: base, resolvingAgainstBaseURL: false)!
-        
-        let formatter = ISO8601DateFormatter()
-        components.queryItems = [
-            URLQueryItem(name: "date", value: formatter.string(from: date))
-        ]
-        
-        let url = components.url!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "teams/\(slug)/week/\(formatter.string(from: date))"
+        )
 
         let response: BackendResponse<TeamWeekDTO> =
             try await RequestService.shared.getToBackend(url: url)
@@ -157,7 +154,32 @@ class TeamService {
         ]
 
         let response: BackendResponse<IdentDTO> =
-        try await RequestService.shared.postToBackend(url: url, payload: payload)
+            try await RequestService.shared.putToBackend(url: url, payload: payload)
+
+        switch response.statusCode {
+        case 200:
+            return
+        default:
+            throw TeamError.backend(response.message)
+        }
+    }
+
+    func setTarget(slug: String, dateStart: Date, count: Int) async throws {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "teams/\(slug)/targets/\(formatter.string(from: dateStart))"
+        )
+        let payload: [String: Any] = [
+            "targetCount": count
+        ]
+
+        let response: BackendResponse<TargetDTO> =
+            try await RequestService.shared.putToBackend(
+                url: url,
+                payload: payload
+            )
 
         switch response.statusCode {
         case 200:

@@ -51,7 +51,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 
 	mux.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link", "Set-Cookie"},
 		AllowCredentials: true,
@@ -85,13 +85,13 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 
 		r.Get("/teams/me", app.GetMyTeams)
 		r.Post("/teams/create", app.CreateTeam)
-		r.Post("/teams/join/{slug}", app.JoinTeam)
-		r.Post("/teams/leave/{slug}", app.LeaveTeam)
-		r.Get("/teams/{slug}/week", app.GetTeamWeek) // "?date="
-
-		r.Post("/targets/create", app.CreateUserTarget)
-
-		r.Post("/idents/create", app.CreateIdent)
+		r.Post("/teams/{slug}/join", app.JoinTeam)
+		r.Post("/teams/{slug}/leave", app.LeaveTeam)
+		r.Get("/teams/{slug}/week/{dateStart}", app.GetTeamWeek)
+		r.Put("/teams/{slug}/targets/{dateStart}", app.PutUserTarget)
+		
+		r.Post("/idents/create", app.CreateIdent) // TODO auch {dateStart} mit 2006-01-01 date format
+		r.Put("/idents/create", app.CreateIdent)
 		r.Delete("/idents/{id}", app.DeleteIdent)
 
 		r.Post("/notify/team/{slug}", app.NotifyTeam)

@@ -90,7 +90,7 @@ type AddUserToTeamResponse struct {
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
-//	@Router			/teams/join/{slug} [post]
+//	@Router			/teams/{slug}/join [post]
 func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -128,7 +128,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
-//	@Router			/teams/leave/{slug} [post]
+//	@Router			/teams/{slug}/leave [post]
 func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -199,14 +199,15 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 //	@Router			/teams/{slug}/week [get]
 func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	dateParam := r.URL.Query().Get("date")
-	date, err := time.Parse(time.RFC3339, dateParam)
+	dateParam := chi.URLParam(r, "dateStart")
+	date, err := time.Parse("2006-01-02", dateParam)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
+
 	if slug == "" || dateParam == "" {
-		util.ErrorJSON(w, errors.New("{slug} and ?date= must be specified"), http.StatusBadRequest)
+		util.ErrorJSON(w, errors.New("{slug} and {dateStart} must be specified"), http.StatusBadRequest)
 		return
 	}
 

@@ -14,8 +14,8 @@
             filePath = "identeam/Services/TeamService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "138"
-            endingLineNumber = "138"
+            startingLineNumber = "131"
+            endingLineNumber = "131"
             landmarkName = "NotifyTeam(slug:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "identeam/Services/TeamService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
+            startingLineNumber = "135"
+            endingLineNumber = "135"
             landmarkName = "NotifyTeam(slug:)"
             landmarkType = "7">
          </BreakpointContent>

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.0+7] - 2026-04-17
+
+### Added
+
+- iOS: Creation of User Targets
+
 ## [1.4.0+6] - 2026-04-15
 
 ### Added

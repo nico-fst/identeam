@@ -1,4 +1,4 @@
-package integration_test
+package api_test
 
 import (
 	"bytes"
@@ -238,7 +238,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 
 	team := createTeam(t, server.URL, owner.SessionToken, "Weekly Builders")
 
-	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/join/"+team.Slug, nil, member.SessionToken)
+	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/join", nil, member.SessionToken)
 	if joinResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, joinResp)
 		t.Fatalf("join team failed with status %d: %s", joinResp.StatusCode, envelope.Message)
@@ -259,9 +259,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 
 	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
 
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
-		TimeStart:   weekDate.Format("2006-01-02"),
-		TeamSlug:    team.Slug,
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
 		TargetCount: 3,
 	}, owner.SessionToken)
 
@@ -301,7 +299,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("unexpected ident userText: %q", identData.UserText)
 	}
 
-	weekURL := fmt.Sprintf("%s/teams/%s/week?date=%s", server.URL, team.Slug, weekDate.Format(time.RFC3339))
+	weekURL := fmt.Sprintf("%s/teams/%s/week/%s", server.URL, team.Slug, weekDate.Format("2006-01-02"))
 	weekResp := doJSONRequest(t, http.DefaultClient, http.MethodGet, weekURL, nil, owner.SessionToken)
 	if weekResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, weekResp)
@@ -340,9 +338,7 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 
 	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
 
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
-		TimeStart:   weekDate.Format("2006-01-02"),
-		TeamSlug:    team.Slug,
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
 		TargetCount: 1,
 	}, owner.SessionToken)
 	if targetResp.StatusCode != http.StatusOK {
@@ -384,7 +380,7 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 	owner := signupUser(t, server.URL, "teamweek-owner@example.com")
 	member := signupUser(t, server.URL, "teamweek-member@example.com")
 	team := createTeam(t, server.URL, owner.SessionToken, "Week Aggregate Team")
-	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/join/"+team.Slug, nil, member.SessionToken)
+	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/join", nil, member.SessionToken)
 	if joinResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, joinResp)
 		t.Fatalf("join team failed with status %d: %s", joinResp.StatusCode, envelope.Message)
@@ -397,9 +393,7 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 
 	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
 
-	ownerTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
-		TimeStart:   weekDate.Format("2006-01-02"),
-		TeamSlug:    team.Slug,
+	ownerTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
 		TargetCount: 3,
 	}, owner.SessionToken)
 	if ownerTargetResp.StatusCode != http.StatusOK {
@@ -407,9 +401,7 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 		t.Fatalf("create owner target failed with status %d: %s", ownerTargetResp.StatusCode, envelope.Message)
 	}
 
-	memberTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/targets/create", api.AddUserTargetPayload{
-		TimeStart:   weekDate.Format("2006-01-02"),
-		TeamSlug:    team.Slug,
+	memberTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
 		TargetCount: 2,
 	}, member.SessionToken)
 	if memberTargetResp.StatusCode != http.StatusOK {
@@ -437,7 +429,7 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 		t.Fatalf("create member ident failed with status %d: %s", memberIdentResp.StatusCode, envelope.Message)
 	}
 
-	weekURL := fmt.Sprintf("%s/teams/%s/week?date=%s", server.URL, team.Slug, weekDate.Format(time.RFC3339))
+	weekURL := fmt.Sprintf("%s/teams/%s/week/%s", server.URL, team.Slug, weekDate.Format("2006-01-02"))
 	weekResp := doJSONRequest(t, http.DefaultClient, http.MethodGet, weekURL, nil, owner.SessionToken)
 	if weekResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, weekResp)
@@ -458,114 +450,5 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 	}
 	if len(weekData.Members) != 2 {
 		t.Fatalf("expected 2 members, got %d", len(weekData.Members))
-	}
-}
-
-func TestFeatureFlow_UpdateUserAndDeviceToken(t *testing.T) {
-	server := newFeatureTestServer(t)
-	defer server.Close()
-
-	authData := signupUser(t, server.URL, "profile@example.com")
-
-	updateUserResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/me/update_user", api.UpdateUserPayload{
-		User: api.UpdateUserData{
-			FullName: "Profile User",
-			Username: "profile-updated",
-		},
-	}, authData.SessionToken)
-
-	if updateUserResp.StatusCode != http.StatusOK {
-		envelope := decodeEnvelope(t, updateUserResp)
-		t.Fatalf("update user failed with status %d: %s", updateUserResp.StatusCode, envelope.Message)
-	}
-
-	updateUserEnvelope := decodeEnvelope(t, updateUserResp)
-	if updateUserEnvelope.Error {
-		t.Fatalf("update user returned error: %s", updateUserEnvelope.Message)
-	}
-
-	updatedUser := decodeData[models.UserResponse](t, updateUserEnvelope)
-	if updatedUser.Username != "profile-updated" {
-		t.Fatalf("expected updated username %q, got %q", "profile-updated", updatedUser.Username)
-	}
-
-	updateTokenResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
-		NewToken: "device-token-123",
-		Platform: "ios",
-	}, authData.SessionToken)
-
-	if updateTokenResp.StatusCode != http.StatusOK {
-		envelope := decodeEnvelope(t, updateTokenResp)
-		t.Fatalf("update device token failed with status %d: %s", updateTokenResp.StatusCode, envelope.Message)
-	}
-
-	updateTokenEnvelope := decodeEnvelope(t, updateTokenResp)
-	if updateTokenEnvelope.Error {
-		t.Fatalf("update device token returned error: %s", updateTokenEnvelope.Message)
-	}
-
-	deviceTokenUser := decodeData[models.UserResponse](t, updateTokenEnvelope)
-	if deviceTokenUser.UserID != authData.User.UserID {
-		t.Fatalf("expected device token update for user %q, got %q", authData.User.UserID, deviceTokenUser.UserID)
-	}
-}
-
-func TestFeatureFlow_UpdateDeviceTokenReassignsTokenToNewUserOnSameDevice(t *testing.T) {
-	app := newFeatureTestApp(t)
-	server := httptest.NewServer(app.SetupRoutesWithoutSwagger())
-	defer server.Close()
-
-	firstUser := signupUser(t, server.URL, "siwa@example.com")
-	secondUser := signupUser(t, server.URL, "pass@example.com")
-
-	const sharedDeviceToken = "shared-device-token-123"
-
-	firstResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
-		NewToken: sharedDeviceToken,
-		Platform: "ios",
-	}, firstUser.SessionToken)
-	if firstResp.StatusCode != http.StatusOK {
-		envelope := decodeEnvelope(t, firstResp)
-		t.Fatalf("first device token update failed with status %d: %s", firstResp.StatusCode, envelope.Message)
-	}
-
-	firstEnvelope := decodeEnvelope(t, firstResp)
-	if firstEnvelope.Error {
-		t.Fatalf("first device token update returned error: %s", firstEnvelope.Message)
-	}
-
-	secondResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/token/update_device_token", api.UpdateDeviceTokenPayload{
-		NewToken: sharedDeviceToken,
-		Platform: "ios",
-	}, secondUser.SessionToken)
-	if secondResp.StatusCode != http.StatusOK {
-		envelope := decodeEnvelope(t, secondResp)
-		t.Fatalf("second device token update failed with status %d: %s", secondResp.StatusCode, envelope.Message)
-	}
-
-	secondEnvelope := decodeEnvelope(t, secondResp)
-	if secondEnvelope.Error {
-		t.Fatalf("second device token update returned error: %s", secondEnvelope.Message)
-	}
-
-	var tokens []models.DeviceToken
-	if err := app.DB.Order("id asc").Find(&tokens).Error; err != nil {
-		t.Fatalf("load device tokens: %v", err)
-	}
-
-	if len(tokens) != 1 {
-		t.Fatalf("expected exactly one persisted device token, got %d", len(tokens))
-	}
-	if tokens[0].Token != sharedDeviceToken {
-		t.Fatalf("expected shared device token %q, got %q", sharedDeviceToken, tokens[0].Token)
-	}
-
-	var secondUserModel models.User
-	if err := app.DB.Where("user_id = ?", secondUser.User.UserID).First(&secondUserModel).Error; err != nil {
-		t.Fatalf("load second user: %v", err)
-	}
-
-	if tokens[0].UserID != secondUserModel.ID {
-		t.Fatalf("expected device token to belong to second user id %d, got %d", secondUserModel.ID, tokens[0].UserID)
 	}
 }

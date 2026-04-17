@@ -1,9 +1,11 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"identeam/models"
 	"os"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -55,4 +57,21 @@ func ConnectSqlite() (*gorm.DB, error) {
 	)
 
 	return db, nil
+}
+
+func IsDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return true
+	}
+
+	msg := strings.ToLower(err.Error())
+
+	return strings.Contains(msg, "unique constraint failed") ||
+		strings.Contains(msg, "duplicate key value violates unique constraint") ||
+		strings.Contains(msg, "duplicated key not allowed") ||
+		strings.Contains(msg, "error 1062")
 }

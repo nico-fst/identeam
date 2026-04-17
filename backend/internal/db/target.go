@@ -25,11 +25,38 @@ func CreateUserWeeklyTarget(ctx context.Context, db *gorm.DB, target models.User
 	return &target, nil
 }
 
+func UpdateUserWeeklyTargetCount(ctx context.Context, db *gorm.DB, targetID uint, newCount int) (*models.UserWeeklyTarget, error) {
+	var target models.UserWeeklyTarget
+	if err := db.Where("id = ?", targetID).First(&target).Error; err != nil {
+		return nil, err
+	}
+
+	updates := map[string]interface{}{
+		"TargetCount": newCount,
+	}
+
+	if err := db.Model(&target).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	var newTarget models.UserWeeklyTarget
+	if err := db.Where("id = ?", targetID).First(&newTarget).Error; err != nil {
+		return nil, err
+	}
+	return &newTarget, nil
+}
+
 func GetUserWeeklyTargetByTimeUserTeam(ctx context.Context, db *gorm.DB, time time.Time, userID uint, teamSlug string) (*models.UserWeeklyTarget, error) {
 	var target models.UserWeeklyTarget
 	err := db.Model(&models.UserWeeklyTarget{}).
 		Joins("Team").
-		Where("user_weekly_targets.time_start = ? AND user_weekly_targets.user_id = ? AND Team.slug = ?", util.TimeToWeekStart(time), userID, teamSlug).
+		Where(`user_weekly_targets.time_start = ? 
+				AND user_weekly_targets.user_id = ? 
+				AND "Team"."slug" = ?`,
+			util.TimeToWeekStart(time),
+			userID,
+			teamSlug,
+		).
 		First(&target).Error
 	if err != nil {
 		log.Printf("ERROR looking up UserWeeklyTarget by time %v, userID %v, teamSlug %v: %v", time, userID, teamSlug, err)
@@ -45,11 +72,11 @@ func GetTeamsWeekTargets(ctx context.Context, db *gorm.DB, teamSlug string, time
 		Joins("Team").
 		Preload("User").
 		Preload("Idents").
-		Where("team.slug = ? AND user_weekly_targets.time_start = ?", teamSlug, util.TimeToWeekStart(timeStart)).
+		Where(`"Team"."slug" = ? AND user_weekly_targets.time_start = ?`, teamSlug, util.TimeToWeekStart(timeStart)).
 		Find(&targets).Error
 	if err != nil {
 		log.Printf("ERROR looking up TeamsWeekTargets for slug %v in week of %v: %v", teamSlug, timeStart, err)
-		return nil, db.Error
+		return nil, err
 	}
 
 	return targets, nil

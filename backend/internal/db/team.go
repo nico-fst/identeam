@@ -178,7 +178,30 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *
 	alert := models.Alert{
 		Title:    fmt.Sprintf("🔥 [%d/%d] @ %v 🔥", teamWeek.IdentSum, teamWeek.TargetSum, target.Team.Name),
 		Subtitle: strings.ReplaceAll(notificationTemplate, "{{name}}", target.User.FullName),
-		Body:     ident.UserText,
+		Body:     target.User.FullName + ": " + ident.UserText,
+	}
+
+	members, err := NotifyTeamMembers(ctx, db, provider, target.User, target.Team.Slug, alert)
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
+func NotifyTeamMembersAboutTargetSet(ctx context.Context, db *gorm.DB, provider *apns.Provider, targetID uint) ([]models.User, error) {
+	var target models.UserWeeklyTarget
+	err := db.Model(&models.UserWeeklyTarget{}).
+		Preload("User").
+		Preload("Team").
+		First(&target, targetID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	alert := models.Alert{
+		Title: fmt.Sprintf("🔥 %v 🔥", target.Team.Name),
+		Body:  fmt.Sprintf("%v set Target to %d", target.User.FullName, target.TargetCount),
 	}
 
 	members, err := NotifyTeamMembers(ctx, db, provider, target.User, target.Team.Slug, alert)

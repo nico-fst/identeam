@@ -11,6 +11,8 @@ import SwiftUI
 struct TeamView: View {
     let slug: String
     
+    @AppStorage("username") private var username: String = ""
+    
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var teamVM: TeamViewModel
@@ -68,13 +70,42 @@ struct TeamView: View {
                             Text("No Info...").opacity(0.25)
                         }
                     }
-                    
-                    Section("New Ident") {
-                        TextField("Tell your members about your ident...", text: $teamVM.createIdentUserText)
-                        
-                        Button("Create Ident") {
+
+                    Section("My Target") {
+                        Picker("Target", selection: $teamVM.selectedTargetCount) {
+                            ForEach(1...7, id: \.self) { count in
+                                Text("\(count)").tag(count)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Button("Set Target") {
                             Task {
-                                await teamVM.tryCreatingIdent(slug: slug, vm: vm, ctx: modelContext, teamsVM: teamsVM)
+                                await teamVM.trySettingTarget(
+                                    slug: team.slug,
+                                    vm: vm,
+                                    ctx: modelContext,
+                                    teamsVM: teamsVM
+                                )
+                            }
+                        }
+                    }
+                    
+                    if (teamWeek?.members.contains(where: {
+                        $0.user.username == username && $0.targetCount > 0
+                    }) ?? false) {
+                        Section("New Ident") {
+                            TextField("Tell your members about your ident...", text: $teamVM.createIdentUserText)
+                            
+                            Button("Create Ident") {
+                                Task {
+                                    await teamVM.tryCreatingIdent(
+                                        slug: slug,
+                                        vm: vm,
+                                        ctx: modelContext,
+                                        teamsVM: teamsVM
+                                    )
+                                }
                             }
                         }
                     }

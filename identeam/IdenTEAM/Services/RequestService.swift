@@ -22,6 +22,12 @@ enum RequestServiceError: Error {
     case decodingDataFailed(reason: String)
 }
 
+enum HTTPMethod: String {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+}
+
 class RequestService {
     @AppStorage("sessionToken") private var sessionToken: String?
 
@@ -33,15 +39,18 @@ class RequestService {
         return decoder
     }
 
-    func postToBackend<T: Decodable>(
+    private func sendToBackend<T: Decodable>(
         url: URL,
+        method: HTTPMethod,
         payload: [String: Any]? = nil,
     ) async throws
         -> BackendResponse<T>
     {
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = method.rawValue
+        if method == .post || method == .put {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         if let token = sessionToken, !token.isEmpty {
             request.setValue(
                 "Bearer \(sessionToken ?? "")",
@@ -60,11 +69,11 @@ class RequestService {
             }
         }
 
-        print("POST \(url.absoluteString)")
+        print("\(method.rawValue) \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(
             for: request
         )
-        print("---> \(String(data: data, encoding: .utf8))")
+        print("---> \(String(describing: String(data: data, encoding: .utf8)))")
 
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
@@ -100,55 +109,32 @@ class RequestService {
         )
     }
 
-    func getToBackend<T: Decodable>(url: URL) async throws -> BackendResponse<T>
-    {
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        if let token = sessionToken, !token.isEmpty {
-            request.setValue(
-                "Bearer \(sessionToken ?? "")",
-                forHTTPHeaderField: "Authorization"
-            )
-        }
-
-        print("GET \(url.absoluteString)")
-        let (data, response) = try await URLSession.shared.data(
-            for: request
+    func postToBackend<T: Decodable>(
+        url: URL,
+        payload: [String: Any]? = nil,
+    ) async throws -> BackendResponse<T> {
+        try await sendToBackend(
+            url: url,
+            method: .post,
+            payload: payload
         )
-        print("---> \(String(data: data, encoding: .utf8))")
+    }
 
-        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+    func putToBackend<T: Decodable>(
+        url: URL,
+        payload: [String: Any]? = nil,
+    ) async throws -> BackendResponse<T> {
+        try await sendToBackend(
+            url: url,
+            method: .put,
+            payload: payload
+        )
+    }
 
-        // try decoding json
-        let json =
-            try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        let error = json?["error"] as? Bool ?? false
-        let message = json?["message"] as? String ?? ""
-
-        var decoded: T? = nil
-        if (200...299).contains(statusCode) {  // only OKs have body
-            if let dataObject = json?["data"] {
-                let dataJSON = try JSONSerialization.data(
-                    withJSONObject: dataObject
-                )
-                decoded = try decoder.decode(T.self, from: dataJSON)
-            }
-        } else if statusCode == 401 {
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .didReceiveUnauthorized,
-                    object: nil
-                )
-            }
-        }
-
-        return BackendResponse(
-            statusCode: statusCode,
-            rawData: data,
-            error: error,
-            message: message,
-            data: decoded  // T?
+    func getToBackend<T: Decodable>(url: URL) async throws -> BackendResponse<T> {
+        try await sendToBackend(
+            url: url,
+            method: .get
         )
     }
 }
