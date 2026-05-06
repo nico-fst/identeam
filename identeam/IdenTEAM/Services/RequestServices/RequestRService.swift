@@ -28,10 +28,10 @@ enum HTTPMethod: String {
     case put = "PUT"
 }
 
-class RequestService {
+class RequestRService {
     @AppStorage("sessionToken") private var sessionToken: String?
 
-    static let shared = RequestService()
+    static let shared = RequestRService()
     
     private var decoder: JSONDecoder {
         let decoder = JSONDecoder()

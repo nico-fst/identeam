@@ -277,6 +277,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = IdenTEAM;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos for Idents";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This will allow attaching your location to your Idents";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add photos of your idents you capture to your library";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -319,6 +323,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = IdenTEAM;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos for Idents";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This will allow attaching your location to your Idents";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add photos of your idents you capture to your library";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

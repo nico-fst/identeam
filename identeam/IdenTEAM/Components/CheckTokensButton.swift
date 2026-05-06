@@ -12,7 +12,7 @@ struct CheckTokensButton: View {
             Task {
                 do {
                     // if isValid
-                    let _ = try await AuthService.shared
+                    let _ = try await AuthRService.shared
                         .letBackendValidateSessionToken()
                     vm.toastMessage = "Token is valid :)"
                     vm.showAlert("Token Check", "Token is valid :)")

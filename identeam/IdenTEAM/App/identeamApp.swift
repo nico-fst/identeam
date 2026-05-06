@@ -17,6 +17,7 @@ struct identeamApp: App {
     @StateObject private var teamsVM = TeamsViewModel()
     @StateObject private var teamVM = TeamViewModel()
     @StateObject private var navVM = NavigationViewModel()
+    @StateObject private var cameraVM = CameraViewModel()
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self])
@@ -44,5 +45,6 @@ struct identeamApp: App {
         .environmentObject(teamVM)
         .environmentObject(vm)
         .environmentObject(navVM)
+        .environmentObject(cameraVM)
     }
 }

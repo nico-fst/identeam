@@ -16,6 +16,7 @@ enum Route: Hashable {
 enum AppTab: Hashable {
     case teams
     case debug
+    case create
 }
 
 class NavigationViewModel: ObservableObject {

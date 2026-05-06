@@ -21,9 +21,15 @@ struct ContentView: View {
                 Tab("Teams", systemImage: "person.2.fill", value: AppTab.teams) {
                     TeamsView()
                 }
+                
+                Tab("Ident", systemImage: "plus", value: AppTab.create) {
+                   IdentingView()
+                }
+                
                 Tab("Debug", systemImage: "info.circle.fill", value: AppTab.debug) {
                     DebugInfoView()
                 }
+                
             }
             .sheet(
                 isPresented: Binding<Bool>(

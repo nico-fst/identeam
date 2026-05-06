@@ -19,10 +19,10 @@ enum TokenError: LocalizedError {
     }
 }
 
-class TokenService {
+class TokenRService {
     @AppStorage("deviceToken") private var deviceToken: String?
 
-    static let shared = TokenService()
+    static let shared = TokenRService()
 
     /// tries propagating current deviceToken to backend
     func sendDeviceTokenToBackend() async throws {
@@ -37,7 +37,7 @@ class TokenService {
             "platform": "ios",
         ]
 
-        let _: BackendResponse<UserDTO> = try await RequestService.shared
+        let _: BackendResponse<UserDTO> = try await RequestRService.shared
             .postToBackend(
                 url: url,
                 payload: payload

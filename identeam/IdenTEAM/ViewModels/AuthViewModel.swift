@@ -58,7 +58,7 @@ class AuthViewModel: ObservableObject {
         guard fullnameInput != "", usernameInput != "" else { return }
         
         do {
-            let newUser = try await UserService.shared
+            let newUser = try await UserRService.shared
                 .requestUserDetailsChange(
                     fullName: fullnameInput,
                     username: usernameInput
@@ -91,7 +91,7 @@ class AuthViewModel: ObservableObject {
         }
 
         do {
-            let response = try await AuthService.shared
+            let response = try await AuthRService.shared
                 .letBackendValidateSessionToken()
             if response.statusCode == 401 {
                 logout()
@@ -116,7 +116,7 @@ class AuthViewModel: ObservableObject {
         }
 
         do {
-            let response = try await AuthService.shared.sendPasswordFlowToBackend(
+            let response = try await AuthRService.shared.sendPasswordFlowToBackend(
                 authMode: authMode,
                 email: emailInput,
                 password: passwordInput
@@ -131,7 +131,7 @@ class AuthViewModel: ObservableObject {
                 created: response.created
             )
             
-            try await TokenService.shared.sendDeviceTokenToBackend()
+            try await TokenRService.shared.sendDeviceTokenToBackend()
         } catch {
             throw error
         }

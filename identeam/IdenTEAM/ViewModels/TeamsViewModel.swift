@@ -33,7 +33,7 @@ class TeamsViewModel: ObservableObject {
             for team in oldTeams { modelContext.delete(team) }
             
             // save new teams
-            let newTeams: [Team] = try await TeamService.shared.fetchMyTeams()
+            let newTeams: [Team] = try await TeamRService.shared.fetchMyTeams()
             for team in newTeams { modelContext.insert(team) }
         } catch {
             print("ERROR replacing cached Teams with fetched ones: ", error)
@@ -55,7 +55,7 @@ class TeamsViewModel: ObservableObject {
                 modelContext.delete(team)
             }
 
-            let newTeamWeek: TeamWeek = try await TeamService.shared.fetchTeamWeek(
+            let newTeamWeek: TeamWeek = try await TeamRService.shared.fetchTeamWeek(
                 slug: slug,
                 date: selectedWeek
             )
@@ -105,7 +105,7 @@ class TeamsViewModel: ObservableObject {
         
         do {
             try await Task.sleep(nanoseconds: 500_000_000)  // debugging ProgressView() in ToolbarItem
-            let resp = try await TeamService.shared.joinTeam(
+            let resp = try await TeamRService.shared.joinTeam(
                 slug: joinSlugInput
             )
             
@@ -128,7 +128,7 @@ class TeamsViewModel: ObservableObject {
         }
         
         do {
-            let resp = try await TeamService.shared.leaveTeam(slug: slug)
+            let resp = try await TeamRService.shared.leaveTeam(slug: slug)
             await reloadTeams(ctx: ctx)
             vm.toastMessage =
             "You just left '\(resp.team.name)' (heartbreaking)"
@@ -147,7 +147,7 @@ class TeamsViewModel: ObservableObject {
         }
         
         do {
-            let resp = try await TeamService.shared.createTeam(
+            let resp = try await TeamRService.shared.createTeam(
                 name: createNameInput,
                 details: createDetailsInput,
                 notificationTemplate: createNotificationTemplate)

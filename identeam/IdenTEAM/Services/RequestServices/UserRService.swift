@@ -20,8 +20,8 @@ enum UserError: LocalizedError {
     }
 }
 
-class UserService {
-    static let shared = UserService()
+class UserRService {
+    static let shared = UserRService()
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -44,7 +44,7 @@ class UserService {
             ]
         ]
 
-        let response: BackendResponse<UserDTO> = try await RequestService.shared
+        let response: BackendResponse<UserDTO> = try await RequestRService.shared
             .postToBackend(url: url, payload: payload)
 
         switch response.statusCode {

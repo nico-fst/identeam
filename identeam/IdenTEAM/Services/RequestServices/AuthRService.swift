@@ -40,10 +40,10 @@ struct AuthResponse: Decodable {
     let created: Bool  // == new user was creted in backend
 }
 
-class AuthService {
+class AuthRService {
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
-    static let shared = AuthService()
+    static let shared = AuthRService()
 
     /// Exchanges identityToken and authorizationCode for sessionToken
     /// - Returns: custom JWT sessionToken valid for 30d
@@ -64,7 +64,7 @@ class AuthService {
         ]
 
         let response: BackendResponse<AuthResponse> =
-            try await RequestService.shared.postToBackend(
+            try await RequestRService.shared.postToBackend(
                 url: url,
                 payload: payload
             )
@@ -84,7 +84,7 @@ class AuthService {
             throw AuthError.emptySessionToken
         }
 
-        let response: BackendResponse<Empty> = try await RequestService.shared
+        let response: BackendResponse<Empty> = try await RequestRService.shared
             .getToBackend(url: url)
 
         return response
@@ -105,7 +105,7 @@ class AuthService {
         
         do {
             let response: BackendResponse<AuthResponse> =
-                try await RequestService.shared.postToBackend(
+                try await RequestRService.shared.postToBackend(
                     url: url,
                     payload: payload
                 )

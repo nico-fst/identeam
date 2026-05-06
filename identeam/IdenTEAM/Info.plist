@@ -4,6 +4,8 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL_DYNAMIC)</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Notifications will remind you of Idents and provide updates of team members</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

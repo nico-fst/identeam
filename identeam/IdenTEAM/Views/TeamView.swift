@@ -114,7 +114,7 @@ struct TeamView: View {
                         Button("Notify Team") {
                             Task {
                                 do {
-                                    try await TeamService.shared.NotifyTeam(slug: team.slug)
+                                    try await TeamRService.shared.NotifyTeam(slug: team.slug)
                                 } catch {
                                     vm.showAlert(
                                         "Error notifying team",

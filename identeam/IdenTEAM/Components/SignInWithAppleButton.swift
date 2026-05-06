@@ -61,7 +61,7 @@ struct SignInWithAppleButtonComponent: View {
             )
 
             Task {
-                let response = try await AuthService.shared
+                let response = try await AuthRService.shared
                     .sendAuthFlowToBackend(
                         identityToken: identityToken,
                         authorizationCode: authorizationCode,
@@ -78,7 +78,7 @@ struct SignInWithAppleButtonComponent: View {
                     created: response.created
                 )
 
-                try await TokenService.shared.sendDeviceTokenToBackend()
+                try await TokenRService.shared.sendDeviceTokenToBackend()
             }
         }
     }
