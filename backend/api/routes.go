@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"identeam/internal/apns"
 	"identeam/internal/db"
+	"identeam/internal/media"
 	"identeam/middleware"
 	"log"
 	"net/http"
@@ -20,6 +21,7 @@ import (
 type App struct {
 	Provider apns.Provider
 	DB       *gorm.DB
+	Media    *media.R2Client
 }
 
 func initSwagger() {
@@ -81,6 +83,9 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 
 		r.Post("/token/update_device_token", app.UpdateDeviceToken)
 
+		r.Get("/me", app.GetMe)
+		r.Post("/me/avatar/get_upload_url", app.GetAvatarUploadURL)
+		r.Post("/me/avatar/commit", app.CommitAvatarPayload)
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift
 
 		r.Get("/teams/me", app.GetMyTeams)
@@ -89,7 +94,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 		r.Post("/teams/{slug}/leave", app.LeaveTeam)
 		r.Get("/teams/{slug}/week/{dateStart}", app.GetTeamWeek)
 		r.Put("/teams/{slug}/targets/{dateStart}", app.PutUserTarget)
-		
+
 		r.Post("/idents/create", app.CreateIdent) // TODO auch {dateStart} mit 2006-01-01 date format
 		r.Put("/idents/create", app.CreateIdent)
 		r.Delete("/idents/{id}", app.DeleteIdent)

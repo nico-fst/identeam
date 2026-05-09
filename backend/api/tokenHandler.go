@@ -1,10 +1,8 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"identeam/internal/db"
-	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
 	"net/http"
@@ -29,15 +27,8 @@ type UpdateDeviceTokenPayload struct {
 // @Security		BearerAuth
 // @Router			/token/update_device_token [post]
 func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r.Context())
+	user, payload, ok := userAndPayload[UpdateDeviceTokenPayload](r.Context(), r.Body, w)
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
-		return
-	}
-
-	var payload UpdateDeviceTokenPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 	if payload.NewToken == "" || payload.Platform == "" {

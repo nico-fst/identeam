@@ -1,10 +1,7 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
 	"identeam/internal/db"
-	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
 	"net/http"
@@ -31,9 +28,8 @@ type CreateTargetPayload struct {
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/targets/create [post]
 func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r.Context())
+	user, payload, ok := userAndPayload[CreateTargetPayload](r.Context(), r.Body, w)
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
 		return
 	}
 
@@ -44,13 +40,6 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
-
-	var payload CreateTargetPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
-		return
-	}
-
 	// ensure teamSlug exists
 	team, err := db.GetTeamBySlug(r.Context(), app.DB, slug)
 	if err != nil {

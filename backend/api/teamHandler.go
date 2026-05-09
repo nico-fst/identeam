@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"identeam/internal/db"
 	"identeam/middleware"
@@ -35,15 +34,8 @@ type AddTeamPayload struct {
 //	@Failure		500		{object}	util.JSONResponse
 //	@Router			/teams/create [post]
 func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r.Context())
+	user, payload, ok := userAndPayload[AddTeamPayload](r.Context(), r.Body, w)
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
-		return
-	}
-
-	var payload AddTeamPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -94,7 +86,7 @@ type AddUserToTeamResponse struct {
 func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
 		return
 	}
 
@@ -133,7 +125,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
 		return
 	}
 
@@ -171,7 +163,7 @@ type GetMyTeamsResponse struct {
 func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
 		return
 	}
 

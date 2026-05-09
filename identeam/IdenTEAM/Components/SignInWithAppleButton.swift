@@ -57,11 +57,11 @@ struct SignInWithAppleButtonComponent: View {
                 fullName: PersonNameComponentsFormatter().string(
                     from: appleIDCredential.fullName ?? PersonNameComponents()
                 ),
-                username: ""
+                username: "",
             )
 
             Task {
-                let response = try await AuthRService.shared
+                let response = try await AuthAPI.shared
                     .sendAuthFlowToBackend(
                         identityToken: identityToken,
                         authorizationCode: authorizationCode,
@@ -78,7 +78,7 @@ struct SignInWithAppleButtonComponent: View {
                     created: response.created
                 )
 
-                try await TokenRService.shared.sendDeviceTokenToBackend()
+                try await TokenAPI.shared.sendDeviceTokenToBackend()
             }
         }
     }

@@ -20,10 +20,10 @@ enum TeamError: LocalizedError {
     }
 }
 
-class TeamRService {
+class TeamAPI {
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
-    static let shared = TeamRService()
+    static let shared = TeamAPI()
 
     struct GetMyTeamsResponse: Decodable {
         let teams: [TeamDTO]
@@ -35,7 +35,7 @@ class TeamRService {
         )
 
         let response: BackendResponse<GetMyTeamsResponse> =
-            try await RequestRService.shared
+            try await API.shared
             .getToBackend(url: url)
 
         switch response.statusCode {
@@ -58,7 +58,7 @@ class TeamRService {
         )
 
         let response: BackendResponse<UserAndTeamResponse> =
-            try await RequestRService.shared.postToBackend(url: url)
+            try await API.shared.postToBackend(url: url)
 
         switch response.statusCode {
         case 200:
@@ -74,7 +74,7 @@ class TeamRService {
         )
 
         let response: BackendResponse<UserAndTeamResponse> =
-            try await RequestRService.shared.postToBackend(url: url)
+            try await API.shared.postToBackend(url: url)
 
         switch response.statusCode {
         case 200:
@@ -92,7 +92,7 @@ class TeamRService {
             "notificationTemplate": notificationTemplate
         ]
         
-        let response: BackendResponse<TeamDTO> = try await RequestRService.shared.postToBackend(
+        let response: BackendResponse<TeamDTO> = try await API.shared.postToBackend(
             url: url,
             payload: payload
         )
@@ -114,7 +114,7 @@ class TeamRService {
         )
 
         let response: BackendResponse<TeamWeekDTO> =
-            try await RequestRService.shared.getToBackend(url: url)
+            try await API.shared.getToBackend(url: url)
 
         switch response.statusCode {
         case 200:
@@ -131,7 +131,7 @@ class TeamRService {
         )
 
         let response: BackendResponse<Empty> =
-            try await RequestRService.shared.postToBackend(url: url)
+            try await API.shared.postToBackend(url: url)
 
         switch response.statusCode {
         case 200:
@@ -154,7 +154,7 @@ class TeamRService {
         ]
 
         let response: BackendResponse<IdentDTO> =
-            try await RequestRService.shared.putToBackend(url: url, payload: payload)
+            try await API.shared.putToBackend(url: url, payload: payload)
 
         switch response.statusCode {
         case 200:
@@ -176,7 +176,7 @@ class TeamRService {
         ]
 
         let response: BackendResponse<TargetDTO> =
-            try await RequestRService.shared.putToBackend(
+            try await API.shared.putToBackend(
                 url: url,
                 payload: payload
             )

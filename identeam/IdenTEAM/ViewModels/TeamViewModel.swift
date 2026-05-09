@@ -26,7 +26,7 @@ class TeamViewModel: ObservableObject {
         }
 
         do {
-            try await TeamRService.shared.createIdent(slug: slug, text: createIdentUserText)
+            try await TeamAPI.shared.createIdent(slug: slug, text: createIdentUserText)
         } catch {
             vm.showAlert("Error creating Ident", error.localizedDescription)
             return
@@ -50,7 +50,7 @@ class TeamViewModel: ObservableObject {
         }
 
         do {
-            try await TeamRService.shared.setTarget(
+            try await TeamAPI.shared.setTarget(
                 slug: slug,
                 dateStart: Date(),
                 count: selectedTargetCount

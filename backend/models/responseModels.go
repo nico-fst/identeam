@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Empty struct{}
 
@@ -8,18 +10,18 @@ type Empty struct{}
 
 // since different notations and []DeviceTokens would complicate decoding in Swift
 type UserResponse struct {
-	UserID   string `json:"userID"`
-	Email    string `json:"email"`
-	FullName string `json:"fullName"`
-	Username string `json:"username"`
+	UserID      string `json:"userID"`
+	Email       string `json:"email"`
+	FullName    string `json:"fullName"`
+	Username    string `json:"username"`
 }
 
 func (u User) ToDTO() UserResponse {
 	return UserResponse{
-		UserID:   u.UserID,
-		Email:    u.Email,
-		FullName: u.FullName,
-		Username: u.Username,
+		UserID:      u.UserID,
+		Email:       u.Email,
+		FullName:    u.FullName,
+		Username:    u.Username,
 	}
 }
 
@@ -136,4 +138,14 @@ func (t UserWeeklyTarget) ToDTO() UserWeeklyTargetResponse {
 		TimeStart:   t.TimeStart,
 		TargetCount: t.TargetCount,
 	}
+}
+
+type PresignedResponse struct {
+	Key       string    `json:"key"`
+	PresignedURL string    `json:"presignedURL"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
+type CommitS3Response struct {
+	Key string `json:"key"`
 }

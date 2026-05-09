@@ -1,13 +1,16 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"identeam/internal/db"
+	"identeam/internal/media"
 	"identeam/middleware"
 	"identeam/models"
 	"identeam/util"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type UpdateUserData struct {
@@ -35,15 +38,8 @@ type UpdateUserPayload struct {
 // @Security		BearerAuth
 // @Router			/me/update_user [post]
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r.Context())
+	user, payload, ok := userAndPayload[UpdateUserPayload](r.Context(), r.Body, w)
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
-		return
-	}
-
-	var payload UpdateUserPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.ErrorJSON(w, errors.New("invalid JSON"), http.StatusBadRequest)
 		return
 	}
 
@@ -68,5 +64,121 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Updated user details successfully",
 		Data:    newUser.ToDTO(),
+	})
+}
+
+type AvatarUploadURLPayload struct {
+	ContentType string `json:"contentType"`
+	SizeBytes   int    `json:"sizeBytes"`
+}
+
+func (app *App) GetAvatarUploadURL(w http.ResponseWriter, r *http.Request) {
+	user, payload, ok := userAndPayload[AvatarUploadURLPayload](r.Context(), r.Body, w)
+	if !ok {
+		return
+	}
+
+	if err := media.ValidateAvatar(payload.ContentType, payload.SizeBytes); err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	newKey, err := media.NextAvatarKey(user.UserID, user.AvatarS3Key, payload.ContentType)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+	expiresAt := time.Now().Add(10 * time.Minute)
+
+	uploadURL, err := app.Media.PresignPutObject(r.Context(), newKey, payload.ContentType, expiresAt)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Created avatar URL",
+		Data: models.PresignedResponse{
+			Key:          newKey,
+			PresignedURL: uploadURL,
+			ExpiresAt:    expiresAt,
+		},
+	})
+}
+
+type CommitAvatarPayload struct {
+	Key string `json:"key"`
+}
+
+func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
+	user, payload, ok := userAndPayload[CommitAvatarPayload](r.Context(), r.Body, w)
+	if !ok {
+		return
+	}
+
+	// Guard: wrong | not existing key
+	expectedPrefix := fmt.Sprintf("users/%s/profile/avatar_v", user.UserID)
+	if !strings.HasPrefix(payload.Key, expectedPrefix) {
+		util.ErrorJSON(w, errors.New("invalid profile image key"), http.StatusBadRequest)
+		return
+	}
+
+	// Guard: not uploaded
+	if err := app.Media.CheckExistence(r.Context(), payload.Key); err != nil {
+		util.ErrorJSON(w, errors.New("uploaded profile image not found"), http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateAvatarKey(r.Context(), app.DB, user.ID, payload.Key); err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Updated avatar",
+		Data: models.CommitS3Response{
+			Key: payload.Key,
+		},
+	})
+}
+
+type GetMeResponse struct {
+	User   models.UserResponse      `json:"user"`
+	Avatar *models.PresignedResponse `json:"avatar"`
+}
+
+func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
+		return
+	}
+
+	var avatar *models.PresignedResponse
+
+	if user.AvatarS3Key != "" {
+		expiresAt := time.Now().Add(10 * time.Minute)
+		avatarURL, err := app.Media.PresignGetObject(r.Context(), user.AvatarS3Key, expiresAt)
+		if err != nil {
+			util.ErrorJSON(w, fmt.Errorf("could not get avatarURL: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		avatar = &models.PresignedResponse{
+			Key: user.AvatarS3Key,
+			PresignedURL: avatarURL,
+			ExpiresAt: expiresAt,
+		}
+	}
+
+	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
+		Error:   false,
+		Message: "Your profile info",
+		Data: GetMeResponse{
+			User: user.ToDTO(),
+			Avatar: avatar,
+		},
 	})
 }

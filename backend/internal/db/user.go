@@ -153,3 +153,11 @@ func DoesEmailMatchPassword(ctx context.Context, db *gorm.DB, email string, pass
 	}
 	return err == nil, user, err
 }
+
+func UpdateAvatarKey(ctx context.Context, db *gorm.DB, userID uint, key string) error {
+	return db.WithContext(ctx).
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("avatar_s3_key", key).
+		Error
+}

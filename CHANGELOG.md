@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0+9] - 2026-05-09
+
+### Added
+
+- Usage of S3/R2 storage for media
+- Allow uploading, changing of user avatars (profile pictures)
+
 ## [1.5.0+7] - 2026-04-17
 
 ### Added

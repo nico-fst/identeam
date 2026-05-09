@@ -26,7 +26,7 @@ final class User {
         userID: String,
         email: String,
         fullName: String,
-        username: String
+        username: String,
     ) {
         self.userID = userID
         self.email = email
@@ -39,7 +39,7 @@ final class User {
             userID: dto.userID,
             email: dto.email,
             fullName: dto.fullName,
-            username: dto.username
+            username: dto.username,
         )
     }
 }

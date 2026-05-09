@@ -1,5 +1,5 @@
 //
-//  UserService.swift
+//  UseAPI.swift
 //  identeam
 //
 //  Created by Nico Stern on 15.12.25.
@@ -20,8 +20,8 @@ enum UserError: LocalizedError {
     }
 }
 
-class UserRService {
-    static let shared = UserRService()
+class UserAPI {
+    static let shared = UserAPI()
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -44,7 +44,7 @@ class UserRService {
             ]
         ]
 
-        let response: BackendResponse<UserDTO> = try await RequestRService.shared
+        let response: BackendResponse<UserDTO> = try await API.shared
             .postToBackend(url: url, payload: payload)
 
         switch response.statusCode {
@@ -60,4 +60,6 @@ class UserRService {
             )
         }
     }
+    
+//    func getAvatarUploadURL(image: IdentifiableImage) async throws -> 
 }

@@ -18,6 +18,8 @@ type User struct {
 	FullName string
 	Username string `gorm:"unique"`
 
+	AvatarS3Key string
+
 	// GORM & Relations
 	gorm.Model                 // provides ID, CreatedAt, UpdatedAt, DeletedAt
 	DeviceTokens []DeviceToken // 1:N - GORM expects for DeviceToken.UserID

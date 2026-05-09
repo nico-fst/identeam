@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"identeam/internal/db"
 	"identeam/middleware"
@@ -64,13 +63,13 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
 		return
 	}
 
 	alert := models.Alert{
 		Title: "Notified Team " + slug,
-		Body: "Triggered by " + user.FullName,
+		Body:  "Triggered by " + user.FullName,
 	}
 
 	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, slug, alert)

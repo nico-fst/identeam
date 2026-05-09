@@ -4,6 +4,7 @@ import (
 	"identeam/api"
 	"identeam/internal/apns"
 	dbpkg "identeam/internal/db"
+	"identeam/internal/media"
 	"log"
 	"os"
 	"strings"
@@ -17,15 +18,16 @@ import (
 func main() {
 	log.Println("Setting up server...")
 
-	// Local: use .env file
-	err := godotenv.Load(".env")
+	// setup env-values
+	err := godotenv.Load(".env") // ...either using .env
 	if err != nil {
+		// ... or when in container through docker-compose
 		log.Println("No .env found - env values should be set from outside (okay and normal in container => adapt docker-compose")
 		log.Println(err)
 	}
 	log.Println("Loaded .env")
 
-	// Setup DB
+	// setup DB
 	db := &gorm.DB{}
 	if strings.ToLower(os.Getenv("USE_INTERNAL_DB")) == "true" {
 		log.Println("Connecting identeam.sqlite3...")
@@ -38,6 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// setup APNs, DB, R2
 	app := api.App{
 		Provider: apns.Provider{
 			KeyId:   os.Getenv("APNS_KEY_ID"),
@@ -45,9 +48,10 @@ func main() {
 			KeyFile: "./apns_key.p8",
 			Topic:   os.Getenv("BUNDLE_ID"),
 			Client:  nil,
-			IsProd: strings.ToLower(os.Getenv("IS_PROD")) == "true",
+			IsProd:  strings.ToLower(os.Getenv("IS_PROD")) == "true",
 		},
-		DB:     db,
+		DB:    db,
+		Media: media.NewR2Client(),
 	}
 
 	app.SetupServer()

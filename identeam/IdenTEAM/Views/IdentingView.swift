@@ -44,6 +44,14 @@ struct IdentingView: View {
                                     .blendMode(.destinationOut)
                             }
                             .compositingGroup()
+                            .overlay {
+                                Image("FlashOutline")
+                                    .renderingMode(.template) // renders all pixels as foreground color
+                                    .resizable()
+                                    .scaledToFit()
+                                    .scaleEffect(1.5)
+                                    .foregroundStyle(.accent)
+                            }
                             .allowsHitTesting(false)
                     }
                 

@@ -5,13 +5,14 @@
 //  Created by Nico Stern on 28.12.25.
 //
 
+import PhotosUI
 import SwiftData
 import SwiftUI
 
 struct DebugInfoView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var vm: AppViewModel
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var ctx
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -19,10 +20,14 @@ struct DebugInfoView: View {
     @AppStorage("username") private var username: String?
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
-
+    
     var body: some View {
         NavigationStack {
             List {
+                Section("Profile") {
+                    AvatarPicker()
+                }
+                
                 Section("Device Config") {
                     TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
                     TextLabeled("Device Token", deviceToken ?? "")
@@ -47,7 +52,7 @@ struct DebugInfoView: View {
                 case .authenticated:
                     CheckTokensButton()
                     Button("Logout") {
-                        authVM.logout()
+                        authVM.logout(ctx: ctx)
                     }
                     .foregroundStyle(.red)
                 }

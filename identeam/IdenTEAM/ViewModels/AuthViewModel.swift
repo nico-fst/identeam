@@ -58,7 +58,7 @@ class AuthViewModel: ObservableObject {
         guard fullnameInput != "", usernameInput != "" else { return }
         
         do {
-            let newUser = try await UserRService.shared
+            let newUser = try await UserAPI.shared
                 .requestUserDetailsChange(
                     fullName: fullnameInput,
                     username: usernameInput
@@ -91,7 +91,7 @@ class AuthViewModel: ObservableObject {
         }
 
         do {
-            let response = try await AuthRService.shared
+            let response = try await AuthAPI.shared
                 .letBackendValidateSessionToken()
             if response.statusCode == 401 {
                 logout()
@@ -116,7 +116,7 @@ class AuthViewModel: ObservableObject {
         }
 
         do {
-            let response = try await AuthRService.shared.sendPasswordFlowToBackend(
+            let response = try await AuthAPI.shared.sendPasswordFlowToBackend(
                 authMode: authMode,
                 email: emailInput,
                 password: passwordInput
@@ -131,14 +131,14 @@ class AuthViewModel: ObservableObject {
                 created: response.created
             )
             
-            try await TokenRService.shared.sendDeviceTokenToBackend()
+            try await TokenAPI.shared.sendDeviceTokenToBackend()
         } catch {
             throw error
         }
     }
 
     @MainActor
-    func logout() {
+    func logout(ctx: ModelContext? = nil) {
         userID = nil
         email = nil
         fullName = nil
@@ -147,7 +147,45 @@ class AuthViewModel: ObservableObject {
         sessionToken = nil
 
         authState = .unauthenticated
+        
+        if let ctx {
+            deleteUserModels(ctx: ctx)
+        }
     }
+    
+    @MainActor
+    private func deleteUserModels(ctx: ModelContext) {
+        do {
+            for team in try ctx.fetch(FetchDescriptor<Team>()) {
+                ctx.delete(team)
+            }
+
+            for ident in try ctx.fetch(FetchDescriptor<Ident>()) {
+                ctx.delete(ident)
+            }
+            
+            for teamMember in try ctx.fetch(FetchDescriptor<TeamMember>()) {
+                ctx.delete(teamMember)
+            }
+            
+            for teamWeek in try ctx.fetch(FetchDescriptor<TeamWeek>()) {
+                ctx.delete(teamWeek)
+            }
+            
+            for user in try ctx.fetch(FetchDescriptor<User>()) {
+                ctx.delete(user)
+            }
+
+            for avatar in try ctx.fetch(FetchDescriptor<Avatar>()) {
+                ctx.delete(avatar)
+            }
+
+            try ctx.save()
+        } catch {
+            authError = error.localizedDescription
+        }
+    }
+
 
     // in SIWA button: not tryLogin() since in async and variables not stable yet
     @MainActor

@@ -18,8 +18,18 @@ struct BackendResponse<T: Decodable> {
 
 }
 
-enum RequestServiceError: Error {
+enum APIError: LocalizedError {
     case decodingDataFailed(reason: String)
+    case backend(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .decodingDataFailed(let reason):
+            return reason
+        case .backend(let message):
+            return message
+        }
+    }
 }
 
 enum HTTPMethod: String {
@@ -28,10 +38,10 @@ enum HTTPMethod: String {
     case put = "PUT"
 }
 
-class RequestRService {
+class API {
     @AppStorage("sessionToken") private var sessionToken: String?
 
-    static let shared = RequestRService()
+    static let shared = API()
     
     private var decoder: JSONDecoder {
         let decoder = JSONDecoder()

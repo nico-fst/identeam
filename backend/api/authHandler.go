@@ -293,7 +293,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 func (app *App) CheckSession(w http.ResponseWriter, r *http.Request) {
 	_, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		util.ErrorJSON(w, errors.New("unable to retrieve userID from context"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
 		return
 	}
 
