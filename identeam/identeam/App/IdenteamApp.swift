@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct identeamApp: App {
+struct IdenteamApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @StateObject private var vm = AppViewModel()

@@ -18,7 +18,7 @@
 		970EA8BE2EEF88E200D3D2B9 /* Exceptions for "identeam" folder in "identeam" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
 		};
