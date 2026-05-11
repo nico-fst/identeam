@@ -12,6 +12,8 @@ import SwiftUI
 struct DebugInfoView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var avatarVM: AvatarViewModel
+    
     @Environment(\.modelContext) private var ctx
 
     @AppStorage("userID") private var userID: String?
@@ -20,6 +22,8 @@ struct DebugInfoView: View {
     @AppStorage("username") private var username: String?
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
+    
+    @Query private var avatars: [Avatar]
     
     var body: some View {
         NavigationStack {
@@ -57,6 +61,16 @@ struct DebugInfoView: View {
                     .foregroundStyle(.red)
                 }
             }
+            .refreshable {
+                Task {
+                    try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)
+                }
+            }
+            .onChange(of: userID) {
+                Task {
+                    try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)
+                }
+            }
             .navigationTitle("Hello \(fullName ?? "(no username)") 👋🏼")
             .task {
                 await authVM.trySiwaLogin(vm: vm)
@@ -69,4 +83,5 @@ struct DebugInfoView: View {
     DebugInfoView()
         .environmentObject(AuthViewModel())
         .environmentObject(AppViewModel())
+        .environmentObject(AvatarViewModel())
 }
