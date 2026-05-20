@@ -89,15 +89,19 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 		r.Post("/me/update_user", app.UpdateUser) // PUT sobald Wrapper in Swift
 
 		r.Get("/teams/me", app.GetMyTeams)
+
 		r.Post("/teams/create", app.CreateTeam)
 		r.Post("/teams/{slug}/join", app.JoinTeam)
 		r.Post("/teams/{slug}/leave", app.LeaveTeam)
+
 		r.Get("/teams/{slug}/week/{dateStart}", app.GetTeamWeek)
+
 		r.Put("/teams/{slug}/targets/{dateStart}", app.PutUserTarget)
 
-		r.Post("/idents/create", app.CreateIdent) // TODO auch {dateStart} mit 2006-01-01 date format
-		r.Put("/idents/create", app.CreateIdent)
-		r.Delete("/idents/{id}", app.DeleteIdent)
+		r.Post("/teams/{slug}/idents/create", app.CreateIdent) // TODO auch {dateStart} mit 2006-01-01 date format
+		r.Post("/teams/{slug}/idents/{id}/image/get_upload_url", app.GetIdentImageUploadURL)
+		r.Post("/teams/{slug}/idents/{id}/image/commit", app.CommitIdentImage)
+		r.Delete("/teams/{slug}/idents/{id}", app.DeleteIdent)
 
 		r.Post("/notify/team/{slug}", app.NotifyTeam)
 	})

@@ -14,17 +14,7 @@ class AvatarViewModel: ObservableObject {
     @Published var isUploadingAvatar = false
     @Published var uploadError: String?
 
-    private let api: AvatarAPI
-
-    init(api: AvatarAPI) {
-        self.api = api
-    }
-
-    convenience init() {
-        self.init(api: .shared)
-    }
-
-    func refreshAvatarIfNeeded(avatars: [Avatar], ctx: ModelContext) async throws {
+    func refreshAvatarIfNeeded(avatars: [S3Item], ctx: ModelContext) async throws {
         guard let localAvatar = avatars.first,
               !localAvatar.isExpired
         else {
@@ -32,7 +22,7 @@ class AvatarViewModel: ObservableObject {
             return
         }
         
-        let remoteAvatar = try await api.fetchMe().avatar
+        let remoteAvatar = try await AvatarAPI.shared.fetchMe().avatar
         guard let remoteAvatar else {
             try await refreshAvatar(avatars: avatars, ctx: ctx)
             return
@@ -45,15 +35,15 @@ class AvatarViewModel: ObservableObject {
         try await refreshAvatar(avatars: avatars, ctx: ctx)
     }
     
-    func refreshAvatar(avatars: [Avatar], ctx: ModelContext) async throws {
-        let resp = try await api.fetchMe()
+    func refreshAvatar(avatars: [S3Item], ctx: ModelContext) async throws {
+        let resp = try await AvatarAPI.shared.fetchMe()
         
         for avatar in avatars {
             ctx.delete(avatar)
         }
         
         if let remoteAvatarDTO = resp.avatar {
-            let remoteAvatar = Avatar(dto: remoteAvatarDTO)
+            let remoteAvatar = S3Item(dto: remoteAvatarDTO, kind: .avatar)
             ctx.insert(remoteAvatar)
         }
         
@@ -62,7 +52,7 @@ class AvatarViewModel: ObservableObject {
     
     func propagateAvatarUpdate(
         _ item: IdentifiableImage,
-        avatars: [Avatar],
+        avatars: [S3Item],
         ctx: ModelContext
     ) async -> Bool {
         isUploadingAvatar = true
@@ -70,7 +60,7 @@ class AvatarViewModel: ObservableObject {
         uploadError = nil
         
         do {
-            try await api.uploadAvatar(
+            try await AvatarAPI.shared.uploadAvatar(
                 imageData: item.imageData,
                 contentType: "image/jpeg"
             )

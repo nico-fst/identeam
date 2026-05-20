@@ -91,6 +91,8 @@ type Ident struct {
 	Time     time.Time `gorm:"not null"`
 	UserText string
 
+	ImageS3Key string
+
 	// GORM & Relations
 	gorm.Model
 	UserWeeklyTargetID uint // UserWeeklyTarget has many Idents

@@ -12,7 +12,7 @@ import SwiftUI
 
 class TeamViewModel: ObservableObject {
     @Published var createIdentUserText: String = ""
-    @Published var selectedTargetCount: Int = 0
+    @Published var showSettingTarget = false
     
     func tryCreatingIdent(
         slug: String,
@@ -20,13 +20,14 @@ class TeamViewModel: ObservableObject {
         ctx: ModelContext,
         teamsVM: TeamsViewModel
     ) async {
-        guard !createIdentUserText.isEmpty else {
+        let trimmedUserText = createIdentUserText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUserText.isEmpty else {
             vm.showAlert("Error creating Ident", "You must provide an UserText")
             return
         }
 
         do {
-            try await TeamAPI.shared.createIdent(slug: slug, text: createIdentUserText)
+            _ = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText)
         } catch {
             vm.showAlert("Error creating Ident", error.localizedDescription)
             return
@@ -34,34 +35,6 @@ class TeamViewModel: ObservableObject {
         
         vm.toastMessage = "Ident created"
         createIdentUserText = ""
-        
-        await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
-    }
-
-    func trySettingTarget(
-        slug: String,
-        vm: AppViewModel,
-        ctx: ModelContext,
-        teamsVM: TeamsViewModel
-    ) async {
-        guard selectedTargetCount != 0 else {
-            vm.showAlert("Error setting target", "You must select a value first")
-            return
-        }
-
-        do {
-            try await TeamAPI.shared.setTarget(
-                slug: slug,
-                dateStart: Date(),
-                count: selectedTargetCount
-            )
-        } catch {
-            vm.showAlert("Error setting Target", error.localizedDescription)
-            return
-        }
-
-        vm.toastMessage = "Target set"
-
         await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
     }
 }

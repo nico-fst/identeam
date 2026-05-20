@@ -204,19 +204,6 @@ func (r *R2Client) PresignHeadObject(ctx context.Context, key string, expiresAt 
 	})
 }
 
-func NextAvatarKey(userID string, currentKey string, contentType string) (string, error) {
-	ext, err := ContentTypeToExtension(contentType)
-	if err != nil {
-		return "", err
-	}
-
-	if currentKey == "" {
-		return fmt.Sprintf("users/%s/profile/avatar_v1.%s", userID, ext), nil
-	}
-
-	return NextKeyVersion(currentKey)
-}
-
 func NextKeyVersion(currentKey string) (string, error) {
 	ext := path.Ext(currentKey)
 	if ext == "" {

@@ -8,10 +8,6 @@ class AvatarAPI {
         let avatar: PresignedDTO?
     }
 
-    struct CommitAvatarResponse: Decodable {
-        let key: String
-    }
-    
     func fetchMe() async throws -> GetMeResponse {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me")
         
@@ -41,26 +37,13 @@ class AvatarAPI {
         }
     }
 
-    func uploadAvatarData(_ data: Data, to uploadURL: URL, contentType: String) async throws {
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "PUT"
-        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
-        
-        let (_, response) = try await URLSession.shared.upload(for: request, from: data)
-        
-        guard let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-    }
-    
-    func commitAvatarUpload(key: String) async throws -> CommitAvatarResponse {
+    func commitAvatarUpload(key: String) async throws -> CommitS3DTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me/avatar/commit")
         let payload: [String: Any] = [
             "key": key
         ]
         
-        let response: BackendResponse<CommitAvatarResponse> = try await API.shared.postToBackend(url: url, payload: payload)
+        let response: BackendResponse<CommitS3DTO> = try await API.shared.postToBackend(url: url, payload: payload)
         
         switch response.statusCode {
         case 200:
@@ -71,15 +54,15 @@ class AvatarAPI {
     }
 
     func uploadAvatar(imageData: Data, contentType: String) async throws {
-        let uploadInfo = try await getAvatarUploadURL(
+        try await S3UploadAPI.upload(
+            imageData: imageData,
             contentType: contentType,
-            sizeBytes: imageData.count
+            getUploadURL: { [self] contentType, sizeBytes in
+                try await getAvatarUploadURL(contentType: contentType, sizeBytes: sizeBytes)
+            },
+            commit: { [self] key in
+                try await commitAvatarUpload(key: key)
+            }
         )
-        guard let uploadURL = URL(string: uploadInfo.presignedURL) else {
-            throw URLError(.badURL)
-        }
-
-        try await uploadAvatarData(imageData, to: uploadURL, contentType: contentType)
-        _ = try await commitAvatarUpload(key: uploadInfo.key)
     }
 }

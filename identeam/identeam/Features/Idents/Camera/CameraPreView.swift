@@ -12,6 +12,14 @@ struct CameraPreView: UIViewRepresentable {
         let view = UIView(frame: .zero) // empty view
 //         view.backgroundColor = .black
         
+        // show camera in preview
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                view.backgroundColor = .blue
+                return view
+            }
+        #endif
+        
         // add previewLayer on empty view
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.videoGravity = .resizeAspectFill

@@ -16,7 +16,7 @@ struct TeamView: View {
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var teamVM: TeamViewModel
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var ctx
 
     @Query private var teams: [Team]
     private var team: Team? {
@@ -70,24 +70,10 @@ struct TeamView: View {
                             Text("No Info...").opacity(0.25)
                         }
                     }
-
+                    
                     Section("My Target") {
-                        Picker("Target", selection: $teamVM.selectedTargetCount) {
-                            ForEach(1...7, id: \.self) { count in
-                                Text("\(count)").tag(count)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
                         Button("Set Target") {
-                            Task {
-                                await teamVM.trySettingTarget(
-                                    slug: team.slug,
-                                    vm: vm,
-                                    ctx: modelContext,
-                                    teamsVM: teamsVM
-                                )
-                            }
+                            teamVM.showSettingTarget = true
                         }
                     }
                     
@@ -102,7 +88,7 @@ struct TeamView: View {
                                     await teamVM.tryCreatingIdent(
                                         slug: slug,
                                         vm: vm,
-                                        ctx: modelContext,
+                                        ctx: ctx,
                                         teamsVM: teamsVM
                                     )
                                 }
@@ -125,7 +111,23 @@ struct TeamView: View {
                         }
                     }
                     .navigationTitle(team.name)
-                }.listStyle(InsetGroupedListStyle())
+                }
+                .listStyle(InsetGroupedListStyle())
+                .sheet(isPresented: $teamVM.showSettingTarget) {
+                    NavigationStack {
+                        TargetPicker(
+                            team: team,
+                        ) { didChange in
+                            teamVM.showSettingTarget = false
+                            if didChange {
+                                Task {
+                                    await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+                                }
+                            }
+                        }
+                    }
+                    .presentationDetents([.medium])
+                }
             } else {
                 ContentUnavailableView(
                     "Team not found",
@@ -135,12 +137,12 @@ struct TeamView: View {
         }
         .refreshable {
             if let team {
-                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: modelContext)
+                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
             }
         }
         .task {
             if let team {
-                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: modelContext)
+                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
             }
         }
     }

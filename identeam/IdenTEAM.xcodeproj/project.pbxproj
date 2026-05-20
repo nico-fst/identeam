@@ -18,7 +18,7 @@
 		970EA8BE2EEF88E200D3D2B9 /* Exceptions for "identeam" folder in "identeam" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Resources/Info.plist,
+				Info.plist,
 			);
 			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
 		};
@@ -289,7 +289,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos for Idents";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This will allow attaching your location to your Idents";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add photos of your idents you capture to your library";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture to your Photo Library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -335,7 +335,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos for Idents";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This will allow attaching your location to your Idents";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Add photos of your idents you capture to your library";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Save photos of your idents you capture to your Photo Library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

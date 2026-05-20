@@ -10,10 +10,13 @@ import SwiftData
 import SwiftUI
 
 enum TeamError: LocalizedError {
+    case targetNotSet
     case backend(String)
     
     var errorDescription: String? {
         switch self {
+        case .targetNotSet:
+            return "Target not set"
         case .backend(let message):
             return message
         }
@@ -132,29 +135,6 @@ class TeamAPI {
 
         let response: BackendResponse<Empty> =
             try await API.shared.postToBackend(url: url)
-
-        switch response.statusCode {
-        case 200:
-            return
-        default:
-            throw TeamError.backend(response.message)
-        }
-    }
-    
-    func createIdent(slug: String, text: String) async throws {
-        let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "idents/create"
-        )
-        
-        let formatter = ISO8601DateFormatter()
-        let payload: [String: Any] = [
-            "time": formatter.string(from: Date()),
-            "teamSlug": slug,
-            "userText": text
-        ]
-
-        let response: BackendResponse<IdentDTO> =
-            try await API.shared.putToBackend(url: url, payload: payload)
 
         switch response.statusCode {
         case 200:

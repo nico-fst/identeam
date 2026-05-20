@@ -176,8 +176,8 @@ class AuthViewModel: ObservableObject {
                 ctx.delete(user)
             }
 
-            for avatar in try ctx.fetch(FetchDescriptor<Avatar>()) {
-                ctx.delete(avatar)
+            for s3Item in try ctx.fetch(FetchDescriptor<S3Item>()) {
+                ctx.delete(s3Item)
             }
 
             try ctx.save()

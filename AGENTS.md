@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Core Principle
-All code changes must be verified by tests.
+All non-trivial code changes must be verified by tests.
 
 ## Workflow
 - After every code change, run the relevant tests.
@@ -27,5 +27,5 @@ All code changes must be verified by tests.
 In the final response, always include:
 1. What was changed (if you changed something)
 2. Which tests were run (if you ran tests)
-3. The result of those tests (if you ran tests)
+3. The result of those tests (only if they fail)
 Discuss remaining risks or uncertainties if there are any.

@@ -33,6 +33,24 @@ func GetIdentById(ctx context.Context, db *gorm.DB, identID uint) (*models.Ident
 	return &ident, nil
 }
 
+func UserOwnsIdentInTeam(ctx context.Context, db *gorm.DB, identID uint, userID uint, teamSlug string) (bool, error) {
+	var count int64
+	err := db.WithContext(ctx).
+		Model(&models.Ident{}).
+		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
+		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
+		Where("idents.id = ?", identID).
+		Where("user_weekly_targets.user_id = ?", userID).
+		Where("teams.slug = ?", teamSlug).
+		Count(&count).Error
+	if err != nil {
+		log.Printf("ERROR checking ownership for Ident %v, userID %v, teamSlug %v: %v", identID, userID, teamSlug, err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func DeleteIdent(ctx context.Context, db *gorm.DB, ident models.Ident) error {
 	_, err := gorm.G[models.Ident](db).Where("id = ?", ident.ID).Delete(ctx)
 	if err != nil {
@@ -42,4 +60,12 @@ func DeleteIdent(ctx context.Context, db *gorm.DB, ident models.Ident) error {
 
 	log.Printf("Deleted Ident with id %v from DB", ident.ID)
 	return nil
+}
+
+func UpdateIdentKey(ctx context.Context, db *gorm.DB, identID uint, key string) error {
+	return db.WithContext(ctx).
+		Model(&models.Ident{}).
+		Where("id = ?", identID).
+		Update("image_s3_key", key).
+		Error
 }

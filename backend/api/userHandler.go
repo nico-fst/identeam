@@ -9,7 +9,6 @@ import (
 	"identeam/models"
 	"identeam/util"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -67,66 +66,42 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type AvatarUploadURLPayload struct {
-	ContentType string `json:"contentType"`
-	SizeBytes   int    `json:"sizeBytes"`
-}
-
 func (app *App) GetAvatarUploadURL(w http.ResponseWriter, r *http.Request) {
-	user, payload, ok := userAndPayload[AvatarUploadURLPayload](r.Context(), r.Body, w)
+	user, payload, ok := userAndPayload[models.PresignedRequestPayload](r.Context(), r.Body, w)
 	if !ok {
 		return
 	}
 
-	if err := media.ValidateAvatar(payload.ContentType, payload.SizeBytes); err != nil {
+	newKey, err := nextValidatedImageKey(payload, func(contentType string) (string, error) {
+		return media.NextAvatarKey(user.UserID, user.AvatarS3Key, contentType)
+	})
+	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
-	newKey, err := media.NextAvatarKey(user.UserID, user.AvatarS3Key, payload.ContentType)
-	if err != nil {
-		util.ErrorJSON(w, err, http.StatusInternalServerError)
-		return
-	}
-	expiresAt := time.Now().Add(10 * time.Minute)
-
-	uploadURL, err := app.Media.PresignPutObject(r.Context(), newKey, payload.ContentType, expiresAt)
-	if err != nil {
-		util.ErrorJSON(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
-		Error:   false,
-		Message: "Created avatar URL",
-		Data: models.PresignedResponse{
-			Key:          newKey,
-			PresignedURL: uploadURL,
-			ExpiresAt:    expiresAt,
-		},
+	app.writePresignedUploadURL(w, r, mediaUploadTarget{
+		Key:           newKey,
+		ContentType:   payload.ContentType,
+		ResponseLabel: "avatar",
 	})
 }
 
-type CommitAvatarPayload struct {
-	Key string `json:"key"`
-}
-
 func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
-	user, payload, ok := userAndPayload[CommitAvatarPayload](r.Context(), r.Body, w)
+	user, payload, ok := userAndPayload[models.CommitUploadPayload](r.Context(), r.Body, w)
 	if !ok {
 		return
 	}
 
-	// Guard: wrong | not existing key
 	expectedPrefix := fmt.Sprintf("users/%s/profile/avatar_v", user.UserID)
-	if !strings.HasPrefix(payload.Key, expectedPrefix) {
-		util.ErrorJSON(w, errors.New("invalid profile image key"), http.StatusBadRequest)
-		return
-	}
-
-	// Guard: not uploaded
-	if err := app.Media.CheckExistence(r.Context(), payload.Key); err != nil {
-		util.ErrorJSON(w, errors.New("uploaded profile image not found"), http.StatusBadRequest)
+	if !app.validateCommittedUpload(
+		w,
+		r,
+		payload.Key,
+		expectedPrefix,
+		"invalid profile image key",
+		"uploaded profile image not found",
+	) {
 		return
 	}
 
@@ -145,7 +120,7 @@ func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetMeResponse struct {
-	User   models.UserResponse      `json:"user"`
+	User   models.UserResponse       `json:"user"`
 	Avatar *models.PresignedResponse `json:"avatar"`
 }
 
@@ -167,9 +142,9 @@ func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
 		}
 
 		avatar = &models.PresignedResponse{
-			Key: user.AvatarS3Key,
+			Key:          user.AvatarS3Key,
 			PresignedURL: avatarURL,
-			ExpiresAt: expiresAt,
+			ExpiresAt:    expiresAt,
 		}
 	}
 
@@ -177,7 +152,7 @@ func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Your profile info",
 		Data: GetMeResponse{
-			User: user.ToDTO(),
+			User:   user.ToDTO(),
 			Avatar: avatar,
 		},
 	})

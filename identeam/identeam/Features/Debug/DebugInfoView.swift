@@ -23,7 +23,9 @@ struct DebugInfoView: View {
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
     
-    @Query private var avatars: [Avatar]
+    @Query(filter: #Predicate<S3Item> {
+        $0.kindRaw == "avatar"
+    }) private var avatars: [S3Item]
     
     var body: some View {
         NavigationStack {

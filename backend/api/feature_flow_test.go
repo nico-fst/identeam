@@ -295,6 +295,9 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	}
 
 	identData := decodeData[models.IdentResponse](t, identEnvelope)
+	if identData.ID == 0 {
+		t.Fatal("expected created ident response to include id")
+	}
 	if identData.UserText != "Completed a meaningful weekly ident." {
 		t.Fatalf("unexpected ident userText: %q", identData.UserText)
 	}
@@ -370,6 +373,81 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 	identData := decodeData[models.IdentResponse](t, identEnvelope)
 	if identData.UserText != "This ident should not panic." {
 		t.Fatalf("unexpected ident userText: %q", identData.UserText)
+	}
+}
+
+func TestFeatureFlow_DeleteIdentRequiresOwner(t *testing.T) {
+	server := newFeatureTestServer(t)
+	defer server.Close()
+
+	owner := signupUser(t, server.URL, "delete-owner@example.com")
+	member := signupUser(t, server.URL, "delete-member@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "Delete Ownership Team")
+
+	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/join", nil, member.SessionToken)
+	if joinResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, joinResp)
+		t.Fatalf("join team failed with status %d: %s", joinResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, joinResp)
+
+	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
+		TargetCount: 1,
+	}, owner.SessionToken)
+	if targetResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, targetResp)
+		t.Fatalf("create target failed with status %d: %s", targetResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, targetResp)
+
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+		Time:     weekDate.Format(time.RFC3339),
+		TeamSlug: team.Slug,
+		UserText: "Only the owner can delete this.",
+	}, owner.SessionToken)
+	if identResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, identResp)
+		t.Fatalf("create ident failed with status %d: %s", identResp.StatusCode, envelope.Message)
+	}
+	identEnvelope := decodeEnvelope(t, identResp)
+	identData := decodeData[models.IdentResponse](t, identEnvelope)
+
+	deleteURL := fmt.Sprintf("%s/teams/%s/idents/%d", server.URL, team.Slug, identData.ID)
+	memberDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, deleteURL, nil, member.SessionToken)
+	if memberDeleteResp.StatusCode != http.StatusForbidden {
+		envelope := decodeEnvelope(t, memberDeleteResp)
+		t.Fatalf("expected member delete to be forbidden, got status %d: %s", memberDeleteResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, memberDeleteResp)
+
+	memberUploadResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, deleteURL+"/image/get_upload_url", models.PresignedRequestPayload{
+		ContentType: "image/jpeg",
+		SizeBytes:   1024,
+	}, member.SessionToken)
+	if memberUploadResp.StatusCode != http.StatusForbidden {
+		envelope := decodeEnvelope(t, memberUploadResp)
+		t.Fatalf("expected member upload url to be forbidden, got status %d: %s", memberUploadResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, memberUploadResp)
+
+	memberCommitResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, deleteURL+"/image/commit", models.CommitUploadPayload{
+		Key: fmt.Sprintf("teams/%s/idents/%d/image_v1.jpg", team.Slug, identData.ID),
+	}, member.SessionToken)
+	if memberCommitResp.StatusCode != http.StatusForbidden {
+		envelope := decodeEnvelope(t, memberCommitResp)
+		t.Fatalf("expected member image commit to be forbidden, got status %d: %s", memberCommitResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, memberCommitResp)
+
+	ownerDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, deleteURL, nil, owner.SessionToken)
+	if ownerDeleteResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, ownerDeleteResp)
+		t.Fatalf("owner delete failed with status %d: %s", ownerDeleteResp.StatusCode, envelope.Message)
+	}
+	ownerDeleteEnvelope := decodeEnvelope(t, ownerDeleteResp)
+	if ownerDeleteEnvelope.Error {
+		t.Fatalf("owner delete returned error: %s", ownerDeleteEnvelope.Message)
 	}
 }
 

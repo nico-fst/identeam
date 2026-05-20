@@ -29,13 +29,7 @@ func ConnectPostgres() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(
-		&models.User{},
-		&models.DeviceToken{},
-		&models.Team{},
-		&models.UserWeeklyTarget{},
-		&models.Ident{},
-	)
+	AutoMigrateAllModels(db)
 
 	return db, nil
 }
@@ -48,6 +42,12 @@ func ConnectSqlite() (*gorm.DB, error) {
 
 	// no ctx := context.Background() - comes from r.Context()
 
+	AutoMigrateAllModels(db)
+
+	return db, nil
+}
+
+func AutoMigrateAllModels(db *gorm.DB) {
 	db.AutoMigrate(
 		&models.User{},
 		&models.DeviceToken{},
@@ -55,8 +55,6 @@ func ConnectSqlite() (*gorm.DB, error) {
 		&models.UserWeeklyTarget{},
 		&models.Ident{},
 	)
-
-	return db, nil
 }
 
 func IsDuplicateKeyError(err error) bool {

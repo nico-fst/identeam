@@ -14,10 +14,16 @@ struct AvatarPicker: View {
     @State private var avatarImage: IdentifiableImage?
     @State private var selectedItem: PhotosPickerItem?
     
+    
+    
     @EnvironmentObject private var avatarVM: AvatarViewModel
     
     @Environment(\.modelContext) private var ctx
-    @Query private var avatars: [Avatar]
+    
+    @Query(filter: #Predicate<S3Item> {
+        $0.kindRaw == "avatar"
+    }) private var avatars: [S3Item]
+    
     
     @AppStorage("fullName") private var fullName: String?
     @AppStorage("username") private var username: String?
@@ -82,6 +88,7 @@ struct AvatarPicker: View {
                                 Image(systemName: "checkmark")
                             }
                         }
+                        .buttonStyle(.borderedProminent)
                         .disabled(avatarVM.isUploadingAvatar)
                     }
                 }
