@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -50,7 +51,7 @@ func TestIdentsToDTOs(t *testing.T) {
 		{Time: now.Add(time.Hour), UserText: "second"},
 	}
 
-	got := idents.ToDTOs()
+	got := idents.ToDTOs(context.Background(), nil)
 	want := []models.IdentResponse{
 		{Time: now, UserText: "first"},
 		{Time: now.Add(time.Hour), UserText: "second"},
@@ -99,7 +100,7 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 		},
 	}
 
-	got := models.NewTeamWeekResponse("fallback-slug", targets)
+	got := models.NewTeamWeekResponse(context.Background(), nil, "fallback-slug", targets)
 
 	if got.Slug != "alpha" {
 		t.Fatalf("expected slug %q, got %q", "alpha", got.Slug)

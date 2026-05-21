@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func UpdateUsersDeviceToken(ctx context.Context, db *gorm.DB, user models.User, token models.DeviceToken) (models.User, error) {
-	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+func UpdateUsersDeviceToken(ctx context.Context, app AppContext, user models.User, token models.DeviceToken) (models.User, error) {
+	err := app.Database().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// A user should only keep one token per platform. If the app rotated the
 		// APNs token on this device, older iOS tokens for the same user can go away.
 		if err := tx.
@@ -66,7 +66,7 @@ func UpdateUsersDeviceToken(ctx context.Context, db *gorm.DB, user models.User, 
 		return models.User{}, err
 	}
 
-	updatedUser, err := gorm.G[models.User](db).
+	updatedUser, err := gorm.G[models.User](app.Database()).
 		Preload("DeviceTokens", nil).
 		Where("id = ?", user.ID).
 		First(ctx)
@@ -77,8 +77,8 @@ func UpdateUsersDeviceToken(ctx context.Context, db *gorm.DB, user models.User, 
 	return updatedUser, nil
 }
 
-func DeleteDeviceToken(ctx context.Context, db *gorm.DB, token string) error {
-	_, err := gorm.G[models.DeviceToken](db).
+func DeleteDeviceToken(ctx context.Context, app AppContext, token string) error {
+	_, err := gorm.G[models.DeviceToken](app.Database()).
 		Where("token = ?", token).
 		Delete(ctx)
 	if err != nil {

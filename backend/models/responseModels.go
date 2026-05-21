@@ -1,6 +1,8 @@
 package models
 
 import (
+	"context"
+	"identeam/internal/media"
 	"time"
 )
 
@@ -67,26 +69,47 @@ func (teams Teams) ToDTOs() []TeamResponse {
 }
 
 type IdentResponse struct {
-	ID       uint      `json:"id"`
-	Time     time.Time `json:"time"`
-	UserText string    `json:"userText"`
+	ID       uint              `json:"id"`
+	Time     time.Time         `json:"time"`
+	UserText string            `json:"userText"`
+	Image    PresignedResponse `json:"image"`
 }
 
-func (i Ident) ToDTO() IdentResponse {
-	return IdentResponse{
+func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentResponse {
+	resp := IdentResponse{
 		ID:       i.ID,
 		Time:     i.Time,
 		UserText: i.UserText,
 	}
+
+	if r == nil || i.ImageS3Key == "" {
+		return resp
+	}
+
+	// add presigned Image
+	expiresAt := time.Now().Add(time.Hour * 24)
+	imageURL, err := r.PresignGetObject(ctx, i.ImageS3Key, expiresAt)
+	if err != nil {
+		// swallows error - catching would complicate entire toDTO process
+		print("ERROR presigning URL for Ident:", err.Error())
+	} else {
+		resp.Image = PresignedResponse{
+			Key:          i.ImageS3Key,
+			PresignedURL: imageURL,
+			ExpiresAt:    expiresAt,
+		}
+	}
+
+	return resp
 }
 
 type Idents []Ident
 
-func (idents Idents) ToDTOs() []IdentResponse {
+func (idents Idents) ToDTOs(ctx context.Context, r *media.R2Client) []IdentResponse {
 	res := make([]IdentResponse, 0, len(idents))
 
 	for _, ident := range idents {
-		res = append(res, ident.ToDTO())
+		res = append(res, ident.ToDTO(ctx, r))
 	}
 
 	return res
@@ -105,7 +128,7 @@ type TeamWeekResponse struct {
 	Members   []TeamWeekMemberResponse `json:"members"`
 }
 
-func NewTeamWeekResponse(teamSlug string, targets []UserWeeklyTarget) TeamWeekResponse {
+func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []UserWeeklyTarget) TeamWeekResponse {
 	resp := TeamWeekResponse{
 		Slug:      teamSlug,
 		TargetSum: 0,
@@ -123,7 +146,7 @@ func NewTeamWeekResponse(teamSlug string, targets []UserWeeklyTarget) TeamWeekRe
 		resp.Members = append(resp.Members, TeamWeekMemberResponse{
 			User:        target.User.ToDTO(),
 			TargetCount: target.TargetCount,
-			Idents:      Idents(target.Idents).ToDTOs(),
+			Idents:      Idents(target.Idents).ToDTOs(ctx, r2Client),
 		})
 	}
 

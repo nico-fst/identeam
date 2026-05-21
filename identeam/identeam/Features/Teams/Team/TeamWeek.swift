@@ -40,6 +40,29 @@ final class TeamMember: Identifiable {
     }
 }
 
+extension TeamMember {
+    static var templateGretaKanten: TeamMember {
+        TeamMember(
+            user: .templateGreta,
+            targetCount: 3,
+            idents: [
+                .templateGym,
+                .templateOtherGym,
+            ]
+        )
+    }
+    
+    static var templateNicoKanten: TeamMember {
+        TeamMember(
+            user: .templateNico,
+            targetCount: 3,
+            idents: [
+                .templateEvenOtherGym,
+            ]
+        )
+    }
+}
+
 struct TeamWeekDTO: Decodable {
     let slug: String
     let targetSum: UInt
@@ -71,6 +94,20 @@ struct TeamWeekDTO: Decodable {
             targetSum: dto.targetSum,
             identSum: dto.identSum,
             members: dto.members.map { TeamMember(dto: $0) }
+        )
+    }
+}
+
+extension TeamWeek {
+    static var templateKanten: TeamWeek {
+        TeamWeek(
+            slug: "die-kanten",
+            targetSum: 6,
+            identSum: 3,
+            members: [
+                .templateGretaKanten,
+                .templateNicoKanten
+            ]
         )
     }
 }

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftData
 
-enum ImageKind: String, Codable {
+enum S3ItemKind: String, Codable {
     case avatar
     case identImage
 }
@@ -24,22 +24,25 @@ final class S3Item {
         expiresAt <= Date()
     }
     
-    var kind: ImageKind {
-        get { ImageKind(rawValue: kindRaw) ?? .avatar }
+    var kind: S3ItemKind {
+        get { S3ItemKind(rawValue: kindRaw) ?? .avatar }
         set { kindRaw = newValue.rawValue }
     }
     
-    var owner: String? {
+    var ownerID: String? {
+        let parts = key.split(separator: "/")
+        
         switch kind {
         case .avatar:
-            let parts = key.split(separator: "/")
-            guard parts.count >= 2 else {
+            guard parts.count == 4 else {
                 return nil
             }
-            
             return String(parts[1])
         case .identImage:
-            return nil
+            guard parts.count == 5  else {
+                return nil
+            }
+            return String(parts[3])
         }
     }
     
@@ -47,7 +50,7 @@ final class S3Item {
         url: URL,
         key: String,
         expiresAt: Date,
-        kind: ImageKind
+        kind: S3ItemKind
     ) {
         self.url = url
         self.key = key
@@ -55,12 +58,23 @@ final class S3Item {
         self.kindRaw = kind.rawValue
     }
     
-    convenience init(dto: PresignedDTO, kind: ImageKind) {
+    convenience init(dto: PresignedDTO, kind: S3ItemKind) {
         self.init(
             url: URL(string: dto.presignedURL)!,
             key: dto.key,
             expiresAt: dto.expiresAt,
             kind: kind
+        )
+    }
+}
+
+extension S3Item {
+    static var templateIdentImage: S3Item {
+        S3Item(
+            url: URL(string: "https://picsum.photos/200/300")!,
+            key: "teams/die-kanten/idents/if_of_ident_here/image_v1.png",
+            expiresAt: Date().addingTimeInterval(60),
+            kind: .identImage
         )
     }
 }

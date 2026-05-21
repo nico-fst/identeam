@@ -44,3 +44,20 @@ final class User {
     }
 }
 
+extension User {
+    static var templateGreta: User {
+        User(
+            userID: "abc",
+            email: "gre@ta.de",
+            fullName: "Greta Kante",
+            username: "greta-kante")
+    }
+    
+    static var templateNico: User {
+        User(
+            userID: "xyz",
+            email: "ni@co.de",
+            fullName: "Nico Kante",
+            username: "nico-kante")
+    }
+}

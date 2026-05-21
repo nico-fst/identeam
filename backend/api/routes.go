@@ -19,9 +19,21 @@ import (
 )
 
 type App struct {
-	Provider apns.Provider
-	DB       *gorm.DB
-	Media    *media.R2Client
+	ApnsProvider apns.Provider
+	DB           *gorm.DB
+	R2Client     *media.R2Client
+}
+
+func (app *App) Database() *gorm.DB {
+	return app.DB
+}
+
+func (app *App) R2() *media.R2Client {
+	return app.R2Client
+}
+
+func (app *App) APNS() *apns.Provider {
+	return &app.ApnsProvider
 }
 
 func initSwagger() {
@@ -77,7 +89,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 
 	mux.Route("/", func(r chi.Router) {
 		r.Use(middleware.JWTAuth,
-			middleware.InjectUser(app.DB))
+			middleware.InjectUser(app))
 
 		r.Get("/auth/apple/check_session", app.CheckSession)
 
@@ -110,7 +122,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 }
 
 func (app *App) SetupDB() {
-	err := db.EnsureDefaultTeams(context.Background(), app.DB)
+	err := db.EnsureDefaultTeams(context.Background(), app)
 	if err != nil {
 		log.Fatalf("ERROR ensuring default teams: %v", err)
 	}
@@ -122,7 +134,7 @@ func (app *App) SetupServer() {
 		Handler: app.SetupRoutes(),
 	}
 
-	app.Provider = *app.Provider.SetupProvider()
+	app.ApnsProvider = *app.ApnsProvider.SetupProvider()
 	app.SetupDB()
 
 	log.Println("Starting server on 8080...")

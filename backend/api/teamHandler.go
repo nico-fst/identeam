@@ -46,13 +46,13 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		NotificationTemplate: &payload.NotificationTemplate,
 	}
 
-	newTeam, err := db.CreateTeam(r.Context(), app.DB, team)
+	newTeam, err := db.CreateTeam(r.Context(), app, team)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
-	_, err = db.AddUserToTeam(r.Context(), app.DB, user.UserID, newTeam.Slug)
+	_, err = db.AddUserToTeam(r.Context(), app, user.UserID, newTeam.Slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -92,7 +92,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 
 	slug := strings.ToLower(chi.URLParam(r, "slug"))
 
-	team, err := db.AddUserToTeam(r.Context(), app.DB, user.UserID, slug)
+	team, err := db.AddUserToTeam(r.Context(), app, user.UserID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
@@ -129,7 +129,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := db.RemoveUserFromTeam(r.Context(), app.DB, user.UserID, slug)
+	team, err := db.RemoveUserFromTeam(r.Context(), app, user.UserID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
@@ -179,16 +179,16 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 // GetTeamWeek godoc
 //
 //	@Summary		Get team week overview
-//	@Description	Returns the team week overview, including weekly targets and idents for the provided RFC3339 date.
+//	@Description	Returns the team week overview, including weekly targets and idents for the provided YYYY-MM-DD week start date.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
-//	@Param			date	query		string	true	"Week date in RFC3339 format"
+//	@Param			dateStart	path		string	true	"Week start date in YYYY-MM-DD format"
 //	@Success		200		{object}	util.JSONResponse{data=models.TeamWeekResponse}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
-//	@Router			/teams/{slug}/week [get]
+//	@Router			/teams/{slug}/week/{dateStart} [get]
 func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	dateParam := chi.URLParam(r, "dateStart")
@@ -203,7 +203,7 @@ func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamWeek, err := db.GetTeamWeek(r.Context(), app.DB, slug, date)
+	teamWeek, err := db.GetTeamWeek(r.Context(), app, slug, date)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return

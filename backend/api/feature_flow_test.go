@@ -73,7 +73,7 @@ func newFeatureTestApp(t *testing.T) *api.App {
 		t.Fatalf("automigrate: %v", err)
 	}
 
-	if err := dbpkg.EnsureDefaultTeams(context.Background(), db); err != nil {
+	if err := dbpkg.EnsureDefaultTeams(context.Background(), dbpkg.NewServices(db)); err != nil {
 		t.Fatalf("ensure default teams: %v", err)
 	}
 
@@ -278,9 +278,8 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("expected target count 3, got %d", targetData.TargetCount)
 	}
 
-	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Format(time.RFC3339),
-		TeamSlug: team.Slug,
 		UserText: "Completed a meaningful weekly ident.",
 	}, owner.SessionToken)
 
@@ -354,9 +353,8 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 		t.Fatalf("create target returned error: %s", targetEnvelope.Message)
 	}
 
-	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Format(time.RFC3339),
-		TeamSlug: team.Slug,
 		UserText: "This ident should not panic.",
 	}, owner.SessionToken)
 
@@ -401,9 +399,8 @@ func TestFeatureFlow_DeleteIdentRequiresOwner(t *testing.T) {
 	}
 	decodeEnvelope(t, targetResp)
 
-	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Format(time.RFC3339),
-		TeamSlug: team.Slug,
 		UserText: "Only the owner can delete this.",
 	}, owner.SessionToken)
 	if identResp.StatusCode != http.StatusOK {
@@ -487,9 +484,8 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 		t.Fatalf("create member target failed with status %d: %s", memberTargetResp.StatusCode, envelope.Message)
 	}
 
-	ownerIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+	ownerIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Format(time.RFC3339),
-		TeamSlug: team.Slug,
 		UserText: "Owner ident one.",
 	}, owner.SessionToken)
 	if ownerIdentResp.StatusCode != http.StatusOK {
@@ -497,9 +493,8 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 		t.Fatalf("create owner ident failed with status %d: %s", ownerIdentResp.StatusCode, envelope.Message)
 	}
 
-	memberIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/idents/create", api.AddIdentPayload{
+	memberIdentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
 		Time:     weekDate.Add(time.Hour).Format(time.RFC3339),
-		TeamSlug: team.Slug,
 		UserText: "Member ident one.",
 	}, member.SessionToken)
 	if memberIdentResp.StatusCode != http.StatusOK {

@@ -15,7 +15,7 @@ struct IdenteamApp: App {
     @StateObject private var vm = AppViewModel()
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var teamsVM = TeamsViewModel()
-    @StateObject private var teamVM = TeamViewModel()
+    @StateObject private var teamVM = TeamWeekViewModel()
     @StateObject private var navVM = NavigationViewModel()
     @StateObject private var cameraVM = CameraViewModel()
     @StateObject private var avatarVM = AvatarViewModel()

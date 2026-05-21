@@ -18,9 +18,9 @@ var (
 )
 
 // Returns user if exists in DB, otherwise nil
-func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User, error) {
+func GetUserById(ctx context.Context, app AppContext, userID string) (*models.User, error) {
 	var user models.User
-	err := db.Model(&models.User{}).
+	err := app.Database().Model(&models.User{}).
 		Preload("Teams").
 		Where("user_id = ?", userID).
 		First(&user).Error
@@ -35,9 +35,9 @@ func GetUserById(ctx context.Context, db *gorm.DB, userID string) (*models.User,
 	return &user, nil
 }
 
-func GetUserByMail(ctx context.Context, db *gorm.DB, email string) (*models.User, error) {
+func GetUserByMail(ctx context.Context, app AppContext, email string) (*models.User, error) {
 	var user models.User
-	err := db.Model(&models.User{}).
+	err := app.Database().Model(&models.User{}).
 		Preload("Teams").
 		Where("email", strings.ToLower(strings.TrimSpace(email))).
 		First(&user).Error
@@ -53,7 +53,7 @@ func GetUserByMail(ctx context.Context, db *gorm.DB, email string) (*models.User
 }
 
 // Tries creating given user in DB
-func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.User, error) {
+func CreateUser(ctx context.Context, app AppContext, user models.User) (*models.User, error) {
 	if user.FullName != "" {
 		log.Printf("Defaulting user.Username %v with its fullname %v", user.UserID, user.FullName)
 		user.Username = user.FullName
@@ -63,7 +63,7 @@ func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.Use
 		user.Username = user.Email[:at]
 	}
 
-	err := gorm.G[models.User](db).
+	err := gorm.G[models.User](app.Database()).
 		Create(ctx, &user)
 	if err != nil {
 		log.Printf("ERROR creating user %v in DB: %v", user, err)
@@ -75,11 +75,11 @@ func CreateUser(ctx context.Context, db *gorm.DB, user models.User) (*models.Use
 }
 
 // Gets or creates user -> true <=> new user crated
-func GetElseCreateUser(ctx context.Context, db *gorm.DB, input models.User) (bool, models.User, error) {
-	foundUser, err := GetUserById(ctx, db, input.UserID)
+func GetElseCreateUser(ctx context.Context, app AppContext, input models.User) (bool, models.User, error) {
+	foundUser, err := GetUserById(ctx, app, input.UserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			createdUser, createErr := CreateUser(ctx, db, input)
+			createdUser, createErr := CreateUser(ctx, app, input)
 			if createErr != nil {
 				return false, models.User{}, createErr
 			}
@@ -92,7 +92,8 @@ func GetElseCreateUser(ctx context.Context, db *gorm.DB, input models.User) (boo
 }
 
 // Update FullName or Username of given user
-func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUserDetails models.User) (models.User, error) {
+func UpdateUserDetails(ctx context.Context, app AppContext, user models.User, newUserDetails models.User) (models.User, error) {
+	db := app.Database()
 	// Guard: |FullName| <= 15
 	if utf8.RuneCountInString(newUserDetails.FullName) > 15 {
 		log.Printf("ERROR updating username %v -> %v (too long)", user.FullName, newUserDetails.FullName)
@@ -116,7 +117,7 @@ func UpdateUserDetails(ctx context.Context, db *gorm.DB, user models.User, newUs
 		return models.User{}, err
 	}
 
-	updatedUser, err := GetUserById(ctx, db, newUserDetails.UserID)
+	updatedUser, err := GetUserById(ctx, app, newUserDetails.UserID)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -137,8 +138,8 @@ func DerefUsers(users []*models.User) []models.User {
 	return res
 }
 
-func DoesEmailMatchPassword(ctx context.Context, db *gorm.DB, email string, password string) (bool, *models.User, error) {
-	user, err := GetUserByMail(ctx, db, email)
+func DoesEmailMatchPassword(ctx context.Context, app AppContext, email string, password string) (bool, *models.User, error) {
+	user, err := GetUserByMail(ctx, app, email)
 	if err != nil {
 		return false, nil, err
 	}
@@ -154,8 +155,8 @@ func DoesEmailMatchPassword(ctx context.Context, db *gorm.DB, email string, pass
 	return err == nil, user, err
 }
 
-func UpdateAvatarKey(ctx context.Context, db *gorm.DB, userID uint, key string) error {
-	return db.WithContext(ctx).
+func UpdateAvatarKey(ctx context.Context, app AppContext, userID uint, key string) error {
+	return app.Database().WithContext(ctx).
 		Model(&models.User{}).
 		Where("id = ?", userID).
 		Update("avatar_s3_key", key).

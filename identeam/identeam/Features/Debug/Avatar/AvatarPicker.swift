@@ -14,8 +14,6 @@ struct AvatarPicker: View {
     @State private var avatarImage: IdentifiableImage?
     @State private var selectedItem: PhotosPickerItem?
     
-    
-    
     @EnvironmentObject private var avatarVM: AvatarViewModel
     
     @Environment(\.modelContext) private var ctx
@@ -118,37 +116,38 @@ struct AvatarPicker: View {
     // umgeht, dass im PhotoPicker exakt 1 View Typ sein muss (baut conditional)
     @ViewBuilder
     private var avatarContent: some View {
-        if let avatar = avatars.first {
-            let resource = KF.ImageResource(
-                downloadURL: avatar.url,
-                cacheKey: avatar.key
-            )
-            
-            HStack(spacing: 24) {
-                    KFImage(source: .network(resource))
-                        .placeholder {
-                            ProgressView()
-                                .frame(width: 80, height: 80)
-                        }
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 80, height: 80)
-                        .clipShape(Circle())
+        HStack(spacing: 24) {
+            if let avatar = avatars.first {
+                let resource = KF.ImageResource(
+                    downloadURL: avatar.url,
+                    cacheKey: avatar.key
+                )
                 
-                VStack(alignment: .leading) {
-                    Text(fullName ?? "no fullname")
-                        .font(.largeTitle)
-                    Text("@\(username ?? "no username")")
-                        .font(.footnote)
-                        .opacity(0.6)
-                }
+                
+                KFImage(source: .network(resource))
+                    .placeholder {
+                        ProgressView()
+                    }
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                    .foregroundStyle(.secondary)
             }
-        } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 96, height: 96)
-                .foregroundStyle(.secondary)
+            
+            // always render fullname und username
+            VStack(alignment: .leading) {
+                Text(fullName ?? "no fullname")
+                    .font(.largeTitle)
+                Text("@\(username ?? "no username")")
+                    .font(.footnote)
+                    .opacity(0.6)
+            }
         }
     }
     

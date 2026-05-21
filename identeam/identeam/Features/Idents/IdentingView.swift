@@ -16,7 +16,9 @@ struct IdentingView: View {
     @EnvironmentObject private var cameraVM: CameraViewModel
     @EnvironmentObject private var identingVM: IdentingViewModel
     @EnvironmentObject private var teamsVM: TeamsViewModel
+    
     @Environment(\.modelContext) private var modelContext
+    
     var forceCameraPreview: Bool = false
     
     private var flashIcon: String {
@@ -65,7 +67,8 @@ struct IdentingView: View {
                 
                 // camera controls
                 VStack {
-                    TeamWheel(selectedTeamSlug: $identingVM.selectedTeamSlug)
+                    TeamWheel(textColor: .white, selectedTeamSlug: $identingVM.selectedTeamSlug)
+                        .frame(width: 300, height: 110)
                     
                     Spacer() // at bottom of screen
                     
@@ -163,38 +166,63 @@ struct IdentingPhotoPreview: View {
     let onDismiss: () -> Void
     let onUpload: () async -> Void
     
+    @State private var savedImagetoCameraRoll = false
+    
     @EnvironmentObject private var identingVM: IdentingViewModel
+    @EnvironmentObject private var vm: AppViewModel
+    
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack {
-            Image(uiImage: item.image)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity) // frame crucial for 3Deffect
-                .frame(height: 360)
-                .mask(
-                    Image("Flash")
-                        .resizable()
-                        .scaledToFit()
+        ZStack() {
+            VStack {
+                TeamWheel(textColor: colorScheme == .dark ? .white : .black,
+                          selectedTeamSlug: $identingVM.selectedTeamSlug)
+                .frame(width: 300, height: 110)
+                
+                Image(uiImage: item.image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity) // frame crucial for 3Deffect
+                    .clipped()
+                    .mask(
+                        Image("Flash")
+                            .resizable()
+                            .scaledToFit()
+                    )
+                    .overlay {
+                        Image("FlashOutline")
+                            .renderingMode(.template) // renders all pixels as foreground color
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundStyle(.accent)
+                    }
+                    .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
+                    .padding(.bottom, 75)
+            }
+            
+            VStack {
+                Spacer()
+                
+                TextField(
+                    "Tell your members about what's going on...",
+                    text: $identingVM.createIdentUserText,
+                    axis: .vertical
                 )
-                .overlay {
-                    Image("FlashOutline")
-                        .renderingMode(.template) // renders all pixels as foreground color
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(.accent)
+                .padding() // simulating List{TextField} style
+                .background {
+                    RoundedRectangle(cornerRadius: 50)
+                        .fill(.gray.opacity(0.15))
                 }
-                .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
-            TextField(
-                "Tell your members about what's going on...",
-                text: $identingVM.createIdentUserText,
-                axis: .vertical
-            )
-            .padding()
-            .textFieldStyle(.roundedBorder)
-            .lineLimit(1...5)
-            .disabled(identingVM.isUploadingImage)
+                .lineLimit(1...2)
+                .disabled(identingVM.isUploadingImage)
+                
+                Text(identingVM.uploadError ?? "")
+                    .foregroundStyle(.red)
+            }
         }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle("New Ident")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -212,10 +240,15 @@ struct IdentingPhotoPreview: View {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     savePhotoToCameraRoll()
+                    savedImagetoCameraRoll = true
                 } label: {
-                    Image(systemName: "square.and.arrow.down")
+                    if !savedImagetoCameraRoll {
+                        Image(systemName: "square.and.arrow.down")
+                    } else {
+                        Image(systemName: "square.and.arrow.down.fill")
+                    }
                 }
-                .disabled(identingVM.isUploadingImage)
+                .disabled(identingVM.isUploadingImage || savedImagetoCameraRoll)
                 
                 Button {
                     Task {
@@ -230,6 +263,15 @@ struct IdentingPhotoPreview: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(identingVM.isUploadingImage)
+            }
+        }
+        .sheet(isPresented: $identingVM.isSettingTarget) {
+            if let slug = identingVM.selectedTeamSlug {
+                NavigationStack {
+                    TargetPicker(slug: slug) { _ in
+                        identingVM.isSettingTarget = false
+                    }
+                }
             }
         }
     }
@@ -280,4 +322,5 @@ struct IdentingPhotoPreview: View {
         onUpload: {}
     )
     .environmentObject(IdentingViewModel())
+    .environmentObject(AppViewModel())
 }

@@ -3,6 +3,8 @@ package db
 import (
 	"errors"
 	"fmt"
+	"identeam/internal/apns"
+	"identeam/internal/media"
 	"identeam/models"
 	"os"
 	"strings"
@@ -11,6 +13,38 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+// Because of import cycle
+type AppContext interface {
+	Database() *gorm.DB
+	R2() *media.R2Client
+	APNS() *apns.Provider
+}
+
+type Services struct {
+	DB           *gorm.DB
+	R2Client     *media.R2Client
+	APNSProvider *apns.Provider
+}
+
+func NewServices(db *gorm.DB) *Services {
+	return &Services{DB: db}
+}
+
+func (s *Services) Database() *gorm.DB {
+	return s.DB
+}
+
+func (s *Services) R2() *media.R2Client {
+	return s.R2Client
+}
+
+func (s *Services) APNS() *apns.Provider {
+	if s.APNSProvider != nil {
+		return s.APNSProvider
+	}
+	return &apns.Provider{}
+}
 
 func ConnectPostgres() (*gorm.DB, error) {
 	host := os.Getenv("DB_HOST")

@@ -7,16 +7,19 @@
 
 import SwiftData
 import SwiftUI
+import Kingfisher
 
-struct TeamView: View {
+struct TeamWeekView: View {
     let slug: String
     
     @AppStorage("username") private var username: String = ""
     
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
-    @EnvironmentObject var teamVM: TeamViewModel
+    @EnvironmentObject var teamVM: TeamWeekViewModel
     @Environment(\.modelContext) private var ctx
+    
+    let isXcodePreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 
     @Query private var teams: [Team]
     private var team: Team? {
@@ -26,6 +29,13 @@ struct TeamView: View {
     @Query private var teamWeeks: [TeamWeek]
     private var teamWeek: TeamWeek? {
         teamWeeks.first(where: { $0.slug == slug })
+    }
+    
+    private var targetSet: Bool {
+        guard let teamWeek else { return false }
+        return teamWeek.members.contains { member in
+            member.user.username == username && member.targetCount > 0
+        }
     }
 
     var body: some View {
@@ -42,7 +52,7 @@ struct TeamView: View {
                             ForEach(teamWeek.members.sorted(by: {
                                 $0.user.username.lowercased() < $1.user.username.lowercased()
                             })) { member in
-                                DisclosureGroup("\(member.user.username) ⋅ \(member.idents.count) / \(member.targetCount) Idents") {
+                                DisclosureGroup("\(member.user.fullName) ⋅ \(member.idents.count) / \(member.targetCount) Idents") {
                                     ForEach(member.idents.sorted(by: {
                                         $0.time > $1.time
                                     })) { ident in
@@ -55,11 +65,13 @@ struct TeamView: View {
                                                 .minute()
                                         )
                                         
-                                        VStack(alignment: .leading) {
-                                            Text(ident.userText)
-                                            Text(date)
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
+                                        HStack {
+                                            identImage(ident: ident)
+                                                .frame(height: 75)
+                                            TextLabeled(date, ident.userText)
+                                        }
+                                        .onTapGesture {
+                                            teamVM.selectedIdent = ident
                                         }
                                     }
                                 }
@@ -72,27 +84,10 @@ struct TeamView: View {
                     }
                     
                     Section("My Target") {
-                        Button("Set Target") {
+                        Button() {
                             teamVM.showSettingTarget = true
-                        }
-                    }
-                    
-                    if (teamWeek?.members.contains(where: {
-                        $0.user.username == username && $0.targetCount > 0
-                    }) ?? false) {
-                        Section("New Ident") {
-                            TextField("Tell your members about your ident...", text: $teamVM.createIdentUserText)
-                            
-                            Button("Create Ident") {
-                                Task {
-                                    await teamVM.tryCreatingIdent(
-                                        slug: slug,
-                                        vm: vm,
-                                        ctx: ctx,
-                                        teamsVM: teamsVM
-                                    )
-                                }
-                            }
+                        } label: {
+                            Text(targetSet ? "Change Target" : "Set Target")
                         }
                     }
                     
@@ -116,7 +111,7 @@ struct TeamView: View {
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
-                            team: team,
+                            slug: team.slug,
                         ) { didChange in
                             teamVM.showSettingTarget = false
                             if didChange {
@@ -126,7 +121,27 @@ struct TeamView: View {
                             }
                         }
                     }
-                    .presentationDetents([.medium])
+                }
+                .sheet(item: $teamVM.selectedIdent) { ident in
+                    NavigationStack {
+                        VStack {
+                            Text(ident.userText)
+                                .padding()
+                            
+                            identImage(ident: ident)
+                                .cornerRadius(12)
+                        }
+                        .padding()
+                        .navigationTitle(ident.time.formatted(
+                            .dateTime
+                                .weekday(.abbreviated)
+                                .day()
+                                .month(.wide)
+                                .hour()
+                                .minute()
+                        ))
+                    }
+                    .presentationDetents([.medium, .large])
                 }
             } else {
                 ContentUnavailableView(
@@ -141,10 +156,32 @@ struct TeamView: View {
             }
         }
         .task {
-            if let team {
-                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+            if !isXcodePreview {
+                if let team {
+                    await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+                }
             }
         }
+    }
+    
+    @ViewBuilder
+    private func identImage(ident: Ident) -> some View {
+        let resource = KF.ImageResource(
+            downloadURL: ident.image.url,
+            cacheKey: ident.image.key
+        )
+        
+        KFImage(source: .network(resource))
+            .placeholder {
+                ProgressView()
+            }
+            .resizable()
+            .scaledToFit()
+            .mask(
+                Image("Flash")
+                    .resizable()
+                    .scaledToFill()
+            )
     }
 }
 
@@ -153,24 +190,30 @@ private struct TeamView_PreviewContainer: View {
 
     init() {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        self.container = try! ModelContainer(for: Team.self, TeamWeek.self, configurations: config)
+        self.container = try! ModelContainer(
+            for: Team.self,
+            TeamWeek.self,
+            TeamMember.self,
+            User.self,
+            Ident.self,
+            S3Item.self,
+            configurations: config
+        )
 
         // Insert mock data into the in-memory context
-        let mockTeam = Team(name: "Die Kanten", slug: "die-kanten", details: "Mock Team for Preview")
-        let mockWeek = TeamWeek(slug: "die-kanten", targetSum: 10, identSum: 3, members: [])
-        container.mainContext.insert(mockTeam)
-        container.mainContext.insert(mockWeek)
+        container.mainContext.insert(Team.templateKanten)
+        container.mainContext.insert(TeamWeek.templateKanten)
     }
 
     var body: some View {
-        TeamView(slug: "die-kanten")
+        TeamWeekView(slug: "die-kanten")
             .environmentObject(AppViewModel())
             .environmentObject(TeamsViewModel())
-            .environmentObject(TeamViewModel())
+            .environmentObject(TeamWeekViewModel())
             .modelContainer(container)
     }
 }
 
-#Preview("TeamView with Mock Data") {
+#Preview {
     TeamView_PreviewContainer()
 }

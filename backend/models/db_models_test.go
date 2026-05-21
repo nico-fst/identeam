@@ -125,7 +125,7 @@ func TestGetTeamBySlugPreloadsUsersDeviceTokens(t *testing.T) {
 		t.Fatalf("associate user with team: %v", err)
 	}
 
-	loadedTeam, err := dbpkg.GetTeamBySlug(context.Background(), db, team.Slug)
+	loadedTeam, err := dbpkg.GetTeamBySlug(context.Background(), dbpkg.NewServices(db), team.Slug)
 	if err != nil {
 		t.Fatalf("GetTeamBySlug returned error: %v", err)
 	}

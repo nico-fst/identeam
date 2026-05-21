@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.0+10] - 2026-05-21
+
+### Added
+
+- Allow creating Idents via camera and upload to R2/S3
+
 ## [1.6.0+9] - 2026-05-09
 
 ### Added

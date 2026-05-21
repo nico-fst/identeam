@@ -53,7 +53,7 @@ struct TeamsView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .team(let slug):
-                    TeamView(slug: slug)
+                    TeamWeekView(slug: slug)
                 }
             }
             .toolbar {
@@ -148,7 +148,7 @@ struct TeamsView: View {
                     }
                 }
                 
-                // Right: Check => Join
+                // Right: Check => Create
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         Task {

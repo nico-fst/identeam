@@ -36,7 +36,7 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	err := app.Provider.NotifyString(deviceToken, notification)
+	err := app.ApnsProvider.NotifyString(deviceToken, notification)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -72,7 +72,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		Body:  "Triggered by " + user.FullName,
 	}
 
-	members, err := db.NotifyTeamMembers(r.Context(), app.DB, &app.Provider, user, slug, alert)
+	members, err := db.NotifyTeamMembers(r.Context(), app, user, slug, alert)
 	if err != nil {
 		util.ErrorJSON(w, fmt.Errorf("unable to notify team members about new ident: %v", err), http.StatusInternalServerError)
 	}

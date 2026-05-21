@@ -62,7 +62,7 @@ class TeamsViewModel: ObservableObject {
             modelContext.insert(newTeamWeek)
             try modelContext.save()
 
-            vm.toastMessage = "Refreshed TeamWeek"
+            print("Refresh Teamweek of \(slug)")
         } catch is CancellationError {
             return
         } catch {

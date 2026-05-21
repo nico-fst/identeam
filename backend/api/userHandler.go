@@ -42,7 +42,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, err := db.UpdateUserDetails(r.Context(), app.DB, user, models.User{
+	newUser, err := db.UpdateUserDetails(r.Context(), app, user, models.User{
 		UserID:   user.UserID,
 		FullName: payload.User.FullName,
 		Username: payload.User.Username,
@@ -66,6 +66,19 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetAvatarUploadURL godoc
+// @Summary		Get avatar upload URL
+// @Description	Creates a presigned PUT URL for uploading the authenticated user's avatar image.
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			payload	body		models.PresignedRequestPayload	true	"Image upload request"
+// @Success		200		{object}	util.JSONResponse{data=models.PresignedResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/me/avatar/get_upload_url [post]
 func (app *App) GetAvatarUploadURL(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[models.PresignedRequestPayload](r.Context(), r.Body, w)
 	if !ok {
@@ -87,6 +100,19 @@ func (app *App) GetAvatarUploadURL(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CommitAvatarPayload godoc
+// @Summary		Commit avatar upload
+// @Description	Stores the uploaded avatar key on the authenticated user after validating the object exists.
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			payload	body		models.CommitUploadPayload	true	"Committed upload key"
+// @Success		200		{object}	util.JSONResponse{data=models.CommitS3Response}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/me/avatar/commit [post]
 func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[models.CommitUploadPayload](r.Context(), r.Body, w)
 	if !ok {
@@ -105,7 +131,7 @@ func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.UpdateAvatarKey(r.Context(), app.DB, user.ID, payload.Key); err != nil {
+	if err := db.UpdateAvatarKey(r.Context(), app, user.ID, payload.Key); err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -124,6 +150,16 @@ type GetMeResponse struct {
 	Avatar *models.PresignedResponse `json:"avatar"`
 }
 
+// GetMe godoc
+// @Summary		Get current user
+// @Description	Returns the authenticated user's profile data and a presigned avatar URL when an avatar is set.
+// @Tags			Users
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	util.JSONResponse{data=GetMeResponse}
+// @Failure		401	{object}	util.JSONResponse
+// @Failure		500	{object}	util.JSONResponse
+// @Router			/me [get]
 func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -135,7 +171,7 @@ func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	if user.AvatarS3Key != "" {
 		expiresAt := time.Now().Add(10 * time.Minute)
-		avatarURL, err := app.Media.PresignGetObject(r.Context(), user.AvatarS3Key, expiresAt)
+		avatarURL, err := app.R2Client.PresignGetObject(r.Context(), user.AvatarS3Key, expiresAt)
 		if err != nil {
 			util.ErrorJSON(w, fmt.Errorf("could not get avatarURL: %v", err), http.StatusInternalServerError)
 			return

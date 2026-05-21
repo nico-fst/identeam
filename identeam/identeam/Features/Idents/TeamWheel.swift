@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct TeamWheel: View {
+    let textColor: Color
     @Binding var selectedTeamSlug: String?
     @Query(sort: \Team.slug) private var teams: [Team]
     
@@ -17,7 +18,7 @@ struct TeamWheel: View {
             if !teams.isEmpty {
                 ForEach(teams, id: \.slug) { team in
                     Text(team.name).tag(Optional(team.slug))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(textColor)
                 }
             } else {
                 Text("Join a team first!").tag(String?.none)
@@ -27,7 +28,6 @@ struct TeamWheel: View {
             }
         }
         .pickerStyle(.wheel)
-        .frame(width: 300, height: 110)
         .clipped()
         .onAppear {
             if selectedTeamSlug == nil {

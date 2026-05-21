@@ -28,17 +28,19 @@ var (
 
 // CreateIdent godoc
 // @Summary		Create ident
-// @Description	Creates an ident for the authenticated user in the team week identified by the payload time and team slug, then notifies the team.
+// @Description	Creates an ident for the authenticated user in the team week identified by the path team slug and payload time, then notifies the team.
 // @Tags			Idents
 // @Accept			json
 // @Produce		json
 // @Security		BearerAuth
+// @Param			slug	path		string			true	"Team slug"
 // @Param			payload	body		AddIdentPayload	true	"Ident payload"
 // @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
+// @Failure		404		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
-// @Router			/idents/create [post]
+// @Router			/teams/{slug}/idents/create [post]
 func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[AddIdentPayload](r.Context(), r.Body, w)
 	if !ok {
@@ -59,7 +61,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	target, err := db.GetUserWeeklyTargetByTimeUserTeam(r.Context(), app.DB, identTime, user.ID, slug)
+	target, err := db.GetUserWeeklyTargetByTimeUserTeam(r.Context(), app, identTime, user.ID, slug)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			util.ErrorJSON(w, errTargetNotSet, http.StatusNotFound)
@@ -75,14 +77,14 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 		UserWeeklyTargetID: target.ID,
 	}
 
-	ident, err := db.CreateIdent(r.Context(), app.DB, newIdent)
+	ident, err := db.CreateIdent(r.Context(), app, newIdent)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
 	// Notify team about new ident
-	_, err = db.NotifyTeamMembersAboutNewIdent(r.Context(), app.DB, &app.Provider, *ident)
+	_, err = db.NotifyTeamMembersAboutNewIdent(r.Context(), app, *ident)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -91,22 +93,24 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created Ident, notified team successfully",
-		Data:    ident.ToDTO(),
+		Data:    ident.ToDTO(r.Context(), app.R2Client),
 	})
 }
 
 // DeleteIdent godoc
 // @Summary		Delete ident
-// @Description	Deletes the ident identified by the path ID and returns the deleted ident.
+// @Description	Deletes the authenticated user's ident identified by team slug and ident ID, then returns the deleted ident.
 // @Tags			Idents
 // @Produce		json
 // @Security		BearerAuth
-// @Param			id	path		int	true	"Ident ID"
-// @Success		200	{object}	util.JSONResponse{data=models.IdentResponse}
-// @Failure		400	{object}	util.JSONResponse
-// @Failure		401	{object}	util.JSONResponse
-// @Failure		500	{object}	util.JSONResponse
-// @Router			/idents/{id} [delete]
+// @Param			slug	path		string	true	"Team slug"
+// @Param			id		path		int		true	"Ident ID"
+// @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		403		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/teams/{slug}/idents/{id} [delete]
 func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -121,13 +125,13 @@ func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	}
 	slug := chi.URLParam(r, "slug")
 
-	ident, err := db.GetIdentById(r.Context(), app.DB, uint(identID))
+	ident, err := db.GetIdentById(r.Context(), app, uint(identID))
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
-	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app.DB, ident.ID, user.ID, slug)
+	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app, ident.ID, user.ID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -137,7 +141,7 @@ func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DeleteIdent(r.Context(), app.DB, *ident)
+	err = db.DeleteIdent(r.Context(), app, *ident)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
@@ -146,10 +150,26 @@ func (app *App) DeleteIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Deleted Ident successfully",
-		Data:    ident.ToDTO(),
+		Data:    ident.ToDTO(r.Context(), app.R2Client),
 	})
 }
 
+// GetIdentImageUploadURL godoc
+// @Summary		Get ident image upload URL
+// @Description	Creates a presigned PUT URL for uploading an image to the authenticated user's ident.
+// @Tags			Idents
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			slug	path		string							true	"Team slug"
+// @Param			id		path		int								true	"Ident ID"
+// @Param			payload	body		models.PresignedRequestPayload	true	"Image upload request"
+// @Success		200		{object}	util.JSONResponse{data=models.PresignedResponse}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		403		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/teams/{slug}/idents/{id}/image/get_upload_url [post]
 func (app *App) GetIdentImageUploadURL(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[models.PresignedRequestPayload](r.Context(), r.Body, w)
 	if !ok {
@@ -164,13 +184,13 @@ func (app *App) GetIdentImageUploadURL(w http.ResponseWriter, r *http.Request) {
 	}
 	identID := uint(identID64)
 
-	ident, err := db.GetIdentById(r.Context(), app.DB, identID)
+	ident, err := db.GetIdentById(r.Context(), app, identID)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
-	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app.DB, ident.ID, user.ID, slug)
+	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app, ident.ID, user.ID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -195,6 +215,22 @@ func (app *App) GetIdentImageUploadURL(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CommitIdentImage godoc
+// @Summary		Commit ident image upload
+// @Description	Stores the uploaded image key on the authenticated user's ident after validating the object exists.
+// @Tags			Idents
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			slug	path		string						true	"Team slug"
+// @Param			id		path		int							true	"Ident ID"
+// @Param			payload	body		models.CommitUploadPayload	true	"Committed upload key"
+// @Success		200		{object}	util.JSONResponse{data=models.CommitS3Response}
+// @Failure		400		{object}	util.JSONResponse
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		403		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/teams/{slug}/idents/{id}/image/commit [post]
 func (app *App) CommitIdentImage(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[models.CommitUploadPayload](r.Context(), r.Body, w)
 	if !ok {
@@ -209,7 +245,7 @@ func (app *App) CommitIdentImage(w http.ResponseWriter, r *http.Request) {
 	}
 	identID := uint(identID64)
 
-	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app.DB, identID, user.ID, slug)
+	ownsIdent, err := db.UserOwnsIdentInTeam(r.Context(), app, identID, user.ID, slug)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -231,7 +267,7 @@ func (app *App) CommitIdentImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.UpdateIdentKey(r.Context(), app.DB, identID, payload.Key); err != nil {
+	if err := db.UpdateIdentKey(r.Context(), app, identID, payload.Key); err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}

@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct TargetPicker: View {
-    let team: Team
+    let slug: String
     let onChange: (Bool) -> Void
     
     @State private var selectedTargetCount: Int = 3
@@ -41,7 +41,7 @@ struct TargetPicker: View {
                 Button {
                     Task {
                         await trySettingTarget(
-                            slug: team.slug,
+                            slug: slug,
                             vm: vm,
                             ctx: ctx,
                         )
@@ -58,6 +58,7 @@ struct TargetPicker: View {
             }
         }
         .navigationTitle("Set Target")
+        .presentationDetents([.large])
     }
     
     func trySettingTarget(
@@ -92,7 +93,7 @@ struct TargetPicker: View {
 
 #Preview {
     TargetPicker(
-        team: Team(name: "Die Kanten", slug: "die-kanten", details: "Hier sind Kanten drin"),
+        slug: "die-kanten",
         onChange: { _ in }
     )
     .environmentObject(AppViewModel())

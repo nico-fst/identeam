@@ -59,14 +59,14 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.GetUserByMail(r.Context(), app.DB, payload.Email)
+	user, err := db.GetUserByMail(r.Context(), app, payload.Email)
 	if err == gorm.ErrRecordNotFound {
 		log.Printf("User with mail %v tried logging in but has to signup first", payload.Email)
 		util.ErrorJSON(w, errors.New("no account found for this email - signup instead"), http.StatusNotFound)
 		return
 	}
 
-	passwordMatches, user, err := db.DoesEmailMatchPassword(r.Context(), app.DB, payload.Email, payload.Password)
+	passwordMatches, user, err := db.DoesEmailMatchPassword(r.Context(), app, payload.Email, payload.Password)
 	if !passwordMatches {
 		util.ErrorJSON(w, errors.New("did not find any user for combination of email and password"))
 		return
@@ -140,7 +140,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 		Username:     payload.Username,
 	}
 
-	foundUser, err := db.CreateUser(r.Context(), app.DB, user)
+	foundUser, err := db.CreateUser(r.Context(), app, user)
 	if err != nil {
 		fmt.Println("ERROR creating user:", foundUser, err)
 		util.ErrorJSON(w, errors.New("ERROR creating user: "+err.Error()))
@@ -256,7 +256,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	// Create or retrieve User; Return Session Token
 
-	created, foundUser, err := db.GetElseCreateUser(r.Context(), app.DB, user)
+	created, foundUser, err := db.GetElseCreateUser(r.Context(), app, user)
 	if err != nil {
 		fmt.Println("ERROR getting (true)) or create (false) user:", foundUser, err)
 		util.ErrorJSON(w, errors.New("ERROR getting or create user"), http.StatusInternalServerError)

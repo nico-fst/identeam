@@ -44,3 +44,12 @@ final class Team {
     }
 }
 
+extension Team {
+    static var templateKanten: Team {
+        Team(
+            name: "Die Kanten",
+            slug: "die-kanten",
+            details: "Mock Team 'Kanten' for Preview"
+        )
+    }
+}

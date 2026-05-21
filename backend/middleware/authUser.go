@@ -10,8 +10,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"gorm.io/gorm"
 )
 
 type ctxKey string
@@ -56,7 +54,7 @@ func GetUserIDFromContext(ctx context.Context) (string, bool) {
 	return id, ok
 }
 
-func InjectUser(pDB *gorm.DB) func(http.Handler) http.Handler { // returns func(...) which returns http.Handler
+func InjectUser(app db.AppContext) func(http.Handler) http.Handler { // returns func(...) which returns http.Handler
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userID, ok := GetUserIDFromContext(r.Context())
@@ -65,7 +63,7 @@ func InjectUser(pDB *gorm.DB) func(http.Handler) http.Handler { // returns func(
 				return
 			}
 
-			user, err := db.GetUserById(r.Context(), pDB, userID)
+			user, err := db.GetUserById(r.Context(), app, userID)
 			if err != nil {
 				// User has valid JWT but doesn't exist in DB -> return 401
 				log.Printf("[InjectUser Middleware] User with valid JWT not found in DB - userID: %s", userID)

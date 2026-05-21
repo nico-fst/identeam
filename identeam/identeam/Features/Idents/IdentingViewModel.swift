@@ -17,6 +17,8 @@ class IdentingViewModel: ObservableObject {
     @Published var isUploadingImage = false
     @Published var uploadError: String?
     
+    @Published var isSettingTarget = false
+    
     func tryCreatingIdentWithImage(
         image: IdentifiableImage,
         vm: AppViewModel,
@@ -52,7 +54,7 @@ class IdentingViewModel: ObservableObject {
             await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
             return true
         } catch TeamError.targetNotSet {
-            uploadError = "Not so fast... Set a target in the team tab first!"
+            isSettingTarget = true
         } catch {
             uploadError = error.localizedDescription
             return false

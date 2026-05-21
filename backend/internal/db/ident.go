@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateIdent(ctx context.Context, db *gorm.DB, ident models.Ident) (*models.Ident, error) {
-	err := gorm.G[models.Ident](db).
+func CreateIdent(ctx context.Context, app AppContext, ident models.Ident) (*models.Ident, error) {
+	err := gorm.G[models.Ident](app.Database()).
 		Create(ctx, &ident)
 	if err != nil {
 		log.Printf("ERROR creating Ident %v in DB: %v", ident, err)
@@ -20,9 +20,9 @@ func CreateIdent(ctx context.Context, db *gorm.DB, ident models.Ident) (*models.
 	return &ident, nil
 }
 
-func GetIdentById(ctx context.Context, db *gorm.DB, identID uint) (*models.Ident, error) {
+func GetIdentById(ctx context.Context, app AppContext, identID uint) (*models.Ident, error) {
 	var ident models.Ident
-	err := db.Model(&models.Ident{}).
+	err := app.Database().Model(&models.Ident{}).
 		Where("id = ?", identID).
 		First(&ident).Error
 	if err != nil {
@@ -33,9 +33,9 @@ func GetIdentById(ctx context.Context, db *gorm.DB, identID uint) (*models.Ident
 	return &ident, nil
 }
 
-func UserOwnsIdentInTeam(ctx context.Context, db *gorm.DB, identID uint, userID uint, teamSlug string) (bool, error) {
+func UserOwnsIdentInTeam(ctx context.Context, app AppContext, identID uint, userID uint, teamSlug string) (bool, error) {
 	var count int64
-	err := db.WithContext(ctx).
+	err := app.Database().WithContext(ctx).
 		Model(&models.Ident{}).
 		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
 		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
@@ -51,8 +51,8 @@ func UserOwnsIdentInTeam(ctx context.Context, db *gorm.DB, identID uint, userID 
 	return count > 0, nil
 }
 
-func DeleteIdent(ctx context.Context, db *gorm.DB, ident models.Ident) error {
-	_, err := gorm.G[models.Ident](db).Where("id = ?", ident.ID).Delete(ctx)
+func DeleteIdent(ctx context.Context, app AppContext, ident models.Ident) error {
+	_, err := gorm.G[models.Ident](app.Database()).Where("id = ?", ident.ID).Delete(ctx)
 	if err != nil {
 		log.Printf("ERROR deleting Ident with id %v from DB: %v", ident.ID, err)
 		return err
@@ -62,8 +62,8 @@ func DeleteIdent(ctx context.Context, db *gorm.DB, ident models.Ident) error {
 	return nil
 }
 
-func UpdateIdentKey(ctx context.Context, db *gorm.DB, identID uint, key string) error {
-	return db.WithContext(ctx).
+func UpdateIdentKey(ctx context.Context, app AppContext, identID uint, key string) error {
+	return app.Database().WithContext(ctx).
 		Model(&models.Ident{}).
 		Where("id = ?", identID).
 		Update("image_s3_key", key).

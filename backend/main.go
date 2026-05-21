@@ -42,7 +42,7 @@ func main() {
 
 	// setup APNs, DB, R2
 	app := api.App{
-		Provider: apns.Provider{
+		ApnsProvider: apns.Provider{
 			KeyId:   os.Getenv("APNS_KEY_ID"),
 			TeamId:  os.Getenv("TEAM_ID"),
 			KeyFile: "./apns_key.p8",
@@ -51,7 +51,7 @@ func main() {
 			IsProd:  strings.ToLower(os.Getenv("IS_PROD")) == "true",
 		},
 		DB:    db,
-		Media: media.NewR2Client(),
+		R2Client: media.NewR2Client(),
 	}
 
 	app.SetupServer()

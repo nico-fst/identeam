@@ -10,11 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateUserWeeklyTarget(ctx context.Context, db *gorm.DB, target models.UserWeeklyTarget) (*models.UserWeeklyTarget, error) {
+func CreateUserWeeklyTarget(ctx context.Context, app AppContext, target models.UserWeeklyTarget) (*models.UserWeeklyTarget, error) {
 	// ensure timeStart is start of week
 	target.TimeStart = util.TimeToWeekStart(target.TimeStart)
 
-	err := gorm.G[models.UserWeeklyTarget](db).
+	err := gorm.G[models.UserWeeklyTarget](app.Database()).
 		Create(ctx, &target)
 	if err != nil {
 		log.Printf("ERROR creating UserWeeklyTarget %v in DB: %v", target, err)
@@ -25,7 +25,8 @@ func CreateUserWeeklyTarget(ctx context.Context, db *gorm.DB, target models.User
 	return &target, nil
 }
 
-func UpdateUserWeeklyTargetCount(ctx context.Context, db *gorm.DB, targetID uint, newCount int) (*models.UserWeeklyTarget, error) {
+func UpdateUserWeeklyTargetCount(ctx context.Context, app AppContext, targetID uint, newCount int) (*models.UserWeeklyTarget, error) {
+	db := app.Database()
 	var target models.UserWeeklyTarget
 	if err := db.Where("id = ?", targetID).First(&target).Error; err != nil {
 		return nil, err
@@ -46,9 +47,9 @@ func UpdateUserWeeklyTargetCount(ctx context.Context, db *gorm.DB, targetID uint
 	return &newTarget, nil
 }
 
-func GetUserWeeklyTargetByTimeUserTeam(ctx context.Context, db *gorm.DB, time time.Time, userID uint, teamSlug string) (*models.UserWeeklyTarget, error) {
+func GetUserWeeklyTargetByTimeUserTeam(ctx context.Context, app AppContext, time time.Time, userID uint, teamSlug string) (*models.UserWeeklyTarget, error) {
 	var target models.UserWeeklyTarget
-	err := db.Model(&models.UserWeeklyTarget{}).
+	err := app.Database().Model(&models.UserWeeklyTarget{}).
 		Joins("Team").
 		Where(`user_weekly_targets.time_start = ? 
 				AND user_weekly_targets.user_id = ? 
@@ -66,9 +67,9 @@ func GetUserWeeklyTargetByTimeUserTeam(ctx context.Context, db *gorm.DB, time ti
 	return &target, nil
 }
 
-func GetTeamsWeekTargets(ctx context.Context, db *gorm.DB, teamSlug string, timeStart time.Time) ([]models.UserWeeklyTarget, error) {
+func GetTeamsWeekTargets(ctx context.Context, app AppContext, teamSlug string, timeStart time.Time) ([]models.UserWeeklyTarget, error) {
 	var targets []models.UserWeeklyTarget
-	err := db.Model(&models.UserWeeklyTarget{}).
+	err := app.Database().Model(&models.UserWeeklyTarget{}).
 		Joins("Team").
 		Preload("User").
 		Preload("Idents").
@@ -80,14 +81,4 @@ func GetTeamsWeekTargets(ctx context.Context, db *gorm.DB, teamSlug string, time
 	}
 
 	return targets, nil
-}
-
-func GetTeamWeek(ctx context.Context, db *gorm.DB, teamSlug string, timeStart time.Time) (*models.TeamWeekResponse, error) {
-	targets, err := GetTeamsWeekTargets(ctx, db, teamSlug, timeStart)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := models.NewTeamWeekResponse(teamSlug, targets)
-	return &resp, nil
 }

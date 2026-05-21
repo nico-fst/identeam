@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"identeam/internal/apns"
 	"identeam/models"
 	"log"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -16,7 +16,8 @@ func stringPtr(s string) *string {
 	return &s
 }
 
-func EnsureDefaultTeams(ctx context.Context, db *gorm.DB) error {
+func EnsureDefaultTeams(ctx context.Context, app AppContext) error {
+	db := app.Database()
 	defaultTeams := []models.Team{
 		{
 			Name:                 "Die Kanten",
@@ -43,7 +44,7 @@ func EnsureDefaultTeams(ctx context.Context, db *gorm.DB) error {
 			return err
 		}
 
-		if _, err := CreateTeam(ctx, db, team); err != nil {
+		if _, err := CreateTeam(ctx, app, team); err != nil {
 			return err
 		}
 	}
@@ -51,8 +52,8 @@ func EnsureDefaultTeams(ctx context.Context, db *gorm.DB) error {
 	return nil
 }
 
-func CreateTeam(ctx context.Context, db *gorm.DB, team models.Team) (*models.Team, error) {
-	err := gorm.G[models.Team](db).
+func CreateTeam(ctx context.Context, app AppContext, team models.Team) (*models.Team, error) {
+	err := gorm.G[models.Team](app.Database()).
 		Create(ctx, &team)
 	if err != nil {
 		log.Printf("ERROR creating team %v in DB: %v", team, err)
@@ -63,8 +64,9 @@ func CreateTeam(ctx context.Context, db *gorm.DB, team models.Team) (*models.Tea
 	return &team, nil
 }
 
-func AddUserToTeam(ctx context.Context, db *gorm.DB, userID string, teamSlug string) (*models.Team, error) {
-	user, err := GetUserById(ctx, db, userID)
+func AddUserToTeam(ctx context.Context, app AppContext, userID string, teamSlug string) (*models.Team, error) {
+	db := app.Database()
+	user, err := GetUserById(ctx, app, userID)
 	if err != nil {
 		return &models.Team{}, err
 	}
@@ -84,8 +86,9 @@ func AddUserToTeam(ctx context.Context, db *gorm.DB, userID string, teamSlug str
 	return &team, nil
 }
 
-func RemoveUserFromTeam(ctx context.Context, db *gorm.DB, userID string, teamSlug string) (*models.Team, error) {
-	user, err := GetUserById(ctx, db, userID)
+func RemoveUserFromTeam(ctx context.Context, app AppContext, userID string, teamSlug string) (*models.Team, error) {
+	db := app.Database()
+	user, err := GetUserById(ctx, app, userID)
 	if err != nil {
 		return &models.Team{}, err
 	}
@@ -106,9 +109,9 @@ func RemoveUserFromTeam(ctx context.Context, db *gorm.DB, userID string, teamSlu
 	return &team, nil
 }
 
-func GetTeamBySlug(ctx context.Context, db *gorm.DB, slug string) (*models.Team, error) {
+func GetTeamBySlug(ctx context.Context, app AppContext, slug string) (*models.Team, error) {
 	var team models.Team
-	err := db.Model(&models.Team{}).
+	err := app.Database().Model(&models.Team{}).
 		Preload("Users").
 		Preload("Users.DeviceTokens").
 		Where("slug = ?", strings.ToLower(slug)).
@@ -121,9 +124,9 @@ func GetTeamBySlug(ctx context.Context, db *gorm.DB, slug string) (*models.Team,
 	return &team, nil
 }
 
-func GetTeamMembers(ctx context.Context, db *gorm.DB, userID string, teamSlug string) ([]*models.User, error) {
+func GetTeamMembers(ctx context.Context, app AppContext, userID string, teamSlug string) ([]*models.User, error) {
 	var team models.Team
-	if err := db.
+	if err := app.Database().
 		Preload("Users", "user_id <> ?", userID).
 		Preload("Users.DeviceTokens").
 		Where("slug = ? ", teamSlug). // not userID himself
@@ -134,8 +137,18 @@ func GetTeamMembers(ctx context.Context, db *gorm.DB, userID string, teamSlug st
 	return team.Users, nil
 }
 
-func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider, user models.User, slug string, alert models.Alert) ([]models.User, error) {
-	team, err := GetTeamBySlug(ctx, db, slug)
+func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart time.Time) (*models.TeamWeekResponse, error) {
+	targets, err := GetTeamsWeekTargets(ctx, app, teamSlug, timeStart)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
+	return &resp, nil
+}
+
+func NotifyTeamMembers(ctx context.Context, app AppContext, user models.User, slug string, alert models.Alert) ([]models.User, error) {
+	team, err := GetTeamBySlug(ctx, app, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +160,7 @@ func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider
 		},
 	}
 
-	err = provider.NotifyUsers(members, notification)
+	err = app.APNS().NotifyUsers(members, notification)
 	if err != nil {
 		return nil, err
 	}
@@ -155,9 +168,9 @@ func NotifyTeamMembers(ctx context.Context, db *gorm.DB, provider *apns.Provider
 	return members, nil
 }
 
-func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *apns.Provider, ident models.Ident) ([]models.User, error) {
+func NotifyTeamMembersAboutNewIdent(ctx context.Context, app AppContext, ident models.Ident) ([]models.User, error) {
 	var target models.UserWeeklyTarget
-	err := db.Model(&models.UserWeeklyTarget{}).
+	err := app.Database().Model(&models.UserWeeklyTarget{}).
 		Preload("User").
 		Preload("Team").
 		First(&target, ident.UserWeeklyTargetID).Error
@@ -165,7 +178,7 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *
 		return nil, err
 	}
 
-	teamWeek, err := GetTeamWeek(ctx, db, target.Team.Slug, target.TimeStart)
+	teamWeek, err := GetTeamWeek(ctx, app, target.Team.Slug, target.TimeStart)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +194,7 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *
 		Body:     target.User.FullName + ": " + ident.UserText,
 	}
 
-	members, err := NotifyTeamMembers(ctx, db, provider, target.User, target.Team.Slug, alert)
+	members, err := NotifyTeamMembers(ctx, app, target.User, target.Team.Slug, alert)
 	if err != nil {
 		return nil, err
 	}
@@ -189,9 +202,9 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, db *gorm.DB, provider *
 	return members, nil
 }
 
-func NotifyTeamMembersAboutTargetSet(ctx context.Context, db *gorm.DB, provider *apns.Provider, targetID uint) ([]models.User, error) {
+func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, targetID uint) ([]models.User, error) {
 	var target models.UserWeeklyTarget
-	err := db.Model(&models.UserWeeklyTarget{}).
+	err := app.Database().Model(&models.UserWeeklyTarget{}).
 		Preload("User").
 		Preload("Team").
 		First(&target, targetID).Error
@@ -204,7 +217,7 @@ func NotifyTeamMembersAboutTargetSet(ctx context.Context, db *gorm.DB, provider 
 		Body:  fmt.Sprintf("%v set Target to %d", target.User.FullName, target.TargetCount),
 	}
 
-	members, err := NotifyTeamMembers(ctx, db, provider, target.User, target.Team.Slug, alert)
+	members, err := NotifyTeamMembers(ctx, app, target.User, target.Team.Slug, alert)
 	if err != nil {
 		return nil, err
 	}

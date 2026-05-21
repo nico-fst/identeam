@@ -10,10 +10,13 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-class TeamViewModel: ObservableObject {
+class TeamWeekViewModel: ObservableObject {
     @Published var createIdentUserText: String = ""
     @Published var showSettingTarget = false
     
+    @Published var selectedIdent: Ident?
+    
+    // Legacy, unused (before photos)
     func tryCreatingIdent(
         slug: String,
         vm: AppViewModel,

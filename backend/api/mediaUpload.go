@@ -20,7 +20,7 @@ type mediaUploadTarget struct {
 func (app *App) writePresignedUploadURL(w http.ResponseWriter, r *http.Request, target mediaUploadTarget) bool {
 	expiresAt := time.Now().Add(10 * time.Minute)
 
-	uploadURL, err := app.Media.PresignPutObject(r.Context(), target.Key, target.ContentType, expiresAt)
+	uploadURL, err := app.R2Client.PresignPutObject(r.Context(), target.Key, target.ContentType, expiresAt)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusInternalServerError)
 		return false
@@ -44,7 +44,7 @@ func (app *App) validateCommittedUpload(w http.ResponseWriter, r *http.Request, 
 		return false
 	}
 
-	if err := app.Media.CheckExistence(r.Context(), key); err != nil {
+	if err := app.R2Client.CheckExistence(r.Context(), key); err != nil {
 		util.ErrorJSON(w, errors.New(missingObjectMessage), http.StatusBadRequest)
 		return false
 	}
