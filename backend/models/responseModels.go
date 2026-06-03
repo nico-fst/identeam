@@ -174,3 +174,9 @@ type PresignedResponse struct {
 type CommitS3Response struct {
 	Key string `json:"key"`
 }
+
+type LocalNotificationDTO struct {
+	Title string    `json:"title"`
+	Body  string    `json:"body"`
+	Date  time.Time `json:"date"`
+}

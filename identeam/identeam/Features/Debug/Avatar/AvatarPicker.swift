@@ -154,7 +154,7 @@ struct AvatarPicker: View {
 }
 
 extension UIImage {
-    func centerSquareCropped() -> UIImage {
+    fileprivate func centerSquareCropped() -> UIImage {
         let originalSize = size
         let squareLength = min(originalSize.width, originalSize.height)
 
@@ -176,7 +176,7 @@ extension UIImage {
         )
     }
 
-    func normalizedJPEGData(compressionQuality: CGFloat) -> Data? {
+    fileprivate func normalizedJPEGData(compressionQuality: CGFloat) -> Data? {
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = scale
         format.opaque = true

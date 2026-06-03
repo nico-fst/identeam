@@ -34,7 +34,7 @@ enum PhotoMetadataHelper {
         return outputData as Data
     }
     
-    static func gpsMetadata(from location: CLLocation) -> [String: Any] {
+    private static func gpsMetadata(from location: CLLocation) -> [String: Any] {
         let coordinate = location.coordinate
         var metadata: [String: Any] = [
             kCGImagePropertyGPSLatitude as String: abs(coordinate.latitude),

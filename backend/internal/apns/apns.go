@@ -53,7 +53,7 @@ func (provider *Provider) NotifyString(deviceToken string, notification models.N
 }
 
 // pushed Notification to all of user's deviceTokens
-func (provider *Provider) NotifyDeviceTokens(deviceTokens []models.DeviceToken, notification models.NotificationPayload) error {
+func (provider *Provider) notifyDeviceTokens(deviceTokens []models.DeviceToken, notification models.NotificationPayload) error {
 	for _, deviceToken := range deviceTokens {
 		notificationPayload := &apns2.Notification{
 			DeviceToken: deviceToken.Token,
@@ -72,7 +72,7 @@ func (provider *Provider) NotifyDeviceTokens(deviceTokens []models.DeviceToken, 
 
 func (provider *Provider) NotifyUsers(users []models.User, notification models.NotificationPayload) error {
 	for _, user := range users {
-		err := provider.NotifyDeviceTokens(user.DeviceTokens, notification)
+		err := provider.notifyDeviceTokens(user.DeviceTokens, notification)
 		if err != nil {
 			return err
 		}

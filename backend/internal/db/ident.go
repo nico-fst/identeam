@@ -33,6 +33,25 @@ func GetIdentById(ctx context.Context, app AppContext, identID uint) (*models.Id
 	return &ident, nil
 }
 
+func GetIdentsOfTarget(ctx context.Context, app AppContext, targetID uint) ([]models.Ident, error) {
+	idents, err := gorm.G[models.Ident](app.Database().Statement.DB).
+		Where("user_weekly_target_id = ?", targetID).
+		Find(ctx)
+	return idents, err
+}
+
+func GetIdentsOfTargets(ctx context.Context, app AppContext, targets []models.UserWeeklyTarget) ([]models.Ident, error) {
+	idents := make([]models.Ident, 0)
+	for _, t := range targets {
+		foundTargets, err := GetIdentsOfTarget(ctx, app, t.ID)
+		if err != nil {
+			return []models.Ident{}, nil
+		}
+		idents = append(idents, foundTargets...)
+	}
+	return idents, nil
+}
+
 func UserOwnsIdentInTeam(ctx context.Context, app AppContext, identID uint, userID uint, teamSlug string) (bool, error) {
 	var count int64
 	err := app.Database().WithContext(ctx).

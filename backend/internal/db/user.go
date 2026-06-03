@@ -125,7 +125,7 @@ func UpdateUserDetails(ctx context.Context, app AppContext, user models.User, ne
 	return *updatedUser, nil
 }
 
-func DerefUsers(users []*models.User) []models.User {
+func derefUsers(users []*models.User) []models.User {
 	res := make([]models.User, 0, len(users))
 
 	for _, u := range users {

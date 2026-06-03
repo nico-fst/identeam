@@ -130,7 +130,7 @@ class TeamAPI {
 
     func NotifyTeam(slug: String) async throws {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "notify/team/\(slug)"
+            "notifications/apns/team/\(slug)/notify"
         )
 
         let response: BackendResponse<Empty> =

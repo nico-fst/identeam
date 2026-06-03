@@ -5,7 +5,7 @@ struct CommitS3DTO: Decodable {
 }
 
 enum S3UploadAPI {
-    static func uploadData(_ data: Data, to uploadURL: URL, contentType: String) async throws {
+    private static func uploadData(_ data: Data, to uploadURL: URL, contentType: String) async throws {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "PUT"
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")

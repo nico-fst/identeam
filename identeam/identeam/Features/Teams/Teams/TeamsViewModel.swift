@@ -81,7 +81,7 @@ class TeamsViewModel: ObservableObject {
     }
     
     // allow only letters and "-"
-    func isValidSlug(slug: String) -> Bool {
+    private func isValidSlug(slug: String) -> Bool {
         let pattern = "^[A-Za-z-]+$"
         let regex = try! NSRegularExpression(pattern: pattern)
         let range = NSRange(location: 0, length: slug.utf16.count)

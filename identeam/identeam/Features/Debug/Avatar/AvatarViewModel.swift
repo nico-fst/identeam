@@ -35,7 +35,7 @@ class AvatarViewModel: ObservableObject {
         try await refreshAvatar(avatars: avatars, ctx: ctx)
     }
     
-    func refreshAvatar(avatars: [S3Item], ctx: ModelContext) async throws {
+    private func refreshAvatar(avatars: [S3Item], ctx: ModelContext) async throws {
         let resp = try await AvatarAPI.shared.fetchMe()
         
         for avatar in avatars {

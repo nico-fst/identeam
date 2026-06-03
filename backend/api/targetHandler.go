@@ -87,7 +87,7 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
-		Message: "Put UserWeeklyGoal and notified TeamMembers successfully",
+		Message: "Put UserWeeklyTarget and notified TeamMembers successfully",
 		Data:    target.ToDTO(),
 	})
 }

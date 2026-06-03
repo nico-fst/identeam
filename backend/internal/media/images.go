@@ -6,13 +6,13 @@ import (
 	"strings"
 )
 
-func AvatarKeyString(userID string, version uint, ext string) string {
+func avatarKeyString(userID string, version uint, ext string) string {
 	ext = strings.TrimPrefix(strings.ToLower(ext), ".")
 	return fmt.Sprintf("users/%s/profile/avatar_v%d.%s", userID, version, ext)
 }
 
 func NextAvatarKey(userID string, currentKey string, contentType string) (string, error) {
-	ext, err := ContentTypeToExtension(contentType)
+	ext, err := contentTypeToExtension(contentType)
 	if err != nil {
 		return "", err
 	}
@@ -21,16 +21,16 @@ func NextAvatarKey(userID string, currentKey string, contentType string) (string
 		return fmt.Sprintf("users/%s/profile/avatar_v1.%s", userID, ext), nil
 	}
 
-	return NextKeyVersion(currentKey)
+	return nextKeyVersion(currentKey)
 }
 
-func IdentImageKeyString(slug string, identID string, version uint, ext string) string {
+func identImageKeyString(slug string, identID string, version uint, ext string) string {
 	ext = strings.TrimPrefix(strings.ToLower(ext), ".")
 	return fmt.Sprintf("teams/%s/idents/%s/image_v%d.%s", slug, identID, version, ext)
 }
 
 func NextIdentImageKey(slug string, currentKey string, identID string, contentType string) (string, error) {
-	ext, err := ContentTypeToExtension(contentType)
+	ext, err := contentTypeToExtension(contentType)
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +39,7 @@ func NextIdentImageKey(slug string, currentKey string, identID string, contentTy
 		return fmt.Sprintf("teams/%s/idents/%s/image_v1.%s", slug, identID, ext), nil
 	}
 
-	return NextKeyVersion(currentKey)
+	return nextKeyVersion(currentKey)
 }
 
 func ValidateImage(contentType string, sizeBytes int) error {
@@ -55,7 +55,7 @@ func ValidateImage(contentType string, sizeBytes int) error {
 	}
 }
 
-func ContentTypeToExtension(contentType string) (string, error) {
+func contentTypeToExtension(contentType string) (string, error) {
 	switch contentType {
 	case "image/jpeg":
 		return "jpg", nil

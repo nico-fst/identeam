@@ -10,7 +10,7 @@ import SwiftData
 
 struct TargetPicker: View {
     let slug: String
-    let onChange: (Bool) -> Void
+    let onChange: (Bool) -> Void // == new value set
     
     @State private var selectedTargetCount: Int = 3
     @State private var isSettingTarget = false
@@ -61,7 +61,7 @@ struct TargetPicker: View {
         .presentationDetents([.large])
     }
     
-    func trySettingTarget(
+    private func trySettingTarget(
         slug: String,
         vm: AppViewModel,
         ctx: ModelContext,
@@ -80,12 +80,15 @@ struct TargetPicker: View {
                 dateStart: Date(),
                 count: selectedTargetCount
             )
+            
+            let notifications = try await LocalNotificationAPI.shared.fetchUpcomingNotifications(slug: slug)
+            try await scheduleLocalNotifications(notifications, slug: slug)
         } catch {
             vm.showAlert("Error setting Target", error.localizedDescription)
             return
         }
 
-        vm.toastMessage = "Target set"
+        vm.toastMessage = "Target set ⋅ Notifications scheduled"
 
         onChange(true)
     }

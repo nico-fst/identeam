@@ -20,7 +20,7 @@ class AvatarAPI {
         }
     }
 
-    func getAvatarUploadURL(contentType: String, sizeBytes: Int) async throws -> PresignedDTO {
+    private func getAvatarUploadURL(contentType: String, sizeBytes: Int) async throws -> PresignedDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me/avatar/get_upload_url")
         let payload: [String: Any] = [
             "contentType": contentType,
@@ -37,7 +37,7 @@ class AvatarAPI {
         }
     }
 
-    func commitAvatarUpload(key: String) async throws -> CommitS3DTO {
+    private func commitAvatarUpload(key: String) async throws -> CommitS3DTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me/avatar/commit")
         let payload: [String: Any] = [
             "key": key

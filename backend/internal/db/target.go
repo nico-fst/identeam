@@ -82,3 +82,46 @@ func GetTeamsWeekTargets(ctx context.Context, app AppContext, teamSlug string, t
 
 	return targets, nil
 }
+
+func GetTargetsByUserTeam(ctx context.Context, app AppContext, userID uint, teamID uint, timeStart time.Time) ([]models.UserWeeklyTarget, error) {
+	targets, err := gorm.G[models.UserWeeklyTarget](app.Database()).
+		Where("user_id = ? AND time_start = ? AND team_id = ?", userID, util.TimeToWeekStart(timeStart), teamID).
+		Find(ctx)
+
+	return targets, err
+}
+
+func GetTargetsLast21DaysByUserTeam(ctx context.Context, app AppContext, userID uint, teamID uint, timeStart time.Time) ([]models.UserWeeklyTarget, error) {
+	targets := make([]models.UserWeeklyTarget, 0)
+
+	last3Weeks := []time.Time{
+		timeStart.AddDate(0, 0, -7),
+		timeStart.AddDate(0, 0, -14),
+		timeStart.AddDate(0, 0, -21),
+	}
+
+	for _, week := range last3Weeks {
+		weekTargets, err := GetTargetsByUserTeam(ctx, app, userID, teamID, week)
+		if err != nil {
+			return []models.UserWeeklyTarget{}, err
+		}
+		targets = append(
+			targets,
+			weekTargets...,
+		)
+	}
+
+	return targets, nil
+}
+
+func FilterTargetsByTeamID(targets []models.UserWeeklyTarget, teamID uint) []models.UserWeeklyTarget {
+	filteredTargets := make([]models.UserWeeklyTarget, 0)
+
+	for _, t := range targets {
+		if t.TeamID == teamID {
+			filteredTargets = append(filteredTargets, t)
+		}
+	}
+
+	return filteredTargets
+}

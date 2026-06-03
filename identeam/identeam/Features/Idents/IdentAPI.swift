@@ -34,7 +34,7 @@ class IdentAPI {
         }
     }
     
-    func getIdentImageUploadURL(slug: String, identID: String, contentType: String, sizeBytes: Int) async throws -> PresignedDTO {
+    private func getIdentImageUploadURL(slug: String, identID: String, contentType: String, sizeBytes: Int) async throws -> PresignedDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("/teams/\(slug)/idents/\(identID)/image/get_upload_url")
         let payload: [String: Any] = [
             "contentType": contentType,
@@ -51,7 +51,7 @@ class IdentAPI {
         }
     }
 
-    func commitIdentImageUpload(key: String, slug: String, identID: String) async throws -> CommitS3DTO {
+    private func commitIdentImageUpload(key: String, slug: String, identID: String) async throws -> CommitS3DTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent("/teams/\(slug)/idents/\(identID)/image/commit")
         let payload: [String: Any] = [
             "key": key

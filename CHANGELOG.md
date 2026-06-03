@@ -1,6 +1,12 @@
 # Changelog
 
-## [1.7.0+10] - 2026-05-21
+## [1.8.0+12] - 2026-06-03
+
+### Added
+
+- Intelligent Reminders per team (every day) using mean of last Idents
+
+## [1.7.0+11] - 2026-05-21
 
 ### Added
 

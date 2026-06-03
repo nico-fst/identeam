@@ -73,9 +73,9 @@ func TestPresignObjectSupportsObjectOperations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			url, err := client.PresignObject(ctx, tt.input)
+			url, err := client.presignObject(ctx, tt.input)
 			if err != nil {
-				t.Fatalf("PresignObject returned error: %v", err)
+				t.Fatalf("presignObject returned error: %v", err)
 			}
 
 			if url == "" {
@@ -137,7 +137,7 @@ func TestPresignObjectValidatesInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := tt.client.PresignObject(ctx, tt.input)
+			_, err := tt.client.presignObject(ctx, tt.input)
 			if err == nil {
 				t.Fatal("expected error")
 			}

@@ -152,7 +152,7 @@ func NotifyTeamMembers(ctx context.Context, app AppContext, user models.User, sl
 	if err != nil {
 		return nil, err
 	}
-	members := DerefUsers(team.Users)
+	members := derefUsers(team.Users)
 
 	notification := models.NotificationPayload{
 		APS: models.APS{

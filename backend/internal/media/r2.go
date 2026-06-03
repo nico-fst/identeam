@@ -104,7 +104,7 @@ func (r *R2Client) CheckExistence(ctx context.Context, key string) error {
 	return nil
 }
 
-func (r *R2Client) PresignObject(ctx context.Context, input PresignObjectInput) (string, error) {
+func (r *R2Client) presignObject(ctx context.Context, input PresignObjectInput) (string, error) {
 	if r == nil || r.Client == nil {
 		return "", errS3ClientNotConfigured
 	}
@@ -172,7 +172,7 @@ func (r *R2Client) PresignObject(ctx context.Context, input PresignObjectInput) 
 }
 
 func (r *R2Client) PresignGetObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
-	return r.PresignObject(ctx, PresignObjectInput{
+	return r.presignObject(ctx, PresignObjectInput{
 		Operation: PresignObjectGet,
 		Key:       key,
 		ExpiresAt: expiresAt,
@@ -180,7 +180,7 @@ func (r *R2Client) PresignGetObject(ctx context.Context, key string, expiresAt t
 }
 
 func (r *R2Client) PresignPutObject(ctx context.Context, key string, contentType string, expiresAt time.Time) (string, error) {
-	return r.PresignObject(ctx, PresignObjectInput{
+	return r.presignObject(ctx, PresignObjectInput{
 		Operation:   PresignObjectPut,
 		Key:         key,
 		ExpiresAt:   expiresAt,
@@ -188,23 +188,23 @@ func (r *R2Client) PresignPutObject(ctx context.Context, key string, contentType
 	})
 }
 
-func (r *R2Client) PresignDeleteObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
-	return r.PresignObject(ctx, PresignObjectInput{
+func (r *R2Client) presignDeleteObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
+	return r.presignObject(ctx, PresignObjectInput{
 		Operation: PresignObjectDelete,
 		Key:       key,
 		ExpiresAt: expiresAt,
 	})
 }
 
-func (r *R2Client) PresignHeadObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
-	return r.PresignObject(ctx, PresignObjectInput{
+func (r *R2Client) presignHeadObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
+	return r.presignObject(ctx, PresignObjectInput{
 		Operation: PresignObjectHead,
 		Key:       key,
 		ExpiresAt: expiresAt,
 	})
 }
 
-func NextKeyVersion(currentKey string) (string, error) {
+func nextKeyVersion(currentKey string) (string, error) {
 	ext := path.Ext(currentKey)
 	if ext == "" {
 		return "", errors.New("s3 key has no file extension")
