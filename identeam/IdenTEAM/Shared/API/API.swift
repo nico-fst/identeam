@@ -36,6 +36,7 @@ enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
     case put = "PUT"
+    case delete = "DELETE"
 }
 
 class API {
@@ -145,6 +146,13 @@ class API {
         try await sendToBackend(
             url: url,
             method: .get
+        )
+    }
+
+    func deleteToBackend<T: Decodable>(url: URL) async throws -> BackendResponse<T> {
+        try await sendToBackend(
+            url: url,
+            method: .delete
         )
     }
 }

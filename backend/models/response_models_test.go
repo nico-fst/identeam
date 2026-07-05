@@ -33,7 +33,7 @@ func TestUsersToDTOs(t *testing.T) {
 		{UserID: "2", Email: "two@example.com", Nickname: "Two", Username: "two"},
 	}
 
-	got := users.ToDTOs()
+	got := users.ToDTOs(context.Background(), nil)
 	want := []models.UserDTO{
 		{UserID: "1", Email: "one@example.com", Nickname: "One", Username: "one"},
 		{UserID: "2", Email: "two@example.com", Nickname: "Two", Username: "two"},

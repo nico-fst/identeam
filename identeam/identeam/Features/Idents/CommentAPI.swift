@@ -31,4 +31,20 @@ class CommentAPI {
             throw TeamError.backend(response.message)
         }
     }
+
+    func uncomment(slug: String, identID: Int, commentID: Int) async throws -> CommentDTO {
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "/teams/\(slug)/idents/\(identID)/uncomment/\(commentID)"
+        )
+
+        let response: BackendResponse<CommentDTO> =
+            try await API.shared.deleteToBackend(url: url)
+
+        switch response.statusCode {
+        case 200:
+            return response.data!
+        default:
+            throw TeamError.backend(response.message)
+        }
+    }
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"identeam/internal/db"
+	"identeam/middleware"
 	"identeam/util"
 	"net/http"
 
@@ -69,6 +70,69 @@ func (app *App) CommentIdent(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Created Comment, notified team successfully",
-		Data:    comment.ToDTO(),
+		Data:    comment.ToDTO(r.Context(), app.R2Client),
+	})
+}
+
+// UncommentIdent godoc
+// @Summary		Delete comment on ident
+// @Description	Deletes the authenticated user's comment from the specified ident in the specified team.
+// @Tags			Comments
+// @Produce		json
+// @Security		BearerAuth
+// @Param			slug		path		string	true	"Team slug"
+// @Param			id			path		int		true	"Ident ID"
+// @Param			commentID	path		int		true	"Comment ID"
+// @Success		200			{object}	util.JSONResponse{data=models.CommentDTO}
+// @Failure		400			{object}	util.JSONResponse
+// @Failure		401			{object}	util.JSONResponse
+// @Failure		403			{object}	util.JSONResponse
+// @Failure		500			{object}	util.JSONResponse
+// @Router			/teams/{slug}/idents/{id}/uncomment/{commentID} [delete]
+func (app *App) UncommentIdent(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		util.ErrorJSON(w, errUnableToRetrieveUserIDFromContext, http.StatusInternalServerError)
+		return
+	}
+
+	slug := chi.URLParam(r, "slug")
+	identID, err := util.StringToUint64(chi.URLParam(r, "id"))
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+	commentID, err := util.StringToUint64(chi.URLParam(r, "commentID"))
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	comment, err := db.GetCommentById(r.Context(), app, commentID)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	ownsComment, err := db.UserOwnsCommentOnIdentInTeam(r.Context(), app, commentID, identID, user.ID, slug)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !ownsComment {
+		util.ErrorJSON(w, errors.New("comment does not belong to user on ident in team"), http.StatusForbidden)
+		return
+	}
+
+	err = db.DeleteComment(r.Context(), app, *comment)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	util.WriteJSON(w, 200, util.JSONResponse{
+		Error:   false,
+		Message: "Deleted Comment successfully",
+		Data:    comment.ToDTO(r.Context(), app.R2Client),
 	})
 }

@@ -90,7 +90,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Success notifying team members",
 		Data: NotifyTeamDTO{
-			Members: models.Users(members).ToDTOs(),
+			Members: models.Users(members).ToDTOs(r.Context(), app.R2Client),
 		},
 	})
 }

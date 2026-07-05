@@ -43,7 +43,7 @@ final class Ident {
             remoteID: dto.id,
             time: dto.time,
             userText: dto.userText,
-            image: S3Item(dto: dto.image, kind: S3ItemKind.identImage),
+            image: S3Item(dto: dto.image, kind: .identImage),
             comments: dto.comments.map { Comment(dto: $0) }
         )
     }
@@ -54,7 +54,7 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Ich war grad im Gym",
-            image: .templateIdentImage,
+            image: .templatePicsum1,
             comments: [.templateSiuu]
         )
     }
@@ -62,8 +62,8 @@ extension Ident {
     static var templateOtherGym: Ident {
         Ident(
             time: Date(),
-            userText: "Ich war auch grad im Gym",
-            image: .templateIdentImage,
+            userText: "Ich war auch grad im Gym und dieser Text hier ist sehr lang",
+            image: .templatePicsum1,
             comments: [.templateWow, .templateGood]
         )
     }
@@ -71,8 +71,8 @@ extension Ident {
     static var templateEvenOtherGym: Ident {
         Ident(
             time: Date(),
-            userText: "Und auch ich war auch grad im Gym",
-            image: .templateIdentImage,
+            userText: "Und auch ich war auch grad im Gym und dieser Text ist äußerst lang",
+            image: .templatePicsum1,
             comments: [.templateWow, .templateSiuu]
         )
     }
@@ -81,7 +81,7 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Ich hab grad Piano gespielt",
-            image: .templateIdentImage,
+            image: .templatePicsum1,
             comments: [.templateWow, .templateSiuu, .templateGood]
         )
     }

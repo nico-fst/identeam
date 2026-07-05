@@ -69,10 +69,28 @@ final class S3Item {
 }
 
 extension S3Item {
-    static var templateIdentImage: S3Item {
+    static var templatePicsum1: S3Item {
         S3Item(
             url: URL(string: "https://picsum.photos/200/300")!,
-            key: "teams/die-kanten/idents/if_of_ident_here/image_v1.png",
+            key: "teams/slug_here/idents/ident_id/image_vX.png",
+            expiresAt: Date().addingTimeInterval(60),
+            kind: .identImage
+        )
+    }
+    
+    static var templatePicsum2: S3Item {
+        S3Item(
+            url: URL(string: "https://picsum.photos/200")!,
+            key: "teams/another_slug/idents/another_ident_id/image_vX.png",
+            expiresAt: Date().addingTimeInterval(60),
+            kind: .identImage
+        )
+    }
+    
+    static var templatePicsum3: S3Item {
+        S3Item(
+            url: URL(string: "https://picsum.photos/250")!,
+            key: "teams/even_another_slug/idents/even_another_ident_id/image_vX.png",
             expiresAt: Date().addingTimeInterval(60),
             kind: .identImage
         )

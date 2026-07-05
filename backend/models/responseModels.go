@@ -19,22 +19,42 @@ type UserDTO struct {
 	Avatar   PresignedResponse `json:"avatar"`
 }
 
-func (u User) ToDTO() UserDTO {
-	return UserDTO{
+func (u User) ToDTO(ctx context.Context, r2Client *media.R2Client) UserDTO {
+	resp := UserDTO{
 		UserID:   u.UserID,
 		Email:    u.Email,
 		Nickname: u.Nickname,
 		Username: u.Username,
 	}
+
+	if r2Client == nil || u.AvatarS3Key == "" {
+		return resp
+	}
+
+	// add presigned Avatar
+	expiresAt := time.Now().Add(time.Hour * 24)
+	imageURL, err := r2Client.PresignGetObject(ctx, u.AvatarS3Key, expiresAt)
+	if err != nil {
+		// swallows error - catching would complicate entire toDTO process
+		print("ERROR presigning URL for User.Avatar:", err.Error())
+	} else {
+		resp.Avatar = PresignedResponse{
+			Key:          u.AvatarS3Key,
+			PresignedURL: imageURL,
+			ExpiresAt:    expiresAt,
+		}
+	}
+
+	return resp
 }
 
 type Users []User
 
-func (users Users) ToDTOs() []UserDTO {
+func (users Users) ToDTOs(ctx context.Context, r2Client *media.R2Client) []UserDTO {
 	res := make([]UserDTO, 0, len(users))
 
 	for _, user := range users {
-		res = append(res, user.ToDTO())
+		res = append(res, user.ToDTO(ctx, r2Client))
 	}
 
 	return res
@@ -77,22 +97,22 @@ type IdentDTO struct {
 	Comments []CommentDTO      `json:"comments"`
 }
 
-func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentDTO {
+func (i Ident) ToDTO(ctx context.Context, r2Client *media.R2Client) IdentDTO {
 	resp := IdentDTO{
 		ID:       i.ID,
 		Time:     i.Time,
 		UserText: i.UserText,
 		// Image s. below
-		Comments: Comments(i.Comments).ToDTOs(), // Cast since Go expects exact same type ([]Comment != Comments)
+		Comments: Comments(i.Comments).ToDTOs(ctx, r2Client), // Cast since Go expects exact same type ([]Comment != Comments)
 	}
 
-	if r == nil || i.ImageS3Key == "" {
+	if r2Client == nil || i.ImageS3Key == "" {
 		return resp
 	}
 
 	// add presigned Image
 	expiresAt := time.Now().Add(time.Hour * 24)
-	imageURL, err := r.PresignGetObject(ctx, i.ImageS3Key, expiresAt)
+	imageURL, err := r2Client.PresignGetObject(ctx, i.ImageS3Key, expiresAt)
 	if err != nil {
 		// swallows error - catching would complicate entire toDTO process
 		print("ERROR presigning URL for Ident:", err.Error())
@@ -109,11 +129,11 @@ func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentDTO {
 
 type Idents []Ident
 
-func (idents Idents) ToDTOs(ctx context.Context, r *media.R2Client) []IdentDTO {
+func (idents Idents) ToDTOs(ctx context.Context, r2Client *media.R2Client) []IdentDTO {
 	res := make([]IdentDTO, 0, len(idents))
 
 	for _, ident := range idents {
-		res = append(res, ident.ToDTO(ctx, r))
+		res = append(res, ident.ToDTO(ctx, r2Client))
 	}
 
 	return res
@@ -126,22 +146,22 @@ type CommentDTO struct {
 	User UserDTO   `json:"user"`
 }
 
-func (c Comment) ToDTO() CommentDTO {
+func (c Comment) ToDTO(ctx context.Context, r2Client *media.R2Client) CommentDTO {
 	return CommentDTO{
 		ID:   c.ID,
 		Time: c.CreatedAt,
 		Text: c.Text,
-		User: c.User.ToDTO(),
+		User: c.User.ToDTO(ctx, r2Client),
 	}
 }
 
 type Comments []Comment
 
-func (comments Comments) ToDTOs() []CommentDTO {
+func (comments Comments) ToDTOs(ctx context.Context, r2Client *media.R2Client) []CommentDTO {
 	res := make([]CommentDTO, 0, len(comments))
 
 	for _, comment := range comments {
-		res = append(res, comment.ToDTO())
+		res = append(res, comment.ToDTO(ctx, r2Client))
 	}
 
 	return res
@@ -176,7 +196,7 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 		resp.TargetSum += target.TargetCount
 		resp.IdentSum += uint(len(target.Idents))
 		resp.Members = append(resp.Members, TeamWeekMemberResponse{
-			User:        target.User.ToDTO(),
+			User:        target.User.ToDTO(ctx, r2Client),
 			TargetCount: target.TargetCount,
 			Idents:      Idents(target.Idents).ToDTOs(ctx, r2Client),
 		})

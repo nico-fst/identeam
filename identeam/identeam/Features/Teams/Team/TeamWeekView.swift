@@ -12,6 +12,7 @@ import Kingfisher
 struct TeamWeekView: View {
     let slug: String
     
+    @AppStorage("userID") private var userID: String = ""
     @AppStorage("username") private var username: String = ""
     
     @EnvironmentObject var vm: AppViewModel
@@ -37,6 +38,39 @@ struct TeamWeekView: View {
             member.user.username == username && member.targetCount > 0
         }
     }
+    
+    private func sortedMembers(for week: TeamWeek) -> [TeamMember] {
+        week.members.sorted { lhs, rhs in
+            lhs.user.username.lowercased() < rhs.user.username.lowercased()
+        }
+    }
+
+    private func sortedIdents(for member: TeamMember) -> [Ident] {
+        member.idents.sorted { a, b in
+            a.time > b.time
+        }
+    }
+
+    private func formattedDateString(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .weekday(.abbreviated)
+                .day()
+                .month(.wide)
+                .hour()
+                .minute()
+        )
+    }
+    
+    private func formattedDateStringShort(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .day(.twoDigits)
+                .month(.twoDigits)
+                .hour(.twoDigits(amPM: .omitted))
+                .minute(.twoDigits)
+        )
+    }
 
     var body: some View {
         Group {
@@ -48,31 +82,28 @@ struct TeamWeekView: View {
                     }
                     
                     if let teamWeek {
-                        Section("Week ⋅ Scored \(teamWeek.identSum) / \(teamWeek.targetSum) Idents ") {
-                            ForEach(teamWeek.members.sorted(by: {
-                                $0.user.username.lowercased() < $1.user.username.lowercased()
-                            })) { member in
-                                DisclosureGroup("\(member.user.nickname) ⋅ \(member.idents.count) / \(member.targetCount) Idents") {
-                                    ForEach(member.idents.sorted(by: {
-                                        $0.time > $1.time
-                                    })) { ident in
-                                        let date = ident.time.formatted(
-                                            .dateTime
-                                                .weekday(.abbreviated)
-                                                .day()
-                                                .month(.wide)
-                                                .hour()
-                                                .minute()
-                                        )
-                                        
+                        Section("Members ⋅ \(teamWeek.identSum) / \(teamWeek.targetSum) Idents ") {
+                            ForEach(sortedMembers(for: teamWeek), id: \.id) { member in
+                                DisclosureGroup {
+                                    ForEach(sortedIdents(for: member), id: \.id) { ident in
+                                        let dateString = formattedDateString(for: ident.time)
                                         HStack {
                                             identImage(ident: ident)
                                                 .frame(height: 75)
-                                            TextLabeled(date, ident.userText)
+                                            TextLabeled(dateString, ident.userText)
                                         }
                                         .onTapGesture {
                                             teamVM.selectedIdent = ident
                                         }
+                                    }
+                                } label: {
+                                    HStack {
+                                        avatar(image: member.user.avatar)
+                                            .frame(height: 50)
+                                        TextLabeled(
+                                            "\(member.idents.count) / \(member.targetCount)",
+                                            member.user.nickname
+                                        )
                                     }
                                 }
                             }
@@ -133,6 +164,7 @@ struct TeamWeekView: View {
                         VStack() {
                             Text(ident.userText)
                                 .padding()
+                                .bold()
                             
                             identImage(ident: ident)
                                 .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
@@ -143,15 +175,45 @@ struct TeamWeekView: View {
                                 ForEach(ident.comments.sorted(by: {
                                     $0.time < $1.time
                                 })) { comment in
-                                    HStack(spacing: 10) {
-                                        Text(comment.user.nickname)
-                                            .bold()
-                                        Text(comment.text)
-                                            .opacity(0.75)
+                                    VStack(alignment: .leading) {
+                                        Text(formattedDateStringShort(for: comment.time))
+                                            .font(.caption)
+                                            .opacity(0.5)
+                                        
+                                        HStack(spacing: 10) {
+                                            Text(comment.user.nickname)
+                                                .bold()
+                                            Text(comment.text)
+                                        }
+                                    }
+                                    .padding(5)
+                                    .contextMenu {
+                                        Button {
+                                            UIPasteboard.general.string = comment.text
+                                        } label: {
+                                            Label("Copy", systemImage: "doc.on.doc")
+                                        }
+                                        
+                                        if comment.user.userID == userID {
+                                            Button(role: .destructive) {
+                                                Task {
+                                                    await teamVM.tryDeletingComment(
+                                                        commentID: comment.id,
+                                                        slug: team.slug,
+                                                        vm: vm,
+                                                        ctx: ctx,
+                                                        teamsVM: teamsVM
+                                                    )
+                                                }
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
                                     }
                                 }
                                 
                                 TextField("Comment...", text: $teamVM.commentInput)
+                                    .padding(5)
                                 Text(teamVM.commentError)
                                     .foregroundStyle(.red)
                                 
@@ -170,14 +232,6 @@ struct TeamWeekView: View {
                             .glassEffect(.regular.interactive())
                         }
                         .padding()
-                        .navigationTitle(ident.time.formatted(
-                            .dateTime
-                                .weekday(.abbreviated)
-                                .day()
-                                .month(.wide)
-                                .hour()
-                                .minute()
-                        ))
                     }
                     .presentationDetents([.large])
                 }
@@ -220,6 +274,22 @@ struct TeamWeekView: View {
                     .resizable()
                     .scaledToFill()
             )
+    }
+    
+    @ViewBuilder
+    private func avatar(image: S3Item) -> some View {
+        let resource = KF.ImageResource(
+            downloadURL: image.url,
+            cacheKey: image.key
+        )
+        
+        KFImage(source: .network(resource))
+            .placeholder {
+                ProgressView()
+            }
+            .resizable()
+            .scaledToFit()
+            .mask(Circle())
     }
 }
 

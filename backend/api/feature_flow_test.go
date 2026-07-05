@@ -449,6 +449,97 @@ func TestFeatureFlow_DeleteIdentRequiresOwner(t *testing.T) {
 	}
 }
 
+func TestFeatureFlow_DeleteCommentRequiresCommentAuthorAndMatchingIdent(t *testing.T) {
+	server := newFeatureTestServer(t)
+	defer server.Close()
+
+	owner := signupUser(t, server.URL, "comment-delete-owner@example.com")
+	member := signupUser(t, server.URL, "comment-delete-member@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "Comment Delete Team")
+
+	joinResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/join", nil, member.SessionToken)
+	if joinResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, joinResp)
+		t.Fatalf("join team failed with status %d: %s", joinResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, joinResp)
+
+	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
+		TargetCount: 1,
+	}, owner.SessionToken)
+	if targetResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, targetResp)
+		t.Fatalf("create target failed with status %d: %s", targetResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, targetResp)
+
+	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
+		Time:     weekDate.Format(time.RFC3339),
+		UserText: "This ident will receive a comment.",
+	}, owner.SessionToken)
+	if identResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, identResp)
+		t.Fatalf("create ident failed with status %d: %s", identResp.StatusCode, envelope.Message)
+	}
+	identEnvelope := decodeEnvelope(t, identResp)
+	identData := decodeData[models.IdentDTO](t, identEnvelope)
+
+	commentResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, fmt.Sprintf("%s/teams/%s/idents/%d/comment", server.URL, team.Slug, identData.ID), api.CommentIdentpayload{
+		Text: "ship it",
+	}, member.SessionToken)
+	if commentResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, commentResp)
+		t.Fatalf("create comment failed with status %d: %s", commentResp.StatusCode, envelope.Message)
+	}
+	commentEnvelope := decodeEnvelope(t, commentResp)
+	commentData := decodeData[models.CommentDTO](t, commentEnvelope)
+	if commentData.Text != "ship it" {
+		t.Fatalf("expected comment text %q, got %q", "ship it", commentData.Text)
+	}
+
+	deleteURL := fmt.Sprintf("%s/teams/%s/idents/%d/uncomment/%d", server.URL, team.Slug, identData.ID, commentData.ID)
+	ownerDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, deleteURL, nil, owner.SessionToken)
+	if ownerDeleteResp.StatusCode != http.StatusForbidden {
+		envelope := decodeEnvelope(t, ownerDeleteResp)
+		t.Fatalf("expected owner delete to be forbidden, got status %d: %s", ownerDeleteResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, ownerDeleteResp)
+
+	wrongIdentDeleteURL := fmt.Sprintf("%s/teams/%s/idents/%d/uncomment/%d", server.URL, team.Slug, identData.ID+1, commentData.ID)
+	wrongIdentDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, wrongIdentDeleteURL, nil, member.SessionToken)
+	if wrongIdentDeleteResp.StatusCode != http.StatusForbidden {
+		envelope := decodeEnvelope(t, wrongIdentDeleteResp)
+		t.Fatalf("expected wrong-ident delete to be forbidden, got status %d: %s", wrongIdentDeleteResp.StatusCode, envelope.Message)
+	}
+	decodeEnvelope(t, wrongIdentDeleteResp)
+
+	memberDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, deleteURL, nil, member.SessionToken)
+	if memberDeleteResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, memberDeleteResp)
+		t.Fatalf("member delete failed with status %d: %s", memberDeleteResp.StatusCode, envelope.Message)
+	}
+	memberDeleteEnvelope := decodeEnvelope(t, memberDeleteResp)
+	if memberDeleteEnvelope.Error {
+		t.Fatalf("member delete returned error: %s", memberDeleteEnvelope.Message)
+	}
+
+	weekURL := fmt.Sprintf("%s/teams/%s/week/%s", server.URL, team.Slug, weekDate.Format("2006-01-02"))
+	weekResp := doJSONRequest(t, http.DefaultClient, http.MethodGet, weekURL, nil, owner.SessionToken)
+	if weekResp.StatusCode != http.StatusOK {
+		envelope := decodeEnvelope(t, weekResp)
+		t.Fatalf("get team week failed with status %d: %s", weekResp.StatusCode, envelope.Message)
+	}
+	weekEnvelope := decodeEnvelope(t, weekResp)
+	weekData := decodeData[getTeamWeekResponse](t, weekEnvelope)
+	if len(weekData.Members) != 1 || len(weekData.Members[0].Idents) != 1 {
+		t.Fatalf("expected one member with one ident, got %#v", weekData.Members)
+	}
+	if len(weekData.Members[0].Idents[0].Comments) != 0 {
+		t.Fatalf("expected deleted comment to be absent, got %#v", weekData.Members[0].Idents[0].Comments)
+	}
+}
+
 func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 	server := newFeatureTestServer(t)
 	defer server.Close()

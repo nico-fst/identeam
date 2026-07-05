@@ -112,6 +112,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 		r.Put("/teams/{slug}/targets/{dateStart}", app.PutUserTarget)
 		r.Post("/teams/{slug}/idents/create", app.CreateIdent) // TODO auch {dateStart} mit 2006-01-01 date format
 		r.Post("/teams/{slug}/idents/{id}/comment", app.CommentIdent)
+		r.Delete("/teams/{slug}/idents/{id}/uncomment/{commentID}", app.UncommentIdent)
 		r.Post("/teams/{slug}/idents/{id}/image/get_upload_url", app.GetIdentImageUploadURL)
 		r.Post("/teams/{slug}/idents/{id}/image/commit", app.CommitIdentImage)
 		r.Delete("/teams/{slug}/idents/{id}", app.DeleteIdent)

@@ -58,6 +58,7 @@ struct SignInWithAppleButtonComponent: View {
                     from: appleIDCredential.fullName ?? PersonNameComponents()
                 ),
                 username: "",
+                avatar: PresignedDTO(key: "nil", presignedURL: "none", expiresAt: Date()), // not used but required
             )
 
             Task {

@@ -102,7 +102,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Added user to team successfully or already joined",
 		Data: AddUserToTeamDTO{
-			User: user.ToDTO(),
+			User: user.ToDTO(r.Context(), app.R2Client),
 			Team: team.ToDTO(),
 		},
 	})
@@ -139,7 +139,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "Removed user from team successfully or was no member",
 		Data: AddUserToTeamDTO{
-			User: user.ToDTO(),
+			User: user.ToDTO(r.Context(), app.R2Client),
 			Team: team.ToDTO(),
 		},
 	})

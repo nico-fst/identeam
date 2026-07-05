@@ -50,6 +50,6 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Updated DeviceToken successfully",
-		Data:    updatedUser.ToDTO(),
+		Data:    updatedUser.ToDTO(r.Context(), app.R2Client),
 	})
 }

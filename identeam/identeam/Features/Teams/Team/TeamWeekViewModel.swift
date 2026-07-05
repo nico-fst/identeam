@@ -80,4 +80,36 @@ class TeamWeekViewModel: ObservableObject {
             .flatMap(\.idents)
             .first { $0.remoteID == identID }
     }
+
+    func tryDeletingComment(
+        commentID: Int,
+        slug: String,
+        vm: AppViewModel,
+        ctx: ModelContext,
+        teamsVM: TeamsViewModel
+    ) async {
+        guard let identID = selectedIdent?.remoteID else {
+            commentError = "ERROR: No Ident selected"
+            return
+        }
+
+        do {
+            _ = try await CommentAPI.shared.uncomment(
+                slug: slug,
+                identID: identID,
+                commentID: commentID
+            )
+        } catch {
+            commentError = error.localizedDescription
+            return
+        }
+
+        vm.toastMessage = "Comment deleted"
+        commentError = ""
+        let reloadedTeamWeek = await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
+        selectedIdent = reloadedTeamWeek?
+            .members
+            .flatMap(\.idents)
+            .first { $0.remoteID == identID }
+    }
 }
