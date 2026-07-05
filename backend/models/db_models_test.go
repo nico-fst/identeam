@@ -97,7 +97,7 @@ func TestGetTeamBySlugPreloadsUsersDeviceTokens(t *testing.T) {
 	user := models.User{
 		UserID:   "user-1",
 		Email:    "user1@example.com",
-		FullName: "User One",
+		Nickname: "User One",
 		Username: "userone",
 	}
 	if err := db.Create(&user).Error; err != nil {

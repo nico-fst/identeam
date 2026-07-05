@@ -11,7 +11,7 @@ import SwiftData
 struct UserDTO: Codable {
     let userID: String
     let email: String
-    let fullName: String
+    let nickname: String
     let username: String
 }
 
@@ -19,18 +19,19 @@ struct UserDTO: Codable {
 final class User {
     var userID: String
     var email: String
-    var fullName: String
+    @Attribute(originalName: "fullName")
+    var nickname: String
     var username: String
     
     init(
         userID: String,
         email: String,
-        fullName: String,
+        nickname: String,
         username: String,
     ) {
         self.userID = userID
         self.email = email
-        self.fullName = fullName
+        self.nickname = nickname
         self.username = username
     }
     
@@ -38,7 +39,7 @@ final class User {
         self.init(
             userID: dto.userID,
             email: dto.email,
-            fullName: dto.fullName,
+            nickname: dto.nickname,
             username: dto.username,
         )
     }
@@ -49,7 +50,7 @@ extension User {
         User(
             userID: "abc",
             email: "gre@ta.de",
-            fullName: "Greta Kante",
+            nickname: "Greta Kante",
             username: "greta-kante")
     }
     
@@ -57,7 +58,7 @@ extension User {
         User(
             userID: "xyz",
             email: "ni@co.de",
-            fullName: "Nico Kante",
+            nickname: "Nico Kante",
             username: "nico-kante")
     }
 }

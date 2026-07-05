@@ -29,14 +29,14 @@ func TestTeamsToDTOsSkipsNilEntries(t *testing.T) {
 
 func TestUsersToDTOs(t *testing.T) {
 	users := models.Users{
-		{UserID: "1", Email: "one@example.com", FullName: "One", Username: "one"},
-		{UserID: "2", Email: "two@example.com", FullName: "Two", Username: "two"},
+		{UserID: "1", Email: "one@example.com", Nickname: "One", Username: "one"},
+		{UserID: "2", Email: "two@example.com", Nickname: "Two", Username: "two"},
 	}
 
 	got := users.ToDTOs()
 	want := []models.UserDTO{
-		{UserID: "1", Email: "one@example.com", FullName: "One", Username: "one"},
-		{UserID: "2", Email: "two@example.com", FullName: "Two", Username: "two"},
+		{UserID: "1", Email: "one@example.com", Nickname: "One", Username: "one"},
+		{UserID: "2", Email: "two@example.com", Nickname: "Two", Username: "two"},
 	}
 
 	if !reflect.DeepEqual(got, want) {
@@ -56,7 +56,7 @@ func TestIdentsToDTOs(t *testing.T) {
 					User: models.User{
 						UserID:   "user-1",
 						Email:    "one@example.com",
-						FullName: "One",
+						Nickname: "One",
 						Username: "one",
 					},
 				},
@@ -76,7 +76,7 @@ func TestIdentsToDTOs(t *testing.T) {
 					User: models.UserDTO{
 						UserID:   "user-1",
 						Email:    "one@example.com",
-						FullName: "One",
+						Nickname: "One",
 						Username: "one",
 					},
 				},
@@ -99,7 +99,7 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 			User: models.User{
 				UserID:   "user-1",
 				Email:    "one@example.com",
-				FullName: "One",
+				Nickname: "One",
 				Username: "one",
 			},
 			Team: models.Team{
@@ -116,7 +116,7 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 			User: models.User{
 				UserID:   "user-2",
 				Email:    "two@example.com",
-				FullName: "Two",
+				Nickname: "Two",
 				Username: "two",
 			},
 			Team: models.Team{

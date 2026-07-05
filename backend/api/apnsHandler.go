@@ -77,7 +77,7 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 
 	alert := models.Alert{
 		Title: fmt.Sprintf("[%v] GO GO GO", team.Name),
-		Body:  user.FullName + " reminded you",
+		Body:  user.Nickname + " reminded you",
 	}
 
 	members, err := db.NotifyTeamMembers(r.Context(), app, slug, alert)

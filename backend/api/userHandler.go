@@ -13,7 +13,7 @@ import (
 )
 
 type UpdateUserData struct {
-	FullName string `json:"fullName"`
+	Nickname string `json:"nickname"`
 	Username string `json:"username"`
 }
 
@@ -44,13 +44,13 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := db.UpdateUserDetails(r.Context(), app, user, models.User{
 		UserID:   user.UserID,
-		FullName: payload.User.FullName,
+		Nickname: payload.User.Nickname,
 		Username: payload.User.Username,
 	})
 	if err != nil {
 		switch err {
-		case db.ErrFullNameTooLong:
-			util.ErrorJSON(w, db.ErrFullNameTooLong, http.StatusUnprocessableEntity)
+		case db.ErrNicknameTooLong:
+			util.ErrorJSON(w, db.ErrNicknameTooLong, http.StatusUnprocessableEntity)
 		case db.ErrUsernameTaken: // TODO not used since gorm triggers 'UNIQUE constraint failed' as general error before
 			util.ErrorJSON(w, db.ErrUsernameTaken, http.StatusConflict)
 		default:

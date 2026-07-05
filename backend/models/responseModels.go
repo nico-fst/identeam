@@ -12,17 +12,18 @@ type Empty struct{}
 
 // since different notations and []DeviceTokens would complicate decoding in Swift
 type UserDTO struct {
-	UserID   string `json:"userID"`
-	Email    string `json:"email"`
-	FullName string `json:"fullName"`
-	Username string `json:"username"`
+	UserID   string            `json:"userID"`
+	Email    string            `json:"email"`
+	Nickname string            `json:"nickname"`
+	Username string            `json:"username"`
+	Avatar   PresignedResponse `json:"avatar"`
 }
 
 func (u User) ToDTO() UserDTO {
 	return UserDTO{
 		UserID:   u.UserID,
 		Email:    u.Email,
-		FullName: u.FullName,
+		Nickname: u.Nickname,
 		Username: u.Username,
 	}
 }

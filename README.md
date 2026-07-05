@@ -24,7 +24,7 @@ Start your habit challenge now - elevate your **iden**tity as a TEAM!
 Drastically simplified process:
 
 1. **[Client]** User presses SIWA Button; sends form
-2. **[Client <-> Apple server]** Apple provides `ASAuthorizationAppleIDCredential` (containing `userID`, `email`, `fullname`, `identityToken`, `authorizationCode`)
+2. **[Client <-> Apple server]** Apple provides `ASAuthorizationAppleIDCredential` (containing `userID`, `email`, `fullName`, `identityToken`, `authorizationCode`)
 3. **[Client -> Backend]** Sends `identityToken` (JWT), `authorizationCode`, `userID`, ..., e.g.:
 
 ```json
@@ -33,7 +33,7 @@ POST /auth/apple/native/callback
   "identityToken": "...",
   "authorizationCode": "...",
   "userID": "...",
-  "fullName": "Max Mustermann"
+  "nickname": "Max Mustermann"
 }
 ```
 
@@ -41,7 +41,7 @@ POST /auth/apple/native/callback
 5. **[Backend <-> Apple]** Exchanges `authorizationCode` for `accessToken` / `refreshToken` from Apple
 6. **[Backend -> Client]** Saves user; Returns own `sessionToken`
 
-> Notice: `fullName` will only be provided when signing in for the first time - `userID` remains stable for AppID even after deleting SIWA credentials.
+> Notice: Apple's `fullName` will only be provided when signing in for the first time - `userID` remains stable for AppID even after deleting SIWA credentials.
 
 # Credis
 

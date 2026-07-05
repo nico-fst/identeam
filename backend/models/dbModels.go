@@ -15,7 +15,7 @@ type User struct {
 	AuthProvider string  // "apple" | "password"
 	PasswordHash *string // Pointer is nullable
 
-	FullName string
+	Nickname string
 	Username string `gorm:"unique"`
 
 	AvatarS3Key string

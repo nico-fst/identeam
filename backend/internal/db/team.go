@@ -190,8 +190,8 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, app AppContext, ident m
 
 	alert := models.Alert{
 		Title:    fmt.Sprintf("🔥 [%d/%d] @ %v 🔥", teamWeek.IdentSum, teamWeek.TargetSum, target.Team.Name),
-		Subtitle: strings.ReplaceAll(notificationTemplate, "{{name}}", target.User.FullName),
-		Body:     target.User.FullName + ": " + ident.UserText,
+		Subtitle: strings.ReplaceAll(notificationTemplate, "{{name}}", target.User.Nickname),
+		Body:     target.User.Nickname + ": " + ident.UserText,
 	}
 
 	members, err := NotifyTeamMembers(ctx, app, target.Team.Slug, alert)
@@ -213,7 +213,7 @@ func NotifyTeamMembersAboutNewComment(ctx context.Context, app AppContext, comme
 
 	alert := models.Alert{
 		Title:    team.Name,
-		Subtitle: fmt.Sprintf("%v commented:", comment.User.FullName),
+		Subtitle: fmt.Sprintf("%v commented:", comment.User.Nickname),
 		Body:     comment.Text,
 	}
 
@@ -255,7 +255,7 @@ func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, target
 
 	alert := models.Alert{
 		Title: fmt.Sprintf("🔥 %v 🔥", target.Team.Name),
-		Body:  fmt.Sprintf("%v set Target to %d", target.User.FullName, target.TargetCount),
+		Body:  fmt.Sprintf("%v set Target to %d", target.User.Nickname, target.TargetCount),
 	}
 
 	members, err := NotifyTeamMembers(ctx, app, target.Team.Slug, alert)

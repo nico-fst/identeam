@@ -150,7 +150,7 @@ func signupUser(t *testing.T, serverURL string, email string) authResponseData {
 	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/auth/password/signup", api.SignupPasswordPayload{
 		Email:    email,
 		Password: "supersafe-password",
-		FullName: "Test User",
+		Nickname: "Test User",
 		Username: "tester",
 	}, "")
 

@@ -98,13 +98,13 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 type SignupPasswordPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	FullName string `json:"fullName"`
+	Nickname string `json:"nickname"`
 	Username string `json:"username"`
 }
 
 // SignupPassword godoc
 // @Summary		Sign up with email and password
-// @Description	Creates a password-based user account and returns the created user plus a session token.
+// @Description	Creates a password-based user account from email, password, optional nickname and username, then returns the created user plus a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
@@ -136,7 +136,7 @@ func (app *App) SignupPassword(w http.ResponseWriter, r *http.Request) {
 		Email:        payload.Email,
 		AuthProvider: "password",
 		PasswordHash: &hashStr,
-		FullName:     payload.FullName,
+		Nickname:     payload.Nickname,
 		Username:     payload.Username,
 	}
 
@@ -169,11 +169,11 @@ type AuthApplePayload struct {
 	IdentityToken     string `json:"identityToken"`
 	AuthorizationCode string `json:"authorizationCode"`
 	UserID            string `json:"userID"`
-	FullName          string `json:"fullName"`
+	Nickname          string `json:"nickname"`
 }
 
 // @Summary		Sign in with Apple (native)
-// @Description	Exchanges the Apple Sign In authorization code, creates or retrieves the user, and returns a session token.
+// @Description	Exchanges the Apple Sign In authorization code, creates or retrieves the user with the provided nickname, and returns a session token.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
@@ -250,7 +250,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 		UserID:       (*claims)["sub"].(string), // Apple's unique stable UserID
 		Email:        (*claims)["email"].(string),
 		AuthProvider: "apple",
-		FullName:     payload.FullName,
+		Nickname:     payload.Nickname,
 		// Username set afterwards updating User details
 	}
 

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -81,7 +82,7 @@ func TestGetTeamsWeekTargetsUsesJoinedTeamAlias(t *testing.T) {
 }
 
 func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
-	sqliteDB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "legacy.sqlite")), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite db: %v", err)
 	}
@@ -101,14 +102,14 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 		UserID:       "owner-auth-id",
 		Email:        "owner@example.com",
 		AuthProvider: "password",
-		FullName:     "Target Owner",
+		Nickname:     "Target Owner",
 		Username:     "owner",
 	}
 	commenter := models.User{
 		UserID:       "commenter-auth-id",
 		Email:        "commenter@example.com",
 		AuthProvider: "password",
-		FullName:     "Commenter User",
+		Nickname:     "Commenter User",
 		Username:     "commenter",
 	}
 	team := models.Team{
@@ -176,5 +177,53 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 	if comments[0].User.ID != commenter.ID {
 		t.Fatalf("expected comment user id %d, got %d", commenter.ID, comments[0].User.ID)
+	}
+}
+
+func TestAutoMigrateAllModelsRenamesLegacyNicknameColumn(t *testing.T) {
+	sqliteDB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite db: %v", err)
+	}
+
+	if err := sqliteDB.Exec(`
+		CREATE TABLE users (
+			id integer primary key autoincrement,
+			created_at datetime,
+			updated_at datetime,
+			deleted_at datetime,
+			user_id text,
+			email text,
+			auth_provider text,
+			password_hash text,
+			full_name text,
+			username text,
+			avatar_s3_key text
+		)
+	`).Error; err != nil {
+		t.Fatalf("create legacy users table: %v", err)
+	}
+	if err := sqliteDB.Exec(`
+		INSERT INTO users (user_id, email, auth_provider, full_name, username)
+		VALUES (?, ?, ?, ?, ?)
+	`, "legacy-user", "legacy@example.com", "password", "Legacy Nick", "legacy").Error; err != nil {
+		t.Fatalf("insert legacy user: %v", err)
+	}
+
+	AutoMigrateAllModels(sqliteDB)
+
+	if sqliteDB.Migrator().HasColumn("users", "full_name") {
+		t.Fatal("expected legacy full_name column to be renamed")
+	}
+	if !sqliteDB.Migrator().HasColumn("users", "nickname") {
+		t.Fatal("expected nickname column to exist")
+	}
+
+	var user models.User
+	if err := sqliteDB.Where("user_id = ?", "legacy-user").First(&user).Error; err != nil {
+		t.Fatalf("load migrated user: %v", err)
+	}
+	if user.Nickname != "Legacy Nick" {
+		t.Fatalf("expected nickname %q, got %q", "Legacy Nick", user.Nickname)
 	}
 }

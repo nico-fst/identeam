@@ -29,7 +29,7 @@ class AuthViewModel: ObservableObject {
     @Published var authError: String? = nil
     @Published var isAuthing: Bool = false
     
-    @Published var fullnameInput: String = ""
+    @Published var nicknameInput: String = ""
     @Published var usernameInput: String = ""
     @Published var emailInput: String = ""
     @Published var passwordInput: String = ""
@@ -38,7 +38,7 @@ class AuthViewModel: ObservableObject {
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
-    @AppStorage("fullName") private var fullName: String?
+    @AppStorage("nickname") private var nickname: String?
     @AppStorage("username") private var username: String?
 
     @AppStorage("sessionToken") private var sessionToken: String?
@@ -46,6 +46,8 @@ class AuthViewModel: ObservableObject {
     // triggered by Notification send from RequestService
     private var cancellables = Set<AnyCancellable>()
     init() {
+        migrateLegacyNicknameStorage()
+
         NotificationCenter.default.publisher(for: .didReceiveUnauthorized)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -54,13 +56,23 @@ class AuthViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    private func migrateLegacyNicknameStorage() {
+        let defaults = UserDefaults.standard
+        guard defaults.string(forKey: "nickname") == nil,
+              let legacyNickname = defaults.string(forKey: "fullName")
+        else { return }
+
+        defaults.set(legacyNickname, forKey: "nickname")
+        defaults.removeObject(forKey: "fullName")
+    }
+
     func tryChangeUserDetails() async {
-        guard fullnameInput != "", usernameInput != "" else { return }
+        guard nicknameInput != "", usernameInput != "" else { return }
         
         do {
             let newUser = try await UserAPI.shared
                 .requestUserDetailsChange(
-                    fullName: fullnameInput,
+                    nickname: nicknameInput,
                     username: usernameInput
                 )
             completeChangeUserDetails(newUser: newUser)
@@ -77,7 +89,7 @@ class AuthViewModel: ObservableObject {
 
         self.userID = newUser.userID
         self.email = newUser.email
-        self.fullName = newUser.fullName
+        self.nickname = newUser.nickname
         self.username = newUser.username
 
         authState = .authenticated
@@ -126,7 +138,7 @@ class AuthViewModel: ObservableObject {
                 sessionToken: response.sessionToken,
                 userID: response.user.userID,
                 email: response.user.email,
-                fullName: response.user.fullName,
+                nickname: response.user.nickname,
                 username: response.user.username,
                 created: response.created
             )
@@ -141,7 +153,7 @@ class AuthViewModel: ObservableObject {
     func logout(ctx: ModelContext? = nil) {
         userID = nil
         email = nil
-        fullName = nil
+        nickname = nil
         username = nil
 
         sessionToken = nil
@@ -193,7 +205,7 @@ class AuthViewModel: ObservableObject {
         sessionToken: String,
         userID: String,
         email: String,
-        fullName: String,
+        nickname: String,
         username: String,
         created: Bool  // == user signed up 1st time
     ) {
@@ -210,7 +222,7 @@ class AuthViewModel: ObservableObject {
 
         self.userID = userID
         self.email = email
-        self.fullName = fullName
+        self.nickname = nickname
         self.username = username
         
         self.isAuthing = false

@@ -23,7 +23,7 @@ struct AvatarPicker: View {
     }) private var avatars: [S3Item]
     
     
-    @AppStorage("fullName") private var fullName: String?
+    @AppStorage("nickname") private var nickname: String?
     @AppStorage("username") private var username: String?
     
     var body: some View {
@@ -140,9 +140,9 @@ struct AvatarPicker: View {
                     .foregroundStyle(.secondary)
             }
             
-            // always render fullname und username
+            // always render nickname und username
             VStack(alignment: .leading) {
-                Text(fullName ?? "no fullname")
+                Text(nickname ?? "no nickname")
                     .font(.largeTitle)
                 Text("@\(username ?? "no username")")
                     .font(.footnote)

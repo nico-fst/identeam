@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrFullNameTooLong = errors.New("'Your Name' is too long (max. 15 chars) >:(")
+	ErrNicknameTooLong = errors.New("nickname is too long (max. 15 chars) >:(")
 	ErrUsernameTaken   = errors.New("This username is not available :O")
 )
 
@@ -54,12 +54,12 @@ func GetUserByMail(ctx context.Context, app AppContext, email string) (*models.U
 
 // Tries creating given user in DB
 func CreateUser(ctx context.Context, app AppContext, user models.User) (*models.User, error) {
-	if user.FullName != "" {
-		log.Printf("Defaulting user.Username %v with its fullname %v", user.UserID, user.FullName)
-		user.Username = user.FullName
+	if user.Nickname != "" {
+		log.Printf("Defaulting user.Username %v with its nickname %v", user.UserID, user.Nickname)
+		user.Username = user.Nickname
 	}
 	if at := strings.Index(user.Email, "@"); at != -1 {
-		log.Printf("Defaulting user.Username %v with Email (%v) Prefix %v since FullName is empty", user.UserID, user.Email, user.Email[:at])
+		log.Printf("Defaulting user.Username %v with Email (%v) Prefix %v since Nickname is empty", user.UserID, user.Email, user.Email[:at])
 		user.Username = user.Email[:at]
 	}
 
@@ -91,13 +91,13 @@ func GetElseCreateUser(ctx context.Context, app AppContext, input models.User) (
 	return false, *foundUser, nil
 }
 
-// Update FullName or Username of given user
+// Update Nickname or Username of given user
 func UpdateUserDetails(ctx context.Context, app AppContext, user models.User, newUserDetails models.User) (models.User, error) {
 	db := app.Database()
-	// Guard: |FullName| <= 15
-	if utf8.RuneCountInString(newUserDetails.FullName) > 15 {
-		log.Printf("ERROR updating username %v -> %v (too long)", user.FullName, newUserDetails.FullName)
-		return models.User{}, ErrFullNameTooLong
+	// Guard: |Nickname| <= 15
+	if utf8.RuneCountInString(newUserDetails.Nickname) > 15 {
+		log.Printf("ERROR updating username %v -> %v (too long)", user.Nickname, newUserDetails.Nickname)
+		return models.User{}, ErrNicknameTooLong
 	}
 
 	var userToUpdate models.User
@@ -106,7 +106,7 @@ func UpdateUserDetails(ctx context.Context, app AppContext, user models.User, ne
 	}
 
 	updates := map[string]interface{}{
-		"FullName": newUserDetails.FullName,
+		"Nickname": newUserDetails.Nickname,
 		"Username": strings.ToLower(strings.TrimSpace(newUserDetails.Username)),
 	}
 

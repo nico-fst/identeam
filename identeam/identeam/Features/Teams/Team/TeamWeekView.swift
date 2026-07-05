@@ -52,7 +52,7 @@ struct TeamWeekView: View {
                             ForEach(teamWeek.members.sorted(by: {
                                 $0.user.username.lowercased() < $1.user.username.lowercased()
                             })) { member in
-                                DisclosureGroup("\(member.user.fullName) ⋅ \(member.idents.count) / \(member.targetCount) Idents") {
+                                DisclosureGroup("\(member.user.nickname) ⋅ \(member.idents.count) / \(member.targetCount) Idents") {
                                     ForEach(member.idents.sorted(by: {
                                         $0.time > $1.time
                                     })) { ident in
@@ -143,10 +143,11 @@ struct TeamWeekView: View {
                                 ForEach(ident.comments.sorted(by: {
                                     $0.time < $1.time
                                 })) { comment in
-                                    HStack(spacing: 20) {
-                                        Text(comment.user.fullName)
+                                    HStack(spacing: 10) {
+                                        Text(comment.user.nickname)
+                                            .bold()
                                         Text(comment.text)
-                                            .opacity(0.8)
+                                            .opacity(0.75)
                                     }
                                 }
                                 

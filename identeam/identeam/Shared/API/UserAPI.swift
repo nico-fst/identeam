@@ -15,7 +15,7 @@ enum UserError: LocalizedError {
         switch self {
         case .missingPayload:
             return
-                "missing payload: needs userID, email, fullName, username in UserDefaults"
+                "missing payload: needs userID, email, nickname, username in UserDefaults"
         }
     }
 }
@@ -26,7 +26,7 @@ class UserAPI {
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
 
-    func requestUserDetailsChange(fullName: String, username: String)
+    func requestUserDetailsChange(nickname: String, username: String)
         async throws -> UserDTO
     {
         let url = AppConfig.apiBaseURL.appendingPathComponent("me/update_user")
@@ -39,7 +39,7 @@ class UserAPI {
             "user": [
                 "userID": userID,
                 "email": email,
-                "fullName": fullName,
+                "nickname": nickname,
                 "username": username,
             ]
         ]

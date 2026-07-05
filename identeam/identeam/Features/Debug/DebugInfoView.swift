@@ -18,7 +18,7 @@ struct DebugInfoView: View {
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
-    @AppStorage("fullName") private var fullName: String?
+    @AppStorage("nickname") private var nickname: String?
     @AppStorage("username") private var username: String?
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
@@ -43,7 +43,7 @@ struct DebugInfoView: View {
                     TextLabeled("Session Token", sessionToken ?? "")
                     TextLabeled("UserID", userID ?? "")
                     TextLabeled("Email", email ?? "")
-                    TextLabeled("Nickname", fullName ?? "")
+                    TextLabeled("Nickname", nickname ?? "")
                     TextLabeled("Username", username ?? "")
                 }
                 
@@ -73,7 +73,7 @@ struct DebugInfoView: View {
                     try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)
                 }
             }
-            .navigationTitle("Hello \(fullName ?? "(no username)") 👋🏼")
+            .navigationTitle("Hello \(nickname ?? "(no nickname)") 👋🏼")
             .task {
                 await authVM.trySiwaLogin(vm: vm)
             }

@@ -12,7 +12,7 @@ enum AuthError: LocalizedError {
     case unexpectedAnswer
     case emptySessionToken
     case emailOrPasswordMissing
-    case fullNameOrUsernameMissing
+    case nicknameOrUsernameMissing
     case userNotFound
     case backend(String)
 
@@ -24,7 +24,7 @@ enum AuthError: LocalizedError {
             return "Empty session token while trying to auth against backend"
         case .emailOrPasswordMissing:
             return "Email and Password are required"
-        case .fullNameOrUsernameMissing:
+        case .nicknameOrUsernameMissing:
             return "Nickname and Username are required"
         case .userNotFound:
             return "User not found"
@@ -60,7 +60,7 @@ class AuthAPI {
             "identityToken": identityToken,
             "authorizationCode": authorizationCode,
             "userID": user.userID,
-            "fullName": user.fullName,
+            "nickname": user.nickname,
         ]
 
         let response: BackendResponse<AuthResponse> =

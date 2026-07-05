@@ -64,8 +64,8 @@ struct AuthSheetView: View {
                 VStack {
                     List {
                         TextField(
-                            "Your Name",
-                            text: $authVM.fullnameInput
+                            "Nickname",
+                            text: $authVM.nicknameInput
                         )
                         TextField(
                             "Username",
@@ -103,4 +103,3 @@ struct AuthSheetView: View {
         .environmentObject(AuthViewModel())
         .environmentObject(AppViewModel())
 }
-

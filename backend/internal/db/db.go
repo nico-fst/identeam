@@ -82,6 +82,8 @@ func ConnectSqlite() (*gorm.DB, error) {
 }
 
 func AutoMigrateAllModels(db *gorm.DB) {
+	renameLegacyUserNicknameColumn(db)
+
 	db.AutoMigrate(
 		&models.User{},
 		&models.DeviceToken{},
@@ -90,6 +92,19 @@ func AutoMigrateAllModels(db *gorm.DB) {
 		&models.Ident{},
 		&models.Comment{},
 	)
+}
+
+func renameLegacyUserNicknameColumn(db *gorm.DB) {
+	if !db.Migrator().HasTable(&models.User{}) {
+		return
+	}
+	if !db.Migrator().HasColumn("users", "full_name") || db.Migrator().HasColumn("users", "nickname") {
+		return
+	}
+
+	if err := db.Exec("ALTER TABLE users RENAME COLUMN full_name TO nickname").Error; err != nil {
+		fmt.Printf("ERROR renaming users.full_name to users.nickname: %v\n", err)
+	}
 }
 
 func IsDuplicateKeyError(err error) bool {
