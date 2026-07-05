@@ -25,24 +25,24 @@ type jsonResponseEnvelope struct {
 }
 
 type authResponseData struct {
-	User         models.UserResponse `json:"user"`
-	SessionToken string              `json:"sessionToken"`
-	Created      bool                `json:"created"`
+	User         models.UserDTO `json:"user"`
+	SessionToken string         `json:"sessionToken"`
+	Created      bool           `json:"created"`
 }
 
-type addUserToTeamResponse struct {
-	User models.UserResponse `json:"user"`
-	Team models.TeamResponse `json:"team"`
+type addUserToTeamDTO struct {
+	User models.UserDTO `json:"user"`
+	Team models.TeamDTO `json:"team"`
 }
 
 type getMyTeamsResponse struct {
-	Teams []models.TeamResponse `json:"teams"`
+	Teams []models.TeamDTO `json:"teams"`
 }
 
 type teamWeekMemberResponse struct {
-	User        models.UserResponse    `json:"user"`
-	TargetCount uint                   `json:"targetCount"`
-	Idents      []models.IdentResponse `json:"idents"`
+	User        models.UserDTO    `json:"user"`
+	TargetCount uint              `json:"targetCount"`
+	Idents      []models.IdentDTO `json:"idents"`
 }
 
 type getTeamWeekResponse struct {
@@ -68,6 +68,7 @@ func newFeatureTestApp(t *testing.T) *api.App {
 		&models.Team{},
 		&models.UserWeeklyTarget{},
 		&models.Ident{},
+		&models.Comment{},
 	)
 	if err != nil {
 		t.Fatalf("automigrate: %v", err)
@@ -166,7 +167,7 @@ func signupUser(t *testing.T, serverURL string, email string) authResponseData {
 	return decodeData[authResponseData](t, envelope)
 }
 
-func createTeam(t *testing.T, serverURL string, token string, name string) models.TeamResponse {
+func createTeam(t *testing.T, serverURL string, token string, name string) models.TeamDTO {
 	t.Helper()
 
 	resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, serverURL+"/teams/create", api.AddTeamPayload{
@@ -184,7 +185,7 @@ func createTeam(t *testing.T, serverURL string, token string, name string) model
 		t.Fatalf("create team returned error: %s", envelope.Message)
 	}
 
-	return decodeData[models.TeamResponse](t, envelope)
+	return decodeData[models.TeamDTO](t, envelope)
 }
 
 func TestFeatureFlow_SignupCheckSessionCreateTeamAndListTeams(t *testing.T) {
@@ -249,7 +250,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("join team returned error: %s", joinEnvelope.Message)
 	}
 
-	joinData := decodeData[addUserToTeamResponse](t, joinEnvelope)
+	joinData := decodeData[addUserToTeamDTO](t, joinEnvelope)
 	if joinData.Team.Slug != team.Slug {
 		t.Fatalf("expected joined team slug %q, got %q", team.Slug, joinData.Team.Slug)
 	}
@@ -273,7 +274,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("create target returned error: %s", targetEnvelope.Message)
 	}
 
-	targetData := decodeData[models.UserWeeklyTargetResponse](t, targetEnvelope)
+	targetData := decodeData[models.UserWeeklyTargetDTO](t, targetEnvelope)
 	if targetData.TargetCount != 3 {
 		t.Fatalf("expected target count 3, got %d", targetData.TargetCount)
 	}
@@ -293,7 +294,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("create ident returned error: %s", identEnvelope.Message)
 	}
 
-	identData := decodeData[models.IdentResponse](t, identEnvelope)
+	identData := decodeData[models.IdentDTO](t, identEnvelope)
 	if identData.ID == 0 {
 		t.Fatal("expected created ident response to include id")
 	}
@@ -368,7 +369,7 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 		t.Fatalf("create ident returned error: %s", identEnvelope.Message)
 	}
 
-	identData := decodeData[models.IdentResponse](t, identEnvelope)
+	identData := decodeData[models.IdentDTO](t, identEnvelope)
 	if identData.UserText != "This ident should not panic." {
 		t.Fatalf("unexpected ident userText: %q", identData.UserText)
 	}
@@ -408,7 +409,7 @@ func TestFeatureFlow_DeleteIdentRequiresOwner(t *testing.T) {
 		t.Fatalf("create ident failed with status %d: %s", identResp.StatusCode, envelope.Message)
 	}
 	identEnvelope := decodeEnvelope(t, identResp)
-	identData := decodeData[models.IdentResponse](t, identEnvelope)
+	identData := decodeData[models.IdentDTO](t, identEnvelope)
 
 	deleteURL := fmt.Sprintf("%s/teams/%s/idents/%d", server.URL, team.Slug, identData.ID)
 	memberDeleteResp := doJSONRequest(t, http.DefaultClient, http.MethodDelete, deleteURL, nil, member.SessionToken)

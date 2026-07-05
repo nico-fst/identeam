@@ -7,6 +7,7 @@ All non-trivial code changes must be verified by tests.
 - After every code change, run the relevant tests.
 - If no tests exist, create appropriate tests before considering the change complete.
 - Update existing tests if behavior changes.
+- After touching backend endpoint handlers, always update their OpenAPI comments to match the changed behavior, payloads, routes, responses, and status codes.
 
 ## Verification
 - Never claim a change works without running tests.

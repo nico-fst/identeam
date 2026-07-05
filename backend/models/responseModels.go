@@ -11,15 +11,15 @@ type Empty struct{}
 // API RESPONSES
 
 // since different notations and []DeviceTokens would complicate decoding in Swift
-type UserResponse struct {
+type UserDTO struct {
 	UserID   string `json:"userID"`
 	Email    string `json:"email"`
 	FullName string `json:"fullName"`
 	Username string `json:"username"`
 }
 
-func (u User) ToDTO() UserResponse {
-	return UserResponse{
+func (u User) ToDTO() UserDTO {
+	return UserDTO{
 		UserID:   u.UserID,
 		Email:    u.Email,
 		FullName: u.FullName,
@@ -29,8 +29,8 @@ func (u User) ToDTO() UserResponse {
 
 type Users []User
 
-func (users Users) ToDTOs() []UserResponse {
-	res := make([]UserResponse, 0, len(users))
+func (users Users) ToDTOs() []UserDTO {
+	res := make([]UserDTO, 0, len(users))
 
 	for _, user := range users {
 		res = append(res, user.ToDTO())
@@ -39,14 +39,14 @@ func (users Users) ToDTOs() []UserResponse {
 	return res
 }
 
-type TeamResponse struct {
+type TeamDTO struct {
 	Name    string `json:"name"`
 	Slug    string `json:"slug"`
 	Details string `json:"details"`
 }
 
-func (t Team) ToDTO() TeamResponse {
-	return TeamResponse{
+func (t Team) ToDTO() TeamDTO {
+	return TeamDTO{
 		Name:    t.Name,
 		Slug:    t.Slug,
 		Details: t.Details,
@@ -55,8 +55,8 @@ func (t Team) ToDTO() TeamResponse {
 
 type Teams []*Team
 
-func (teams Teams) ToDTOs() []TeamResponse {
-	res := make([]TeamResponse, 0, len(teams))
+func (teams Teams) ToDTOs() []TeamDTO {
+	res := make([]TeamDTO, 0, len(teams))
 
 	for _, team := range teams {
 		if team == nil {
@@ -68,18 +68,21 @@ func (teams Teams) ToDTOs() []TeamResponse {
 	return res
 }
 
-type IdentResponse struct {
+type IdentDTO struct {
 	ID       uint              `json:"id"`
 	Time     time.Time         `json:"time"`
 	UserText string            `json:"userText"`
 	Image    PresignedResponse `json:"image"`
+	Comments []CommentDTO      `json:"comments"`
 }
 
-func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentResponse {
-	resp := IdentResponse{
+func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentDTO {
+	resp := IdentDTO{
 		ID:       i.ID,
 		Time:     i.Time,
 		UserText: i.UserText,
+		// Image s. below
+		Comments: Comments(i.Comments).ToDTOs(), // Cast since Go expects exact same type ([]Comment != Comments)
 	}
 
 	if r == nil || i.ImageS3Key == "" {
@@ -105,8 +108,8 @@ func (i Ident) ToDTO(ctx context.Context, r *media.R2Client) IdentResponse {
 
 type Idents []Ident
 
-func (idents Idents) ToDTOs(ctx context.Context, r *media.R2Client) []IdentResponse {
-	res := make([]IdentResponse, 0, len(idents))
+func (idents Idents) ToDTOs(ctx context.Context, r *media.R2Client) []IdentDTO {
+	res := make([]IdentDTO, 0, len(idents))
 
 	for _, ident := range idents {
 		res = append(res, ident.ToDTO(ctx, r))
@@ -115,10 +118,38 @@ func (idents Idents) ToDTOs(ctx context.Context, r *media.R2Client) []IdentRespo
 	return res
 }
 
+type CommentDTO struct {
+	ID   uint      `json:"id"`
+	Time time.Time `json:"time"`
+	Text string    `json:"text"`
+	User UserDTO   `json:"user"`
+}
+
+func (c Comment) ToDTO() CommentDTO {
+	return CommentDTO{
+		ID:   c.ID,
+		Time: c.CreatedAt,
+		Text: c.Text,
+		User: c.User.ToDTO(),
+	}
+}
+
+type Comments []Comment
+
+func (comments Comments) ToDTOs() []CommentDTO {
+	res := make([]CommentDTO, 0, len(comments))
+
+	for _, comment := range comments {
+		res = append(res, comment.ToDTO())
+	}
+
+	return res
+}
+
 type TeamWeekMemberResponse struct {
-	User        UserResponse    `json:"user"`
-	TargetCount uint            `json:"targetCount"`
-	Idents      []IdentResponse `json:"idents"`
+	User        UserDTO    `json:"user"`
+	TargetCount uint       `json:"targetCount"`
+	Idents      []IdentDTO `json:"idents"`
 }
 
 type TeamWeekResponse struct {
@@ -153,13 +184,13 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 	return resp
 }
 
-type UserWeeklyTargetResponse struct {
+type UserWeeklyTargetDTO struct {
 	TimeStart   time.Time `json:"timeStart"`
 	TargetCount uint      `json:"targetCount"`
 }
 
-func (t UserWeeklyTarget) ToDTO() UserWeeklyTargetResponse {
-	return UserWeeklyTargetResponse{
+func (t UserWeeklyTarget) ToDTO() UserWeeklyTargetDTO {
+	return UserWeeklyTargetDTO{
 		TimeStart:   t.TimeStart,
 		TargetCount: t.TargetCount,
 	}

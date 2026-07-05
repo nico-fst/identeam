@@ -24,7 +24,7 @@ type CreateTargetPayload struct {
 // @Param			slug		path		string				true	"Team slug"
 // @Param			dateStart	path		string				true	"Week start date in YYYY-MM-DD format"
 // @Param			payload		body		CreateTargetPayload	true	"Weekly target payload"
-// @Success		200		{object}	util.JSONResponse{data=models.UserWeeklyTargetResponse}
+// @Success		200		{object}	util.JSONResponse{data=models.UserWeeklyTargetDTO}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse

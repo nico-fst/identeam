@@ -35,7 +35,7 @@ var (
 // @Security		BearerAuth
 // @Param			slug	path		string			true	"Team slug"
 // @Param			payload	body		AddIdentPayload	true	"Ident payload"
-// @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
+// @Success		200		{object}	util.JSONResponse{data=models.IdentDTO}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		404		{object}	util.JSONResponse
@@ -105,7 +105,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 // @Security		BearerAuth
 // @Param			slug	path		string	true	"Team slug"
 // @Param			id		path		int		true	"Ident ID"
-// @Success		200		{object}	util.JSONResponse{data=models.IdentResponse}
+// @Success		200		{object}	util.JSONResponse{data=models.IdentDTO}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		403		{object}	util.JSONResponse

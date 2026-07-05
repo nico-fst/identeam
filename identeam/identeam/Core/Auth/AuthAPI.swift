@@ -25,7 +25,7 @@ enum AuthError: LocalizedError {
         case .emailOrPasswordMissing:
             return "Email and Password are required"
         case .fullNameOrUsernameMissing:
-            return "Full Name and Username are required"
+            return "Nickname and Username are required"
         case .userNotFound:
             return "User not found"
         case .backend(let message):

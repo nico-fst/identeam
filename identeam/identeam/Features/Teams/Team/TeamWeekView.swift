@@ -122,14 +122,51 @@ struct TeamWeekView: View {
                         }
                     }
                 }
-                .sheet(item: $teamVM.selectedIdent) { ident in
+                .sheet(
+                    item: $teamVM.selectedIdent,
+                    onDismiss: {
+                        teamVM.commentInput = ""
+                        teamVM.commentError = ""
+                    }
+                ) { ident in
                     NavigationStack {
-                        VStack {
+                        VStack() {
                             Text(ident.userText)
                                 .padding()
                             
                             identImage(ident: ident)
+                                .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
                                 .cornerRadius(12)
+                            
+                            // Comments
+                            VStack(alignment: .leading) {
+                                ForEach(ident.comments.sorted(by: {
+                                    $0.time < $1.time
+                                })) { comment in
+                                    HStack(spacing: 20) {
+                                        Text(comment.user.fullName)
+                                        Text(comment.text)
+                                            .opacity(0.8)
+                                    }
+                                }
+                                
+                                TextField("Comment...", text: $teamVM.commentInput)
+                                Text(teamVM.commentError)
+                                    .foregroundStyle(.red)
+                                
+                            }
+                            .padding()
+                            
+                            Button {
+                                Task {
+                                    await teamVM.tryCommenting(slug: team.slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                                }
+                            } label: {
+                                Text("Comment")
+                                    .padding(5)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .glassEffect(.regular.interactive())
                         }
                         .padding()
                         .navigationTitle(ident.time.formatted(
@@ -141,7 +178,7 @@ struct TeamWeekView: View {
                                 .minute()
                         ))
                     }
-                    .presentationDetents([.medium, .large])
+                    .presentationDetents([.large])
                 }
             } else {
                 ContentUnavailableView(
@@ -197,6 +234,7 @@ private struct TeamView_PreviewContainer: View {
             User.self,
             Ident.self,
             S3Item.self,
+            Comment.self,
             configurations: config
         )
 

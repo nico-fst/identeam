@@ -73,6 +73,7 @@ func GetTeamsWeekTargets(ctx context.Context, app AppContext, teamSlug string, t
 		Joins("Team").
 		Preload("User").
 		Preload("Idents").
+		Preload("Idents.Comments.User").
 		Where(`"Team"."slug" = ? AND user_weekly_targets.time_start = ?`, teamSlug, util.TimeToWeekStart(timeStart)).
 		Find(&targets).Error
 	if err != nil {

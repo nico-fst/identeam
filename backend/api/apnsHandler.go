@@ -13,8 +13,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type NotifyTeamResponse struct {
-	Members []models.UserResponse `json:"members"`
+type NotifyTeamDTO struct {
+	Members []models.UserDTO `json:"members"`
 }
 
 // SendNotification godoc
@@ -57,10 +57,10 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Security		BearerAuth
 // @Param			slug	path		string	true	"Team slug"
-// @Success		200			{object}	util.JSONResponse{data=NotifyTeamResponse}
+// @Success		200			{object}	util.JSONResponse{data=NotifyTeamDTO}
 // @Failure		401			{object}	util.JSONResponse
 // @Failure		500			{object}	util.JSONResponse
-// @Router			/notify/team/{slug} [post]
+// @Router			/notifications/apns/team/{slug}/notify [post]
 func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -69,12 +69,18 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert := models.Alert{
-		Title: "Notified Team " + slug,
-		Body:  "Triggered by " + user.FullName,
+	team, err := db.GetTeamBySlug(r.Context(), app, slug)
+	if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
+		return
 	}
 
-	members, err := db.NotifyTeamMembers(r.Context(), app, user, slug, alert)
+	alert := models.Alert{
+		Title: fmt.Sprintf("[%v] GO GO GO", team.Name),
+		Body:  user.FullName + " reminded you",
+	}
+
+	members, err := db.NotifyTeamMembers(r.Context(), app, slug, alert)
 	if err != nil {
 		util.ErrorJSON(w, fmt.Errorf("unable to notify team members about new ident: %v", err), http.StatusInternalServerError)
 		return
@@ -83,12 +89,23 @@ func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Success notifying team members",
-		Data: NotifyTeamResponse{
+		Data: NotifyTeamDTO{
 			Members: models.Users(members).ToDTOs(),
 		},
 	})
 }
 
+// GetLocalNotificationsForWeek godoc
+// @Summary		Get local notification suggestions
+// @Description	Returns suggested local notification times for the authenticated user in the specified team for the upcoming week.
+// @Tags			Notifications
+// @Produce		json
+// @Security		BearerAuth
+// @Param			slug	path		string	true	"Team slug"
+// @Success		200		{object}	util.JSONResponse{data=[]models.LocalNotificationDTO}
+// @Failure		401		{object}	util.JSONResponse
+// @Failure		500		{object}	util.JSONResponse
+// @Router			/teams/{slug}/week/notifications [get]
 func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {

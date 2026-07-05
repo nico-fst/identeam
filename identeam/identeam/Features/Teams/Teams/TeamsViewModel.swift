@@ -41,7 +41,8 @@ class TeamsViewModel: ObservableObject {
     }
     
     @MainActor
-    func reloadTeamWeek(slug: String, vm: AppViewModel, ctx modelContext: ModelContext) async {
+    @discardableResult
+    func reloadTeamWeek(slug: String, vm: AppViewModel, ctx modelContext: ModelContext) async -> TeamWeek? {
         do {
             let descriptor = FetchDescriptor<TeamWeek>(
                 predicate: #Predicate<TeamWeek> { teamWeek in
@@ -63,10 +64,12 @@ class TeamsViewModel: ObservableObject {
             try modelContext.save()
 
             print("Refresh Teamweek of \(slug)")
+            return newTeamWeek
         } catch is CancellationError {
-            return
+            return nil
         } catch {
             vm.showAlert("ERROR fetching TeamWeek", error.localizedDescription)
+            return nil
         }
     }
     

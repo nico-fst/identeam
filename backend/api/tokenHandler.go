@@ -20,7 +20,7 @@ type UpdateDeviceTokenPayload struct {
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		UpdateDeviceTokenPayload	true	"UpdateDeviceToken payload"
-// @Success		200		{object}	util.JSONResponse{data=models.UserResponse}
+// @Success		200		{object}	util.JSONResponse{data=models.UserDTO}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse

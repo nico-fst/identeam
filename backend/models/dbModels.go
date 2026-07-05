@@ -96,4 +96,16 @@ type Ident struct {
 	// GORM & Relations
 	gorm.Model
 	UserWeeklyTargetID uint // UserWeeklyTarget has many Idents
+	Comments           []Comment
+}
+
+type Comment struct {
+	Text    string `gorm:"not null"`
+	IdentID uint   `gorm:"not null;index"`
+	UserID  uint   `gorm:"not null;index"`
+
+	// GORM & Relations
+	gorm.Model
+	Ident Ident
+	User  User
 }

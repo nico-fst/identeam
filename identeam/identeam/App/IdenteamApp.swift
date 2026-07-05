@@ -22,7 +22,7 @@ struct IdenteamApp: App {
     @StateObject private var identingVM = IdentingViewModel()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self, S3Item.self])
+        let schema = Schema([Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self, S3Item.self, Comment.self])
         let modelConfiguration = ModelConfiguration(schema: schema)
 
         do {

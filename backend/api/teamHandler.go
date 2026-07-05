@@ -28,7 +28,7 @@ type AddTeamPayload struct {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			payload	body		AddTeamPayload	true	"Team data"
-//	@Success		200		{object}	util.JSONResponse{data=models.TeamResponse}
+//	@Success		200		{object}	util.JSONResponse{data=models.TeamDTO}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
@@ -65,9 +65,9 @@ func (app *App) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type AddUserToTeamResponse struct {
-	User models.UserResponse `json:"user"`
-	Team models.TeamResponse `json:"team"`
+type AddUserToTeamDTO struct {
+	User models.UserDTO `json:"user"`
+	Team models.TeamDTO `json:"team"`
 }
 
 // JoinTeam godoc
@@ -78,7 +78,7 @@ type AddUserToTeamResponse struct {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
-//	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
+//	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamDTO}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
@@ -101,7 +101,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Added user to team successfully or already joined",
-		Data: AddUserToTeamResponse{
+		Data: AddUserToTeamDTO{
 			User: user.ToDTO(),
 			Team: team.ToDTO(),
 		},
@@ -116,7 +116,7 @@ func (app *App) JoinTeam(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			slug	path		string	true	"Team slug"
-//	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamResponse}
+//	@Success		200		{object}	util.JSONResponse{data=AddUserToTeamDTO}
 //	@Failure		400		{object}	util.JSONResponse
 //	@Failure		401		{object}	util.JSONResponse
 //	@Failure		500		{object}	util.JSONResponse
@@ -138,7 +138,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
 		Message: "Removed user from team successfully or was no member",
-		Data: AddUserToTeamResponse{
+		Data: AddUserToTeamDTO{
 			User: user.ToDTO(),
 			Team: team.ToDTO(),
 		},
@@ -146,7 +146,7 @@ func (app *App) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetMyTeamsResponse struct {
-	Teams []models.TeamResponse `json:"teams"`
+	Teams []models.TeamDTO `json:"teams"`
 }
 
 // GetMyTeams godoc

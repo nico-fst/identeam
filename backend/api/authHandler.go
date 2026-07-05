@@ -22,9 +22,9 @@ import (
 )
 
 type AuthResponseData struct {
-	User         models.UserResponse `json:"user"`
-	SessionToken string              `json:"sessionToken"`
-	Created      bool                `json:"created"`
+	User         models.UserDTO `json:"user"`
+	SessionToken string         `json:"sessionToken"`
+	Created      bool           `json:"created"`
 }
 
 type LoginPasswordPayload struct {

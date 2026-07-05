@@ -17,7 +17,7 @@ func TestTeamsToDTOsSkipsNilEntries(t *testing.T) {
 	}
 
 	got := teams.ToDTOs()
-	want := []models.TeamResponse{
+	want := []models.TeamDTO{
 		{Name: "Alpha", Slug: "alpha", Details: "first"},
 		{Name: "Beta", Slug: "beta", Details: "second"},
 	}
@@ -34,7 +34,7 @@ func TestUsersToDTOs(t *testing.T) {
 	}
 
 	got := users.ToDTOs()
-	want := []models.UserResponse{
+	want := []models.UserDTO{
 		{UserID: "1", Email: "one@example.com", FullName: "One", Username: "one"},
 		{UserID: "2", Email: "two@example.com", FullName: "Two", Username: "two"},
 	}
@@ -47,14 +47,42 @@ func TestUsersToDTOs(t *testing.T) {
 func TestIdentsToDTOs(t *testing.T) {
 	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
 	idents := models.Idents{
-		{Time: now, UserText: "first"},
+		{
+			Time:     now,
+			UserText: "first",
+			Comments: []models.Comment{
+				{
+					Text: "nice",
+					User: models.User{
+						UserID:   "user-1",
+						Email:    "one@example.com",
+						FullName: "One",
+						Username: "one",
+					},
+				},
+			},
+		},
 		{Time: now.Add(time.Hour), UserText: "second"},
 	}
 
 	got := idents.ToDTOs(context.Background(), nil)
-	want := []models.IdentResponse{
-		{Time: now, UserText: "first"},
-		{Time: now.Add(time.Hour), UserText: "second"},
+	want := []models.IdentDTO{
+		{
+			Time:     now,
+			UserText: "first",
+			Comments: []models.CommentDTO{
+				{
+					Text: "nice",
+					User: models.UserDTO{
+						UserID:   "user-1",
+						Email:    "one@example.com",
+						FullName: "One",
+						Username: "one",
+					},
+				},
+			},
+		},
+		{Time: now.Add(time.Hour), UserText: "second", Comments: []models.CommentDTO{}},
 	}
 
 	if !reflect.DeepEqual(got, want) {

@@ -13,6 +13,7 @@ struct IdentDTO: Decodable {
     let time: Date
     let userText: String
     let image: PresignedDTO
+    let comments: [CommentDTO]
 }
 
 @Model
@@ -21,17 +22,20 @@ final class Ident {
     var time: Date
     var userText: String
     var image: S3Item
+    var comments: [Comment]
     
     init(
         remoteID: Int = 0,
         time: Date,
         userText: String,
-        image: S3Item
+        image: S3Item,
+        comments: [Comment]
     ) {
         self.remoteID = remoteID
         self.time = time
         self.userText = userText
         self.image = image
+        self.comments = comments
     }
     
     convenience init(dto: IdentDTO) {
@@ -39,7 +43,8 @@ final class Ident {
             remoteID: dto.id,
             time: dto.time,
             userText: dto.userText,
-            image: S3Item(dto: dto.image, kind: S3ItemKind.identImage)
+            image: S3Item(dto: dto.image, kind: S3ItemKind.identImage),
+            comments: dto.comments.map { Comment(dto: $0) }
         )
     }
 }
@@ -49,7 +54,8 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Ich war grad im Gym",
-            image: .templateIdentImage
+            image: .templateIdentImage,
+            comments: [.templateSiuu]
         )
     }
     
@@ -57,7 +63,8 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Ich war auch grad im Gym",
-            image: .templateIdentImage
+            image: .templateIdentImage,
+            comments: [.templateWow, .templateGood]
         )
     }
     
@@ -65,7 +72,8 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Und auch ich war auch grad im Gym",
-            image: .templateIdentImage
+            image: .templateIdentImage,
+            comments: [.templateWow, .templateSiuu]
         )
     }
     
@@ -73,7 +81,8 @@ extension Ident {
         Ident(
             time: Date(),
             userText: "Ich hab grad Piano gespielt",
-            image: .templateIdentImage
+            image: .templateIdentImage,
+            comments: [.templateWow, .templateSiuu, .templateGood]
         )
     }
 }

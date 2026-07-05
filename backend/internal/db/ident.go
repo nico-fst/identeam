@@ -70,6 +70,25 @@ func UserOwnsIdentInTeam(ctx context.Context, app AppContext, identID uint, user
 	return count > 0, nil
 }
 
+func UserIsInIdentsTeam(ctx context.Context, app AppContext, identID uint, userID uint, teamSlug string) (bool, error) {
+	var count int64
+	err := app.Database().WithContext(ctx).
+		Model(&models.Ident{}).
+		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
+		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
+		Joins("JOIN users_teams ON users_teams.team_id = teams.id").
+		Where("idents.id = ?", identID).
+		Where("users_teams.user_id = ?", userID).
+		Where("teams.slug = ?", teamSlug).
+		Count(&count).Error
+	if err != nil {
+		log.Printf("ERROR checking team membership for Ident %v, userID %v, teamSlug %v: %v", identID, userID, teamSlug, err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func DeleteIdent(ctx context.Context, app AppContext, ident models.Ident) error {
 	_, err := gorm.G[models.Ident](app.Database()).Where("id = ?", ident.ID).Delete(ctx)
 	if err != nil {

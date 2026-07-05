@@ -88,6 +88,7 @@ func AutoMigrateAllModels(db *gorm.DB) {
 		&models.Team{},
 		&models.UserWeeklyTarget{},
 		&models.Ident{},
+		&models.Comment{},
 	)
 }
 

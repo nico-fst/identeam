@@ -43,7 +43,7 @@ struct DebugInfoView: View {
                     TextLabeled("Session Token", sessionToken ?? "")
                     TextLabeled("UserID", userID ?? "")
                     TextLabeled("Email", email ?? "")
-                    TextLabeled("Full Name", fullName ?? "")
+                    TextLabeled("Nickname", fullName ?? "")
                     TextLabeled("Username", username ?? "")
                 }
                 

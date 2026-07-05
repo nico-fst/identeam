@@ -124,10 +124,10 @@ func GetTeamBySlug(ctx context.Context, app AppContext, slug string) (*models.Te
 	return &team, nil
 }
 
-func GetTeamMembers(ctx context.Context, app AppContext, userID string, teamSlug string) ([]*models.User, error) {
+func GetTeamMembers(ctx context.Context, app AppContext, userID uint, teamSlug string) ([]*models.User, error) {
 	var team models.Team
 	if err := app.Database().
-		Preload("Users", "user_id <> ?", userID).
+		Preload("Users", "id <> ?", userID).
 		Preload("Users.DeviceTokens").
 		Where("slug = ? ", teamSlug). // not userID himself
 		First(&team).Error; err != nil {
@@ -147,7 +147,7 @@ func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart
 	return &resp, nil
 }
 
-func NotifyTeamMembers(ctx context.Context, app AppContext, user models.User, slug string, alert models.Alert) ([]models.User, error) {
+func NotifyTeamMembers(ctx context.Context, app AppContext, slug string, alert models.Alert) ([]models.User, error) {
 	team, err := GetTeamBySlug(ctx, app, slug)
 	if err != nil {
 		return nil, err
@@ -194,12 +194,53 @@ func NotifyTeamMembersAboutNewIdent(ctx context.Context, app AppContext, ident m
 		Body:     target.User.FullName + ": " + ident.UserText,
 	}
 
-	members, err := NotifyTeamMembers(ctx, app, target.User, target.Team.Slug, alert)
+	members, err := NotifyTeamMembers(ctx, app, target.Team.Slug, alert)
 	if err != nil {
 		return nil, err
 	}
 
 	return members, nil
+}
+
+func NotifyTeamMembersAboutNewComment(ctx context.Context, app AppContext, comment *models.Comment, authorID uint) ([]models.User, error) {
+	team, err := GetTeamByIdent(ctx, app, comment.IdentID)
+	if err != nil {
+		return nil, err
+	}
+
+	memberPtrs, err := GetTeamMembers(ctx, app, authorID, team.Slug)
+	members := derefUsers(memberPtrs)
+
+	alert := models.Alert{
+		Title:    team.Name,
+		Subtitle: fmt.Sprintf("%v commented:", comment.User.FullName),
+		Body:     comment.Text,
+	}
+
+	_, err = NotifyTeamMembers(ctx, app, team.Slug, alert)
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
+func GetTeamByIdent(ctx context.Context, app AppContext, identID uint) (*models.Team, error) {
+	ident, err := GetIdentById(ctx, app, identID)
+	if err != nil {
+		return nil, err
+	}
+
+	var target models.UserWeeklyTarget
+	err = app.Database().Model(&models.UserWeeklyTarget{}).
+		Preload("User").
+		Preload("Team").
+		First(&target, ident.UserWeeklyTargetID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &target.Team, nil
 }
 
 func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, targetID uint) ([]models.User, error) {
@@ -217,7 +258,7 @@ func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, target
 		Body:  fmt.Sprintf("%v set Target to %d", target.User.FullName, target.TargetCount),
 	}
 
-	members, err := NotifyTeamMembers(ctx, app, target.User, target.Team.Slug, alert)
+	members, err := NotifyTeamMembers(ctx, app, target.Team.Slug, alert)
 	if err != nil {
 		return nil, err
 	}
