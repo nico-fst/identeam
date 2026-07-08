@@ -1,10 +1,37 @@
 package util
 
-import "time"
+import (
+	"identeam/internal/appclock"
+	"time"
+)
+
+func AppLocation() *time.Location {
+	return appclock.Location()
+}
+
+func Now() time.Time {
+	return appclock.Now()
+}
+
+func TimeInAppLocation(t time.Time) time.Time {
+	return appclock.InLocation(t)
+}
+
+func ParseRFC3339InAppLocation(value string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return TimeInAppLocation(t), nil
+}
+
+func ParseDateInAppLocation(value string) (time.Time, error) {
+	return time.ParseInLocation("2006-01-02", value, AppLocation())
+}
 
 func TimeToWeekStart(t time.Time) time.Time {
-	t = t.UTC()
-	
+	t = TimeInAppLocation(t)
+
 	// Normalize to midnight first
 	y, m, d := t.Date()
 	loc := t.Location()

@@ -32,11 +32,8 @@ struct TeamWeekView: View {
         teamWeeks.first(where: { $0.slug == slug })
     }
     
-    private var targetSet: Bool {
-        guard let teamWeek else { return false }
-        return teamWeek.members.contains { member in
-            member.user.username == username && member.targetCount > 0
-        }
+    private var ownMember: TeamMember? {
+        teamWeek?.members.first(where: { $0.user.username == username })
     }
     
     private func sortedMembers(for week: TeamWeek) -> [TeamMember] {
@@ -79,7 +76,34 @@ struct TeamWeekView: View {
                     Section("Info") {
                         TextLabeled("Slug", team.slug)
                         TextLabeled("Details", team.details)
+                        
+                        Button() {
+                            Task {
+                                await teamVM.tryRemindingTeam(slug: team.slug, vm: vm)
+                            }
+                        } label: {
+                            Label(
+                                teamVM.remindButtonTitle,
+                                systemImage: teamVM.remindButtonDisabled ? "bell.fill" : "bell"
+                            )
+                        }
+                        .disabled(teamVM.remindButtonDisabled)
+                        .opacity(teamVM.remindButtonDisabled ? 0.3 : 1)
                     }
+                    
+                    Section("My Target") {
+                        Button() {
+                            teamVM.showSettingTarget = true
+                        } label: {
+                            Label(
+                                ownMember?.targetCount ?? 0 > 0
+                                    ? "Change Target (\(ownMember?.targetCount ?? 0))"
+                                    : "Set Target",
+                                systemImage: "target"
+                            )
+                        }
+                    }
+                    .navigationTitle(team.name)
                     
                     if let teamWeek {
                         Section("Members ⋅ \(teamWeek.identSum) / \(teamWeek.targetSum) Idents ") {
@@ -89,7 +113,7 @@ struct TeamWeekView: View {
                                         let dateString = formattedDateString(for: ident.time)
                                         HStack {
                                             identImage(ident: ident)
-                                                .frame(height: 75)
+                                                .frame(height: 100)
                                             TextLabeled(dateString, ident.userText)
                                         }
                                         .onTapGesture {
@@ -99,7 +123,6 @@ struct TeamWeekView: View {
                                 } label: {
                                     HStack {
                                         avatar(image: member.user.avatar)
-                                            .frame(height: 50)
                                         TextLabeled(
                                             "\(member.idents.count) / \(member.targetCount)",
                                             member.user.nickname
@@ -113,36 +136,13 @@ struct TeamWeekView: View {
                             Text("No Info...").opacity(0.25)
                         }
                     }
-                    
-                    Section("My Target") {
-                        Button() {
-                            teamVM.showSettingTarget = true
-                        } label: {
-                            Text(targetSet ? "Change Target" : "Set Target")
-                        }
-                    }
-                    
-                    Section("Debugging") {
-                        Button("Notify Team") {
-                            Task {
-                                do {
-                                    try await TeamAPI.shared.NotifyTeam(slug: team.slug)
-                                } catch {
-                                    vm.showAlert(
-                                        "Error notifying team",
-                                        error.localizedDescription
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .navigationTitle(team.name)
                 }
                 .listStyle(InsetGroupedListStyle())
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
                             slug: team.slug,
+                            initialTargetCount: Int(ownMember?.targetCount ?? 3)
                         ) { didChange in
                             teamVM.showSettingTarget = false
                             if didChange {
@@ -167,7 +167,7 @@ struct TeamWeekView: View {
                                 .bold()
                             
                             identImage(ident: ident)
-                                .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
+                                .modifier(Floating3DEffect(isActive: true, animationFactor: 1.2))
                                 .cornerRadius(12)
                             
                             // Comments
@@ -288,8 +288,9 @@ struct TeamWeekView: View {
                 ProgressView()
             }
             .resizable()
-            .scaledToFit()
-            .mask(Circle())
+            .scaledToFill()
+            .frame(width: 50, height: 50)
+            .clipShape(Circle())
     }
 }
 

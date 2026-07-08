@@ -27,6 +27,12 @@ struct Floating3DEffect: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .shadow(
+                color: .black.opacity(isActive ? 0.5 : 0),
+                radius: isActive ? 16 : 0,
+                x: animate ? 8 : -8,
+                y: animate ? 12 : 6
+            )
             .rotation3DEffect(
                 .degrees(isActive
                     ? (animate ? xAngle : -xAngle)

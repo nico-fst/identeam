@@ -22,7 +22,7 @@ class AvatarViewModel: ObservableObject {
             return
         }
         
-        let remoteAvatar = try await AvatarAPI.shared.fetchMe().avatar
+        let remoteAvatar = try await AvatarAPI.shared.fetchMe().user.avatar
         guard let remoteAvatar else {
             try await refreshAvatar(avatars: avatars, ctx: ctx)
             return
@@ -42,10 +42,7 @@ class AvatarViewModel: ObservableObject {
             ctx.delete(avatar)
         }
         
-        if let remoteAvatarDTO = resp.avatar {
-            let remoteAvatar = S3Item(dto: remoteAvatarDTO, kind: .avatar)
-            ctx.insert(remoteAvatar)
-        }
+        ctx.insert(S3Item.avatar(for: resp.user))
         
         try ctx.save()
     }

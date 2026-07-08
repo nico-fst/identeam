@@ -5,7 +5,6 @@ class AvatarAPI {
     
     struct GetMeResponse: Decodable {
         let user: UserDTO
-        let avatar: PresignedDTO?
     }
 
     func fetchMe() async throws -> GetMeResponse {

@@ -8,7 +8,6 @@ import (
 	"identeam/util"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -192,7 +191,7 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 func (app *App) GetTeamWeek(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	dateParam := chi.URLParam(r, "dateStart")
-	date, err := time.Parse("2006-01-02", dateParam)
+	date, err := util.ParseDateInAppLocation(dateParam)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return

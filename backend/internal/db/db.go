@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"identeam/internal/apns"
+	"identeam/internal/appclock"
 	"identeam/internal/media"
 	"identeam/models"
 	"os"
@@ -58,7 +59,7 @@ func ConnectPostgres() (*gorm.DB, error) {
 		host, port, user, password, dbname,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), GormConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func ConnectPostgres() (*gorm.DB, error) {
 }
 
 func ConnectSqlite() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("identeam.sqlite3"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("identeam.sqlite3"), GormConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +80,12 @@ func ConnectSqlite() (*gorm.DB, error) {
 	AutoMigrateAllModels(db)
 
 	return db, nil
+}
+
+func GormConfig() *gorm.Config {
+	return &gorm.Config{
+		NowFunc: appclock.Now,
+	}
 }
 
 func AutoMigrateAllModels(db *gorm.DB) {

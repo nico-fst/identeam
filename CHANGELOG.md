@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0+13] - 2026-07-08
+
+### Added
+
+- Default seeded User Avatars using DiceBear
+- Introducing Ident Comments
+- Showing User Avatars in Teams
+
+### Fixed
+
+- Close SetTargetSheet after saving
+- Add cooldown for reminding Team
+
 ## [1.8.0+12] - 2026-06-03
 
 ### Added

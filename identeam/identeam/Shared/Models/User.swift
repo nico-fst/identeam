@@ -13,7 +13,7 @@ struct UserDTO: Decodable {
     let email: String
     let nickname: String
     let username: String
-    let avatar: PresignedDTO
+    let avatar: PresignedDTO?
 }
 
 @Model
@@ -45,7 +45,7 @@ final class User {
             email: dto.email,
             nickname: dto.nickname,
             username: dto.username,
-            avatar: S3Item(dto: dto.avatar, kind: .avatar)
+            avatar: S3Item.avatar(for: dto)
         )
     }
 }
@@ -72,3 +72,34 @@ extension User {
     }
 }
 
+enum DiceBear {
+    static func avatarURL(seed: String) -> URL {
+        var components = URLComponents(string: "https://api.dicebear.com/10.x/adventurer/jpg")!
+        components.queryItems = [
+            URLQueryItem(name: "seed", value: seed),
+            URLQueryItem(
+                name: "backgroundColor",
+                value: [
+                    "cbf0ff", "d3e2ff", "d9c9fe", "efcaff", "f9d3e0", "ffdbd8", "ffe2d6", "ffecd4", "fff2d5", "fefcdd", "f7fadb", "dfeed4"
+                ].joined(separator: ",")
+            )
+        ]
+        
+        return components.url!
+    }
+}
+
+extension S3Item {
+    static func avatar(for dto: UserDTO) -> S3Item {
+        if let dtoAvatar = dto.avatar {
+            return S3Item(dto: dtoAvatar, kind: .avatar)
+        }
+
+        return S3Item(
+            url: DiceBear.avatarURL(seed: dto.username),
+            key: "dicebear-\(dto.username)",
+            expiresAt: Date().addingTimeInterval(60 * 10),
+            kind: .avatar
+        )
+    }
+}

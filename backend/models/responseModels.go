@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"identeam/internal/appclock"
 	"identeam/internal/media"
 	"time"
 )
@@ -12,11 +13,11 @@ type Empty struct{}
 
 // since different notations and []DeviceTokens would complicate decoding in Swift
 type UserDTO struct {
-	UserID   string            `json:"userID"`
-	Email    string            `json:"email"`
-	Nickname string            `json:"nickname"`
-	Username string            `json:"username"`
-	Avatar   PresignedResponse `json:"avatar"`
+	UserID   string             `json:"userID"`
+	Email    string             `json:"email"`
+	Nickname string             `json:"nickname"`
+	Username string             `json:"username"`
+	Avatar   *PresignedResponse `json:"avatar"`
 }
 
 func (u User) ToDTO(ctx context.Context, r2Client *media.R2Client) UserDTO {
@@ -25,6 +26,7 @@ func (u User) ToDTO(ctx context.Context, r2Client *media.R2Client) UserDTO {
 		Email:    u.Email,
 		Nickname: u.Nickname,
 		Username: u.Username,
+		Avatar:   nil,
 	}
 
 	if r2Client == nil || u.AvatarS3Key == "" {
@@ -32,13 +34,13 @@ func (u User) ToDTO(ctx context.Context, r2Client *media.R2Client) UserDTO {
 	}
 
 	// add presigned Avatar
-	expiresAt := time.Now().Add(time.Hour * 24)
+	expiresAt := appclock.Now().Add(time.Hour * 24)
 	imageURL, err := r2Client.PresignGetObject(ctx, u.AvatarS3Key, expiresAt)
 	if err != nil {
 		// swallows error - catching would complicate entire toDTO process
 		print("ERROR presigning URL for User.Avatar:", err.Error())
 	} else {
-		resp.Avatar = PresignedResponse{
+		resp.Avatar = &PresignedResponse{
 			Key:          u.AvatarS3Key,
 			PresignedURL: imageURL,
 			ExpiresAt:    expiresAt,
@@ -111,7 +113,7 @@ func (i Ident) ToDTO(ctx context.Context, r2Client *media.R2Client) IdentDTO {
 	}
 
 	// add presigned Image
-	expiresAt := time.Now().Add(time.Hour * 24)
+	expiresAt := appclock.Now().Add(time.Hour * 24)
 	imageURL, err := r2Client.PresignGetObject(ctx, i.ImageS3Key, expiresAt)
 	if err != nil {
 		// swallows error - catching would complicate entire toDTO process

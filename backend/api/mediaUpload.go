@@ -18,7 +18,7 @@ type mediaUploadTarget struct {
 }
 
 func (app *App) writePresignedUploadURL(w http.ResponseWriter, r *http.Request, target mediaUploadTarget) bool {
-	expiresAt := time.Now().Add(10 * time.Minute)
+	expiresAt := util.Now().Add(10 * time.Minute)
 
 	uploadURL, err := app.R2Client.PresignPutObject(r.Context(), target.Key, target.ContentType, expiresAt)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"identeam/models"
 	"identeam/util"
 	"net/http"
-	"time"
 )
 
 type UpdateUserData struct {
@@ -146,8 +145,7 @@ func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetMeResponse struct {
-	User   models.UserDTO            `json:"user"`
-	Avatar *models.PresignedResponse `json:"avatar"`
+	User models.UserDTO `json:"user"`
 }
 
 // GetMe godoc
@@ -167,29 +165,11 @@ func (app *App) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var avatar *models.PresignedResponse
-
-	if user.AvatarS3Key != "" {
-		expiresAt := time.Now().Add(10 * time.Minute)
-		avatarURL, err := app.R2Client.PresignGetObject(r.Context(), user.AvatarS3Key, expiresAt)
-		if err != nil {
-			util.ErrorJSON(w, fmt.Errorf("could not get avatarURL: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		avatar = &models.PresignedResponse{
-			Key:          user.AvatarS3Key,
-			PresignedURL: avatarURL,
-			ExpiresAt:    expiresAt,
-		}
-	}
-
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Your profile info",
 		Data: GetMeResponse{
-			User:   user.ToDTO(r.Context(), app.R2Client),
-			Avatar: avatar,
+			User: user.ToDTO(r.Context(), app.R2Client),
 		},
 	})
 }

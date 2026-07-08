@@ -105,6 +105,7 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 		r.Post("/teams/create", app.CreateTeam)
 		r.Post("/teams/{slug}/join", app.JoinTeam)
 		r.Post("/teams/{slug}/leave", app.LeaveTeam)
+		r.Post("/teams/{slug}/remind", app.RemindTeam)
 
 		r.Get("/teams/{slug}/week/{dateStart}", app.GetTeamWeek)
 		r.Get("/teams/{slug}/week/notifications", app.GetLocalNotificationsForWeek)
@@ -116,8 +117,6 @@ func (app *App) setupRoutes(enableSwagger bool) http.Handler {
 		r.Post("/teams/{slug}/idents/{id}/image/get_upload_url", app.GetIdentImageUploadURL)
 		r.Post("/teams/{slug}/idents/{id}/image/commit", app.CommitIdentImage)
 		r.Delete("/teams/{slug}/idents/{id}", app.DeleteIdent)
-
-		r.Post("/notifications/apns/team/{slug}/notify", app.NotifyTeam)
 	})
 
 	return mux

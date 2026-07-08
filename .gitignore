@@ -6,6 +6,7 @@ UserInterfaceState.xcuserstate
 coverage.out
 coverage-summary.txt
 test-output.txt
+*.xcodeproj/xcuserdata/
 
 # Docs dynamically generated
 docs/ 

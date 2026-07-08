@@ -61,7 +61,7 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 // @Failure		401			{object}	util.JSONResponse
 // @Failure		500			{object}	util.JSONResponse
 // @Router			/notifications/apns/team/{slug}/notify [post]
-func (app *App) NotifyTeam(w http.ResponseWriter, r *http.Request) {
+func (app *App) RemindTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -137,7 +137,7 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 		app,
 		user.ID,
 		team.ID,
-		time.Now(),
+		util.Now(),
 	)
 
 	dates := make([]time.Time, 0, 7)
@@ -148,7 +148,7 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	for _, day := range util.NextMonToSun(time.Now()) {
+	for _, day := range util.NextMonToSun(util.Now()) {
 
 		reminder, ok := apns.BuildIntelligentReminderTime(idents, day)
 		if !ok {

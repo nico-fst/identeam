@@ -12,20 +12,36 @@ struct TargetPicker: View {
     let slug: String
     let onChange: (Bool) -> Void // == new value set
     
-    @State private var selectedTargetCount: Int = 3
+    init(
+        slug: String,
+        initialTargetCount: Int = 3,
+        onChange: @escaping (Bool) -> Void
+    ) {
+        self.slug = slug
+        self.onChange = onChange
+        _selectedTargetCount = State(initialValue: initialTargetCount)
+    }
+    
+    @State private var selectedTargetCount: Int
     @State private var isSettingTarget = false
+    @State private var settingError = ""
     
     @EnvironmentObject var vm: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
     
     var body: some View {
-        Picker("Target", selection: $selectedTargetCount) {
-            ForEach(1...7, id: \.self) { count in
-                Text("\(count)").tag(count)
+        VStack {
+            Picker("Target", selection: $selectedTargetCount) {
+                ForEach(1...7, id: \.self) { count in
+                    Text("\(count)").tag(count)
+                }
             }
+            .pickerStyle(.wheel)
+            
+            Text(settingError)
+                .foregroundStyle(.red)
         }
-        .pickerStyle(.wheel)
         .toolbar {
             // left: X
             ToolbarItem(placement: .topBarLeading) {
@@ -40,11 +56,15 @@ struct TargetPicker: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
-                        await trySettingTarget(
+                        let success = await trySettingTarget(
                             slug: slug,
                             vm: vm,
                             ctx: ctx,
                         )
+                        
+                        if success {
+                            dismiss()
+                        }
                     }
                 } label: {
                     if isSettingTarget {
@@ -57,20 +77,24 @@ struct TargetPicker: View {
                 .disabled(isSettingTarget)
             }
         }
+        .interactiveDismissDisabled()
         .navigationTitle("Set Target")
-        .presentationDetents([.large])
+        .presentationDetents([.medium])
     }
     
     private func trySettingTarget(
         slug: String,
         vm: AppViewModel,
         ctx: ModelContext,
-    ) async {
+    ) async -> Bool {
         guard selectedTargetCount != 0 else {
-            vm.showAlert("Error setting target", "You must select a value first")
-            return
+            settingError = "You must select a value first"
+            return false
         }
         
+        var notificationsScheduled = false
+        
+        settingError = ""
         isSettingTarget = true
         defer { isSettingTarget = false }
 
@@ -81,16 +105,20 @@ struct TargetPicker: View {
                 count: selectedTargetCount
             )
             
-            let notifications = try await LocalNotificationAPI.shared.fetchUpcomingNotifications(slug: slug)
-            try await scheduleLocalNotifications(notifications, slug: slug)
+            // schedule notifications - temp ignore errors (new accounts have nos amples to calc notifications)
+            if let notifications = try? await LocalNotificationAPI.shared.fetchUpcomingNotifications(slug: slug) {
+                try await scheduleLocalNotifications(notifications, slug: slug)
+                notificationsScheduled = true
+            }
         } catch {
-            vm.showAlert("Error setting Target", error.localizedDescription)
-            return
+            settingError = error.localizedDescription
+            return false
         }
 
-        vm.toastMessage = "Target set ⋅ Notifications scheduled"
+        vm.toastMessage = "Target set\(notificationsScheduled ? " ⋅ Notifications scheduled" : "")"
 
         onChange(true)
+        return true
     }
 }
 

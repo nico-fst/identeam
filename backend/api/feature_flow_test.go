@@ -57,7 +57,7 @@ func newFeatureTestApp(t *testing.T) *api.App {
 	t.Setenv("SESSION_TOKEN_SECRET", "feature-test-secret")
 
 	dbPath := filepath.Join(t.TempDir(), "identeam-test.sqlite")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), dbpkg.GormConfig())
 	if err != nil {
 		t.Fatalf("open sqlite db: %v", err)
 	}

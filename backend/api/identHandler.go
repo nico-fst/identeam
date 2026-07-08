@@ -10,7 +10,6 @@ import (
 	"identeam/util"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -55,7 +54,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identTime, err := time.Parse(time.RFC3339, payload.Time)
+	identTime, err := util.ParseRFC3339InAppLocation(payload.Time)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return

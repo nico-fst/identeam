@@ -5,7 +5,6 @@ import (
 	"identeam/models"
 	"identeam/util"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -37,7 +36,7 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 
 	slug := chi.URLParam(r, "slug")
 	dateParam := chi.URLParam(r, "dateStart")
-	timeStart, err := time.Parse("2006-01-02", dateParam)
+	timeStart, err := util.ParseDateInAppLocation(dateParam)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return

@@ -128,9 +128,9 @@ class TeamAPI {
         }
     }
 
-    func NotifyTeam(slug: String) async throws {
+    func remindTeam(slug: String) async throws {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "notifications/apns/team/\(slug)/notify"
+            "teams/\(slug)/remind"
         )
 
         let response: BackendResponse<Empty> =

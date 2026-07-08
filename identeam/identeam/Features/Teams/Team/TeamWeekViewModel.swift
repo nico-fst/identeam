@@ -19,6 +19,45 @@ class TeamWeekViewModel: ObservableObject {
     @Published var commentInput: String = ""
     @Published var commentError: String = ""
     
+    @Published var remindButtonDisabled = false
+    @Published var remindDisabledUntil: Date?
+    @Published var now = Date()
+    
+    var remindCooldownRemaining: Int {
+        guard let remindDisabledUntil else { return 0 }
+        return max(0, Int(ceil(remindDisabledUntil.timeIntervalSince(now))))
+    }
+    
+    func tryRemindingTeam(slug: String, vm: AppViewModel) async {
+        do {
+            try await TeamAPI.shared.remindTeam(slug: slug)
+            
+            remindDisabledUntil = Date().addingTimeInterval(9)
+            remindButtonDisabled = true
+            now = Date()
+            
+            Task { @MainActor in
+                while remindCooldownRemaining > 1 {
+                    now = Date()
+                    try? await Task.sleep(for: .seconds(1))
+                }
+                
+                remindButtonDisabled = false
+                remindDisabledUntil = nil
+                now = Date()
+            }
+        } catch {
+            vm.showAlert(
+                "Error reminding team",
+                error.localizedDescription
+            )
+        }
+    }
+    var remindButtonTitle: String {
+        guard remindCooldownRemaining > 0 else { return "Remind Team" }
+        return "Remind Team ⋅ \(remindCooldownRemaining)s"
+    }
+    
     // Legacy, unused (before photos)
     func tryCreatingIdent(
         slug: String,
