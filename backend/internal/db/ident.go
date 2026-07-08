@@ -35,12 +35,12 @@ func GetIdentById(ctx context.Context, app AppContext, identID uint) (*models.Id
 
 func GetIdentsOfTarget(ctx context.Context, app AppContext, targetID uint) ([]models.Ident, error) {
 	idents, err := gorm.G[models.Ident](app.Database().Statement.DB).
-		Where("user_weekly_target_id = ?", targetID).
+		Where("target_id = ?", targetID).
 		Find(ctx)
 	return idents, err
 }
 
-func GetIdentsOfTargets(ctx context.Context, app AppContext, targets []models.UserWeeklyTarget) ([]models.Ident, error) {
+func GetIdentsOfTargets(ctx context.Context, app AppContext, targets []models.Target) ([]models.Ident, error) {
 	idents := make([]models.Ident, 0)
 	for _, t := range targets {
 		foundTargets, err := GetIdentsOfTarget(ctx, app, t.ID)
@@ -56,10 +56,10 @@ func UserOwnsIdentInTeam(ctx context.Context, app AppContext, identID uint, user
 	var count int64
 	err := app.Database().WithContext(ctx).
 		Model(&models.Ident{}).
-		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
-		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
+		Joins("JOIN targets ON targets.id = idents.target_id").
+		Joins("JOIN teams ON teams.id = targets.team_id").
 		Where("idents.id = ?", identID).
-		Where("user_weekly_targets.user_id = ?", userID).
+		Where("targets.user_id = ?", userID).
 		Where("teams.slug = ?", teamSlug).
 		Count(&count).Error
 	if err != nil {
@@ -74,8 +74,8 @@ func UserIsInIdentsTeam(ctx context.Context, app AppContext, identID uint, userI
 	var count int64
 	err := app.Database().WithContext(ctx).
 		Model(&models.Ident{}).
-		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
-		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
+		Joins("JOIN targets ON targets.id = idents.target_id").
+		Joins("JOIN teams ON teams.id = targets.team_id").
 		Joins("JOIN users_teams ON users_teams.team_id = teams.id").
 		Where("idents.id = ?", identID).
 		Where("users_teams.user_id = ?", userID).

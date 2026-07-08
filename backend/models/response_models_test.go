@@ -92,7 +92,7 @@ func TestIdentsToDTOs(t *testing.T) {
 
 func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 	weekStart := time.Date(2026, 4, 7, 0, 0, 0, 0, time.UTC)
-	targets := []models.UserWeeklyTarget{
+	targets := []models.Target{
 		{
 			TimeStart:   weekStart,
 			TargetCount: 3,

@@ -27,16 +27,16 @@ func newDryRunDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func TestGetUserWeeklyTargetByTimeUserTeamUsesJoinedTeamAlias(t *testing.T) {
+func TestGetTargetByTimeUserTeamUsesJoinedTeamAlias(t *testing.T) {
 	db := newDryRunDB(t)
 	weekTime := time.Date(2026, 4, 18, 12, 0, 0, 0, time.UTC)
 
 	sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
-		var target models.UserWeeklyTarget
-		return tx.Model(&models.UserWeeklyTarget{}).
+		var target models.Target
+		return tx.Model(&models.Target{}).
 			Joins("Team").
 			Where(
-				"user_weekly_targets.time_start = ? AND user_weekly_targets.user_id = ? AND Team.slug = ?",
+				"targets.time_start = ? AND targets.user_id = ? AND Team.slug = ?",
 				util.TimeToWeekStart(weekTime),
 				uint(2),
 				"test",
@@ -58,14 +58,14 @@ func TestGetTeamsWeekTargetsUsesJoinedTeamAlias(t *testing.T) {
 	weekTime := time.Date(2026, 4, 18, 12, 0, 0, 0, time.UTC)
 
 	sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
-		var targets []models.UserWeeklyTarget
-		return tx.Model(&models.UserWeeklyTarget{}).
+		var targets []models.Target
+		return tx.Model(&models.Target{}).
 			Joins("Team").
 			Preload("User").
 			Preload("Idents").
 			Preload("Idents.Comments.User").
 			Where(
-				"Team.slug = ? AND user_weekly_targets.time_start = ?",
+				"Team.slug = ? AND targets.time_start = ?",
 				"test",
 				util.TimeToWeekStart(weekTime),
 			).
@@ -90,7 +90,7 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	err = sqliteDB.AutoMigrate(
 		&models.User{},
 		&models.Team{},
-		&models.UserWeeklyTarget{},
+		&models.Target{},
 		&models.Ident{},
 		&models.Comment{},
 	)
@@ -127,7 +127,7 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 
 	weekTime := time.Date(2026, 6, 30, 13, 0, 0, 0, time.UTC)
-	target := models.UserWeeklyTarget{
+	target := models.Target{
 		TimeStart:   util.TimeToWeekStart(weekTime),
 		UserID:      owner.ID,
 		TeamID:      team.ID,
@@ -138,9 +138,9 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 
 	ident := models.Ident{
-		Time:               weekTime,
-		UserText:           "shipped a useful thing",
-		UserWeeklyTargetID: target.ID,
+		Time:     weekTime,
+		UserText: "shipped a useful thing",
+		TargetID: target.ID,
 	}
 	if err := sqliteDB.Create(&ident).Error; err != nil {
 		t.Fatalf("create ident: %v", err)
@@ -180,8 +180,91 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 }
 
+func TestAutoMigrateAllModelsRenamesLegacyTargetsTableAndIdentColumn(t *testing.T) {
+	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "legacy-targets.sqlite")), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite db: %v", err)
+	}
+
+	if err := sqliteDB.Exec(`
+		CREATE TABLE user_weekly_targets (
+			id integer primary key autoincrement,
+			created_at datetime,
+			updated_at datetime,
+			deleted_at datetime,
+			time_start datetime NOT NULL,
+			user_id integer NOT NULL,
+			team_id integer NOT NULL,
+			target_count integer NOT NULL
+		)
+	`).Error; err != nil {
+		t.Fatalf("create legacy targets table: %v", err)
+	}
+	if err := sqliteDB.Exec(`
+		CREATE TABLE idents (
+			id integer primary key autoincrement,
+			created_at datetime,
+			updated_at datetime,
+			deleted_at datetime,
+			time datetime,
+			user_text text,
+			image_s3_key text,
+			user_weekly_target_id integer
+		)
+	`).Error; err != nil {
+		t.Fatalf("create legacy idents table: %v", err)
+	}
+	if err := sqliteDB.Exec(`
+		INSERT INTO user_weekly_targets (time_start, user_id, team_id, target_count)
+		VALUES (?, ?, ?, ?)
+	`, time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC), 12, 34, 5).Error; err != nil {
+		t.Fatalf("insert legacy target: %v", err)
+	}
+	if err := sqliteDB.Exec(`
+		INSERT INTO idents (time, user_text, user_weekly_target_id)
+		VALUES (?, ?, ?)
+	`, time.Date(2026, 7, 8, 12, 0, 0, 0, time.UTC), "legacy ident", 1).Error; err != nil {
+		t.Fatalf("insert legacy ident: %v", err)
+	}
+
+	AutoMigrateAllModels(sqliteDB)
+
+	if sqliteDB.Migrator().HasTable("user_weekly_targets") {
+		t.Fatal("expected legacy user_weekly_targets table to be renamed")
+	}
+	if !sqliteDB.Migrator().HasTable(&models.Target{}) {
+		t.Fatal("expected targets table to exist")
+	}
+	if hasTableColumn(sqliteDB, "idents", "user_weekly_target_id") {
+		t.Fatal("expected legacy idents.user_weekly_target_id column to be renamed")
+	}
+	if !hasTableColumn(sqliteDB, "idents", "target_id") {
+		t.Fatal("expected idents.target_id column to exist")
+	}
+
+	var target models.Target
+	if err := sqliteDB.First(&target, 1).Error; err != nil {
+		t.Fatalf("load migrated target: %v", err)
+	}
+	var rawTargetCount uint
+	if err := sqliteDB.Raw("SELECT target_count FROM targets WHERE id = ?", 1).Scan(&rawTargetCount).Error; err != nil {
+		t.Fatalf("load raw migrated target count: %v", err)
+	}
+	if target.TargetCount != 5 {
+		t.Fatalf("expected target count 5, got %d via gorm and %d via raw SQL", target.TargetCount, rawTargetCount)
+	}
+
+	var ident models.Ident
+	if err := sqliteDB.First(&ident, 1).Error; err != nil {
+		t.Fatalf("load migrated ident: %v", err)
+	}
+	if ident.TargetID != target.ID {
+		t.Fatalf("expected ident target id %d, got %d", target.ID, ident.TargetID)
+	}
+}
+
 func TestAutoMigrateAllModelsRenamesLegacyNicknameColumn(t *testing.T) {
-	sqliteDB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "legacy-users.sqlite")), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite db: %v", err)
 	}

@@ -13,7 +13,7 @@ type CreateTargetPayload struct {
 	TargetCount uint `json:"targetCount"`
 }
 
-// CreateUserTarget godoc
+// CreateTarget godoc
 // @Summary		Create weekly target
 // @Description	Creates a weekly target for the authenticated user in the specified team using a YYYY-MM-DD start date.
 // @Tags			Targets
@@ -23,12 +23,12 @@ type CreateTargetPayload struct {
 // @Param			slug		path		string				true	"Team slug"
 // @Param			dateStart	path		string				true	"Week start date in YYYY-MM-DD format"
 // @Param			payload		body		CreateTargetPayload	true	"Weekly target payload"
-// @Success		200		{object}	util.JSONResponse{data=models.UserWeeklyTargetDTO}
+// @Success		200		{object}	util.JSONResponse{data=models.TargetDTO}
 // @Failure		400		{object}	util.JSONResponse
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
 // @Router			/teams/{slug}/targets/{dateStart} [put]
-func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
+func (app *App) PutTarget(w http.ResponseWriter, r *http.Request) {
 	user, payload, ok := userAndPayload[CreateTargetPayload](r.Context(), r.Body, w)
 	if !ok {
 		return
@@ -48,7 +48,7 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newTarget := models.UserWeeklyTarget{
+	newTarget := models.Target{
 		TimeStart:   timeStart,
 		UserID:      user.ID,
 		TeamID:      team.ID,
@@ -56,17 +56,17 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// try creating new target
-	target, err := db.CreateUserWeeklyTarget(r.Context(), app, newTarget)
+	target, err := db.CreateTarget(r.Context(), app, newTarget)
 	if err != nil {
 		// update if already exists
 		if db.IsDuplicateKeyError(err) {
-			existingTarget, err := db.GetUserWeeklyTargetByTimeUserTeam(r.Context(), app, timeStart, user.ID, slug)
+			existingTarget, err := db.GetTargetByTimeUserTeam(r.Context(), app, timeStart, user.ID, slug)
 			if err != nil {
 				util.ErrorJSON(w, err, http.StatusInternalServerError)
 				return
 			}
 
-			target, err = db.UpdateUserWeeklyTargetCount(r.Context(), app, existingTarget.ID, int(payload.TargetCount))
+			target, err = db.UpdateTargetCount(r.Context(), app, existingTarget.ID, int(payload.TargetCount))
 			if err != nil {
 				util.ErrorJSON(w, err, http.StatusInternalServerError)
 				return
@@ -86,7 +86,7 @@ func (app *App) PutUserTarget(w http.ResponseWriter, r *http.Request) {
 
 	util.WriteJSON(w, 200, util.JSONResponse{
 		Error:   false,
-		Message: "Put UserWeeklyTarget and notified TeamMembers successfully",
+		Message: "Put Target and notified TeamMembers successfully",
 		Data:    target.ToDTO(),
 	})
 }

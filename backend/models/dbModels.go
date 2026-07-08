@@ -72,11 +72,11 @@ func (team *Team) BeforeSave(tx *gorm.DB) (err error) {
 	return nil
 }
 
-type UserWeeklyTarget struct {
+type Target struct {
 	// Composite Unique Index with UserID, TeamID
-	TimeStart time.Time `gorm:"not null;uniqueIndex:idx_user_team_week"`
-	UserID    uint      `gorm:"not null;uniqueIndex:idx_user_team_week"`
-	TeamID    uint      `gorm:"not null;uniqueIndex:idx_user_team_week"`
+	TimeStart time.Time `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
+	UserID    uint      `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
+	TeamID    uint      `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
 
 	TargetCount uint `gorm:"not null"`
 
@@ -84,7 +84,7 @@ type UserWeeklyTarget struct {
 	gorm.Model
 	User   User // gorm-idiomatic: allows .Joins("Team")
 	Team   Team
-	Idents []Ident // UserWeeklyTarget has many Idents
+	Idents []Ident // Target has many Idents
 }
 
 type Ident struct {
@@ -95,8 +95,8 @@ type Ident struct {
 
 	// GORM & Relations
 	gorm.Model
-	UserWeeklyTargetID uint // UserWeeklyTarget has many Idents
-	Comments           []Comment
+	TargetID uint // Target has many Idents
+	Comments []Comment
 }
 
 type Comment struct {

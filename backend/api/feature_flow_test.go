@@ -66,7 +66,7 @@ func newFeatureTestApp(t *testing.T) *api.App {
 		&models.User{},
 		&models.DeviceToken{},
 		&models.Team{},
-		&models.UserWeeklyTarget{},
+		&models.Target{},
 		&models.Ident{},
 		&models.Comment{},
 	)
@@ -274,7 +274,7 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("create target returned error: %s", targetEnvelope.Message)
 	}
 
-	targetData := decodeData[models.UserWeeklyTargetDTO](t, targetEnvelope)
+	targetData := decodeData[models.TargetDTO](t, targetEnvelope)
 	if targetData.TargetCount != 3 {
 		t.Fatalf("expected target count 3, got %d", targetData.TargetCount)
 	}

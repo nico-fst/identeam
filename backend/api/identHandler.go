@@ -60,7 +60,7 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	target, err := db.GetUserWeeklyTargetByTimeUserTeam(r.Context(), app, identTime, user.ID, slug)
+	target, err := db.GetTargetByTimeUserTeam(r.Context(), app, identTime, user.ID, slug)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			util.ErrorJSON(w, errTargetNotSet, http.StatusNotFound)
@@ -71,9 +71,9 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newIdent := models.Ident{
-		Time:               identTime,
-		UserText:           payload.UserText,
-		UserWeeklyTargetID: target.ID,
+		Time:     identTime,
+		UserText: payload.UserText,
+		TargetID: target.ID,
 	}
 
 	ident, err := db.CreateIdent(r.Context(), app, newIdent)

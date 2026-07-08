@@ -169,11 +169,11 @@ func NotifyTeamMembers(ctx context.Context, app AppContext, slug string, alert m
 }
 
 func NotifyTeamMembersAboutNewIdent(ctx context.Context, app AppContext, ident models.Ident) ([]models.User, error) {
-	var target models.UserWeeklyTarget
-	err := app.Database().Model(&models.UserWeeklyTarget{}).
+	var target models.Target
+	err := app.Database().Model(&models.Target{}).
 		Preload("User").
 		Preload("Team").
-		First(&target, ident.UserWeeklyTargetID).Error
+		First(&target, ident.TargetID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -231,11 +231,11 @@ func GetTeamByIdent(ctx context.Context, app AppContext, identID uint) (*models.
 		return nil, err
 	}
 
-	var target models.UserWeeklyTarget
-	err = app.Database().Model(&models.UserWeeklyTarget{}).
+	var target models.Target
+	err = app.Database().Model(&models.Target{}).
 		Preload("User").
 		Preload("Team").
-		First(&target, ident.UserWeeklyTargetID).Error
+		First(&target, ident.TargetID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -244,8 +244,8 @@ func GetTeamByIdent(ctx context.Context, app AppContext, identID uint) (*models.
 }
 
 func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, targetID uint) ([]models.User, error) {
-	var target models.UserWeeklyTarget
-	err := app.Database().Model(&models.UserWeeklyTarget{}).
+	var target models.Target
+	err := app.Database().Model(&models.Target{}).
 		Preload("User").
 		Preload("Team").
 		First(&target, targetID).Error

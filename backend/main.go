@@ -50,7 +50,7 @@ func main() {
 			Client:  nil,
 			IsProd:  strings.ToLower(os.Getenv("IS_PROD")) == "true",
 		},
-		DB:    db,
+		DB:       db,
 		R2Client: media.NewR2Client(),
 	}
 

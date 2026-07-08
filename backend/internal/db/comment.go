@@ -50,8 +50,8 @@ func UserOwnsCommentOnIdentInTeam(ctx context.Context, app AppContext, commentID
 	err := app.Database().WithContext(ctx).
 		Model(&models.Comment{}).
 		Joins("JOIN idents ON idents.id = comments.ident_id").
-		Joins("JOIN user_weekly_targets ON user_weekly_targets.id = idents.user_weekly_target_id").
-		Joins("JOIN teams ON teams.id = user_weekly_targets.team_id").
+		Joins("JOIN targets ON targets.id = idents.target_id").
+		Joins("JOIN teams ON teams.id = targets.team_id").
 		Where("comments.id = ?", commentID).
 		Where("comments.ident_id = ?", identID).
 		Where("comments.user_id = ?", userID).

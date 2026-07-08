@@ -90,12 +90,14 @@ func GormConfig() *gorm.Config {
 
 func AutoMigrateAllModels(db *gorm.DB) {
 	renameLegacyUserNicknameColumn(db)
+	renameLegacyTargetsTable(db)
+	renameLegacyIdentTargetColumn(db)
 
 	db.AutoMigrate(
 		&models.User{},
 		&models.DeviceToken{},
 		&models.Team{},
-		&models.UserWeeklyTarget{},
+		&models.Target{},
 		&models.Ident{},
 		&models.Comment{},
 	)
@@ -112,6 +114,44 @@ func renameLegacyUserNicknameColumn(db *gorm.DB) {
 	if err := db.Exec("ALTER TABLE users RENAME COLUMN full_name TO nickname").Error; err != nil {
 		fmt.Printf("ERROR renaming users.full_name to users.nickname: %v\n", err)
 	}
+}
+
+func renameLegacyTargetsTable(db *gorm.DB) {
+	if !db.Migrator().HasTable("user_weekly_targets") || db.Migrator().HasTable(&models.Target{}) {
+		return
+	}
+
+	if err := db.Migrator().RenameTable("user_weekly_targets", &models.Target{}); err != nil {
+		fmt.Printf("ERROR renaming user_weekly_targets to targets: %v\n", err)
+	}
+}
+
+func renameLegacyIdentTargetColumn(db *gorm.DB) {
+	if !db.Migrator().HasTable(&models.Ident{}) {
+		return
+	}
+	if !hasTableColumn(db, "idents", "user_weekly_target_id") || hasTableColumn(db, "idents", "target_id") {
+		return
+	}
+
+	if err := db.Exec("ALTER TABLE idents RENAME COLUMN user_weekly_target_id TO target_id").Error; err != nil {
+		fmt.Printf("ERROR renaming idents.user_weekly_target_id to idents.target_id: %v\n", err)
+	}
+}
+
+func hasTableColumn(db *gorm.DB, tableName string, columnName string) bool {
+	columns, err := db.Migrator().ColumnTypes(tableName)
+	if err != nil {
+		return false
+	}
+
+	for _, column := range columns {
+		if column.Name() == columnName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func IsDuplicateKeyError(err error) bool {

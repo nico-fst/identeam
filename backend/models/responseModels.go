@@ -182,7 +182,7 @@ type TeamWeekResponse struct {
 	Members   []TeamWeekMemberResponse `json:"members"`
 }
 
-func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []UserWeeklyTarget) TeamWeekResponse {
+func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []Target) TeamWeekResponse {
 	resp := TeamWeekResponse{
 		Slug:      teamSlug,
 		TargetSum: 0,
@@ -207,13 +207,13 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 	return resp
 }
 
-type UserWeeklyTargetDTO struct {
+type TargetDTO struct {
 	TimeStart   time.Time `json:"timeStart"`
 	TargetCount uint      `json:"targetCount"`
 }
 
-func (t UserWeeklyTarget) ToDTO() UserWeeklyTargetDTO {
-	return UserWeeklyTargetDTO{
+func (t Target) ToDTO() TargetDTO {
+	return TargetDTO{
 		TimeStart:   t.TimeStart,
 		TargetCount: t.TargetCount,
 	}
