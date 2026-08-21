@@ -11,6 +11,8 @@ import Kingfisher
 
 struct TeamWeekView: View {
     let slug: String
+
+    @State private var hasLoadedFreshTeamWeek = false
     
     @AppStorage("userID") private var userID: String = ""
     @AppStorage("username") private var username: String = ""
@@ -92,20 +94,24 @@ struct TeamWeekView: View {
                     }
                     
                     Section("My Target") {
-                        Button() {
-                            teamVM.showSettingTarget = true
-                        } label: {
-                            Label(
-                                ownMember?.targetCount ?? 0 > 0
-                                    ? "Change Target (\(ownMember?.targetCount ?? 0))"
-                                    : "Set Target",
-                                systemImage: "target"
-                            )
+                        if hasLoadedFreshTeamWeek {
+                            Button() {
+                                teamVM.showSettingTarget = true
+                            } label: {
+                                Label(
+                                    ownMember?.targetCount ?? 0 > 0
+                                        ? "Change Target (\(ownMember?.targetCount ?? 0))"
+                                        : "Set Target",
+                                    systemImage: "target"
+                                )
+                            }
+                        } else {
+                            ProgressView("Loading current team week...")
                         }
                     }
                     .navigationTitle(team.name)
                     
-                    if let teamWeek {
+                    if hasLoadedFreshTeamWeek, let teamWeek {
                         Section("Members ⋅ \(teamWeek.identSum) / \(teamWeek.targetSum) Idents ") {
                             ForEach(sortedMembers(for: teamWeek), id: \.id) { member in
                                 DisclosureGroup {
@@ -147,7 +153,13 @@ struct TeamWeekView: View {
                             teamVM.showSettingTarget = false
                             if didChange {
                                 Task {
-                                    await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+                                    if await teamsVM.reloadTeamWeek(
+                                        slug: team.slug,
+                                        vm: vm,
+                                        ctx: ctx
+                                    ) != nil {
+                                        hasLoadedFreshTeamWeek = true
+                                    }
                                 }
                             }
                         }
@@ -244,14 +256,28 @@ struct TeamWeekView: View {
         }
         .refreshable {
             if let team {
-                await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+                if await teamsVM.reloadTeamWeek(
+                    slug: team.slug,
+                    vm: vm,
+                    ctx: ctx
+                ) != nil {
+                    hasLoadedFreshTeamWeek = true
+                }
             }
         }
         .task {
             if !isXcodePreview {
                 if let team {
-                    await teamsVM.reloadTeamWeek(slug: team.slug, vm: vm, ctx: ctx)
+                    if await teamsVM.reloadTeamWeek(
+                        slug: team.slug,
+                        vm: vm,
+                        ctx: ctx
+                    ) != nil {
+                        hasLoadedFreshTeamWeek = true
+                    }
                 }
+            } else {
+                hasLoadedFreshTeamWeek = true
             }
         }
     }

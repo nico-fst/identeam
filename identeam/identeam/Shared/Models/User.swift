@@ -90,16 +90,19 @@ enum DiceBear {
 }
 
 extension S3Item {
-    static func avatar(for dto: UserDTO) -> S3Item {
+    static func avatar(
+        for dto: UserDTO,
+        kind: S3ItemKind = .avatar
+    ) -> S3Item {
         if let dtoAvatar = dto.avatar {
-            return S3Item(dto: dtoAvatar, kind: .avatar)
+            return S3Item(dto: dtoAvatar, kind: kind)
         }
 
         return S3Item(
             url: DiceBear.avatarURL(seed: dto.username),
             key: "dicebear-\(dto.username)",
             expiresAt: Date().addingTimeInterval(60 * 10),
-            kind: .avatar
+            kind: kind
         )
     }
 }

@@ -10,6 +10,7 @@ import SwiftData
 
 enum S3ItemKind: String, Codable {
     case avatar
+    case ownAvatar
     case identImage
 }
 
@@ -28,12 +29,12 @@ final class S3Item {
         get { S3ItemKind(rawValue: kindRaw) ?? .avatar }
         set { kindRaw = newValue.rawValue }
     }
-    
+
     var ownerID: String? {
         let parts = key.split(separator: "/")
         
         switch kind {
-        case .avatar:
+        case .avatar, .ownAvatar:
             guard parts.count == 4 else {
                 return nil
             }

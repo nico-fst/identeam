@@ -24,7 +24,7 @@ struct DebugInfoView: View {
     @AppStorage("sessionToken") private var sessionToken: String?
     
     @Query(filter: #Predicate<S3Item> {
-        $0.kindRaw == "avatar"
+        $0.kindRaw == "ownAvatar"
     }) private var avatars: [S3Item]
     
     var body: some View {

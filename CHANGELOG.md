@@ -1,4 +1,9 @@
 # Changelog
+## [1.9.0+14] - 2026-08-21
+
+### Fixed
+
+- Race Condition when selecting team (refreshing own avatar deleted other)
 
 ## [1.9.0+13] - 2026-07-08
 

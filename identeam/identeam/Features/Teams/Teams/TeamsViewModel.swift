@@ -11,6 +11,18 @@ import SwiftData
 import SwiftUI
 
 class TeamsViewModel: ObservableObject {
+    typealias TeamWeekFetcher = (_ slug: String, _ date: Date) async throws -> TeamWeek
+
+    private let fetchTeamWeek: TeamWeekFetcher
+
+    init(
+        fetchTeamWeek: @escaping TeamWeekFetcher = { slug, date in
+            try await TeamAPI.shared.fetchTeamWeek(slug: slug, date: date)
+        }
+    ) {
+        self.fetchTeamWeek = fetchTeamWeek
+    }
+
     @Published var showingJoinSheet: Bool = false
     @Published var joinSlugInput: String = ""
     @Published var joinError: String = ""
@@ -50,17 +62,14 @@ class TeamsViewModel: ObservableObject {
                 }
             )
             
-            let oldTeamWeek: TeamWeek? = try modelContext.fetch(descriptor).first
-            if let team = oldTeamWeek {
-                print("Deleting old teamWeek with slug:", team.slug)
-                modelContext.delete(team)
-            }
+            let newTeamWeek: TeamWeek = try await fetchTeamWeek(slug, selectedWeek)
 
-            let newTeamWeek: TeamWeek = try await TeamAPI.shared.fetchTeamWeek(
-                slug: slug,
-                date: selectedWeek
-            )
+            let oldTeamWeek: TeamWeek? = try modelContext.fetch(descriptor).first
             modelContext.insert(newTeamWeek)
+            if let oldTeamWeek {
+                print("Replacing old teamWeek with slug:", oldTeamWeek.slug)
+                modelContext.delete(oldTeamWeek)
+            }
             try modelContext.save()
 
             print("Refresh Teamweek of \(slug)")

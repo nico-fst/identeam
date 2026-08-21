@@ -37,13 +37,26 @@ class AvatarViewModel: ObservableObject {
     
     private func refreshAvatar(avatars: [S3Item], ctx: ModelContext) async throws {
         let resp = try await AvatarAPI.shared.fetchMe()
-        
-        for avatar in avatars {
+
+        try replaceCachedAvatar(
+            with: S3Item.avatar(for: resp.user, kind: .ownAvatar),
+            cachedAvatars: avatars,
+            ctx: ctx
+        )
+    }
+
+    func replaceCachedAvatar(
+        with newAvatar: S3Item,
+        cachedAvatars: [S3Item],
+        ctx: ModelContext
+    ) throws {
+        for avatar in cachedAvatars where avatar.kind == .ownAvatar {
             ctx.delete(avatar)
         }
-        
-        ctx.insert(S3Item.avatar(for: resp.user))
-        
+
+        newAvatar.kind = .ownAvatar
+        ctx.insert(newAvatar)
+
         try ctx.save()
     }
     

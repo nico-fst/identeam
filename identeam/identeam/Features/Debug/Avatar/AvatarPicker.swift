@@ -19,7 +19,7 @@ struct AvatarPicker: View {
     @Environment(\.modelContext) private var ctx
     
     @Query(filter: #Predicate<S3Item> {
-        $0.kindRaw == "avatar"
+        $0.kindRaw == "ownAvatar"
     }) private var avatars: [S3Item]
     
     
