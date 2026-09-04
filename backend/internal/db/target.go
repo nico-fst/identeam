@@ -95,13 +95,14 @@ func GetTargetsByUserTeam(ctx context.Context, app AppContext, userID uint, team
 func GetTargetsLast21DaysByUserTeam(ctx context.Context, app AppContext, userID uint, teamID uint, timeStart time.Time) ([]models.Target, error) {
 	targets := make([]models.Target, 0)
 
-	last3Weeks := []time.Time{
+	weeksOverlappingLast21Days := []time.Time{
+		timeStart,
 		timeStart.AddDate(0, 0, -7),
 		timeStart.AddDate(0, 0, -14),
 		timeStart.AddDate(0, 0, -21),
 	}
 
-	for _, week := range last3Weeks {
+	for _, week := range weeksOverlappingLast21Days {
 		weekTargets, err := GetTargetsByUserTeam(ctx, app, userID, teamID, week)
 		if err != nil {
 			return []models.Target{}, err

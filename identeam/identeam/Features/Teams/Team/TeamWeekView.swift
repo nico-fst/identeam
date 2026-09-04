@@ -13,6 +13,7 @@ struct TeamWeekView: View {
     let slug: String
 
     @State private var hasLoadedFreshTeamWeek = false
+    @State private var showTeamSettings = false
     
     @AppStorage("userID") private var userID: String = ""
     @AppStorage("username") private var username: String = ""
@@ -21,6 +22,8 @@ struct TeamWeekView: View {
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var teamVM: TeamWeekViewModel
     @Environment(\.modelContext) private var ctx
+    
+    @Namespace private var settingsTransition
     
     let isXcodePreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 
@@ -144,6 +147,16 @@ struct TeamWeekView: View {
                     }
                 }
                 .listStyle(InsetGroupedListStyle())
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showTeamSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .matchedTransitionSource(id: "settings-button", in: settingsTransition)
+                    }
+                }
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
@@ -164,6 +177,18 @@ struct TeamWeekView: View {
                             }
                         }
                     }
+                }
+                .sheet(isPresented: $showTeamSettings) {
+                    NavigationStack {
+                        TeamSettingsView(
+                            slug: team.slug,
+                            teamName: team.name,
+                            userID: userID
+                        )
+                    }
+                    .navigationTransition(
+                        .zoom(sourceID: "settings-button", in: settingsTransition)
+                    )
                 }
                 .sheet(
                     item: $teamVM.selectedIdent,

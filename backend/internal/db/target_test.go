@@ -180,6 +180,54 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 }
 
+func TestGetTargetsLast21DaysIncludesCurrentWeek(t *testing.T) {
+	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "recent-targets.sqlite")), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite db: %v", err)
+	}
+	if err := sqliteDB.AutoMigrate(
+		&models.User{},
+		&models.Team{},
+		&models.Target{},
+	); err != nil {
+		t.Fatalf("automigrate: %v", err)
+	}
+
+	user := models.User{UserID: "recent-user", Email: "recent@example.com", Username: "recent"}
+	team := models.Team{Name: "Recent Team", Slug: "recent-team"}
+	if err := sqliteDB.Create(&user).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := sqliteDB.Create(&team).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+
+	now := time.Date(2026, time.September, 4, 12, 0, 0, 0, util.AppLocation())
+	target := models.Target{
+		TimeStart:   util.TimeToWeekStart(now),
+		UserID:      user.ID,
+		TeamID:      team.ID,
+		TargetCount: 3,
+	}
+	if err := sqliteDB.Create(&target).Error; err != nil {
+		t.Fatalf("create current target: %v", err)
+	}
+
+	targets, err := GetTargetsLast21DaysByUserTeam(
+		context.Background(),
+		NewServices(sqliteDB),
+		user.ID,
+		team.ID,
+		now,
+	)
+	if err != nil {
+		t.Fatalf("get recent targets: %v", err)
+	}
+	if len(targets) != 1 || targets[0].ID != target.ID {
+		t.Fatalf("expected current-week target %d, got %#v", target.ID, targets)
+	}
+}
+
 func TestAutoMigrateAllModelsRenamesLegacyTargetsTableAndIdentColumn(t *testing.T) {
 	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "legacy-targets.sqlite")), &gorm.Config{})
 	if err != nil {

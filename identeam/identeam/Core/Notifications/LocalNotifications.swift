@@ -5,12 +5,30 @@
 //  Created by Nico Stern on 03.06.26.
 //
 
+import Foundation
 import UserNotifications
 
-struct LocalReminderDTO: Decodable {
-    let title: String
-    let body: String
-    let date: Date
+@discardableResult
+func refreshLocalNotifications(
+    slug: String,
+    teamName: String,
+    userID: String
+) async throws -> Int {
+    let intelligentSuggestions =
+        (try? await LocalNotificationAPI.shared.fetchUpcomingNotifications(slug: slug))
+        ?? []
+    let defaultTime = TeamReminderSettingsStore.shared.defaultTime(
+        userID: userID,
+        slug: slug
+    )
+    let reminders = ReminderSchedulePlanner.remindersForUpcomingWeek(
+        intelligentSuggestions: intelligentSuggestions,
+        defaultTime: defaultTime,
+        teamName: teamName
+    )
+
+    try await scheduleLocalNotifications(reminders, slug: slug)
+    return reminders.count
 }
 
 func scheduleLocalNotifications(_ reminders: [LocalReminderDTO], slug: String) async throws {

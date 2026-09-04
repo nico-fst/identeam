@@ -97,7 +97,7 @@ func (app *App) RemindTeam(w http.ResponseWriter, r *http.Request) {
 
 // GetLocalNotificationsForWeek godoc
 // @Summary		Get local notification suggestions
-// @Description	Returns suggested local notification times for the authenticated user in the specified team for the upcoming week.
+// @Description	Returns intelligent local notification suggestions for the authenticated user in the specified team for the upcoming week. An empty list is returned when there is not enough ident history; the client supplies its per-team default time.
 // @Tags			Notifications
 // @Produce		json
 // @Security		BearerAuth
@@ -132,28 +132,32 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 	// 	return
 	// }
 
-	sameLast3Targets, err := db.GetTargetsLast21DaysByUserTeam(
+	now := util.Now()
+	recentTargets, err := db.GetTargetsLast21DaysByUserTeam(
 		r.Context(),
 		app,
 		user.ID,
 		team.ID,
-		util.Now(),
+		now,
 	)
+	if err != nil {
+		util.ErrorJSON(w, fmt.Errorf("ERROR querying user's targets: %w", err), http.StatusInternalServerError)
+		return
+	}
 
 	dates := make([]time.Time, 0, 7)
 
-	idents, err := db.GetIdentsOfTargets(r.Context(), app, sameLast3Targets)
+	idents, err := db.GetIdentsOfTargets(r.Context(), app, recentTargets)
 	if err != nil {
 		util.ErrorJSON(w, fmt.Errorf("ERROR querying user's idents: %w", err), http.StatusInternalServerError)
 		return
 	}
 
-	for _, day := range util.NextMonToSun(util.Now()) {
+	for _, day := range util.NextMonToSun(now) {
 
-		reminder, ok := apns.BuildIntelligentReminderTime(idents, day)
+		reminder, ok := apns.BuildIntelligentReminderTime(idents, day, now)
 		if !ok {
-			util.ErrorJSON(w, fmt.Errorf("ERROR calculating dates: %w", err), http.StatusInternalServerError)
-			return
+			continue
 		}
 
 		dates = append(dates, reminder)

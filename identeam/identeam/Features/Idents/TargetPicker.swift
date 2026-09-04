@@ -27,6 +27,7 @@ struct TargetPicker: View {
     @State private var settingError = ""
     
     @EnvironmentObject var vm: AppViewModel
+    @AppStorage("userID") private var userID: String = ""
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
     
@@ -104,10 +105,22 @@ struct TargetPicker: View {
                 dateStart: Date(),
                 count: selectedTargetCount
             )
+           
+            // schedule notifications
             
-            // schedule notifications - temp ignore errors (new accounts have nos amples to calc notifications)
-            if let notifications = try? await LocalNotificationAPI.shared.fetchUpcomingNotifications(slug: slug) {
-                try await scheduleLocalNotifications(notifications, slug: slug)
+            let teamName = try? ctx.fetch(
+                FetchDescriptor<Team>(
+                    predicate: #Predicate<Team> { team in
+                        team.slug == slug
+                    }
+                )
+            ).first?.name
+
+            if try await refreshLocalNotifications(
+                slug: slug,
+                teamName: teamName ?? slug,
+                userID: userID
+            ) > 0 {
                 notificationsScheduled = true
             }
         } catch {

@@ -82,10 +82,14 @@ func buildLast21DaysMeanSamples(idents []models.Ident, now time.Time) []TimeSamp
 	return samples
 }
 
-func buildWeekdayMeanSamples(idents []models.Ident, now time.Time) []TimeSample {
+func buildWeekdayMeanSamples(
+	idents []models.Ident,
+	reminderDay time.Time,
+	historyReference time.Time,
+) []TimeSample {
 	samples := make([]TimeSample, 0)
 
-	currentWeekday := now.Weekday()
+	currentWeekday := reminderDay.Weekday()
 
 	for _, ident := range idents {
 		// guard same weekday
@@ -93,7 +97,7 @@ func buildWeekdayMeanSamples(idents []models.Ident, now time.Time) []TimeSample 
 			continue
 		}
 
-		daysAgo := now.Sub(ident.Time).Hours() / 24
+		daysAgo := historyReference.Sub(ident.Time).Hours() / 24
 
 		// guard only last 6 weeks
 		if daysAgo > 42 {
@@ -111,21 +115,25 @@ func buildWeekdayMeanSamples(idents []models.Ident, now time.Time) []TimeSample 
 	return samples
 }
 
-func BuildIntelligentReminderTime(idents []models.Ident, now time.Time) (time.Time, bool) {
-	last21DaysSamples := buildLast21DaysMeanSamples(idents, now)
-	last21DaysMean, ok := weightedCirculacMean(last21DaysSamples, now)
+func BuildIntelligentReminderTime(
+	idents []models.Ident,
+	reminderDay time.Time,
+	historyReference time.Time,
+) (time.Time, bool) {
+	last21DaysSamples := buildLast21DaysMeanSamples(idents, historyReference)
+	last21DaysMean, ok := weightedCirculacMean(last21DaysSamples, reminderDay)
 	if !ok {
 		return time.Time{}, false
 	}
 
-	weekdaySamples := buildWeekdayMeanSamples(idents, now)
+	weekdaySamples := buildWeekdayMeanSamples(idents, reminderDay, historyReference)
 
 	// not enough weekday data: last21Days
 	if len(weekdaySamples) < 4 {
 		return last21DaysMean, true
 	}
 
-	weekdayMean, ok := weightedCirculacMean(weekdaySamples, now)
+	weekdayMean, ok := weightedCirculacMean(weekdaySamples, reminderDay)
 	if !ok {
 		return last21DaysMean, true
 	}
@@ -141,5 +149,5 @@ func BuildIntelligentReminderTime(idents []models.Ident, now time.Time) (time.Ti
 		},
 	}
 
-	return weightedCirculacMean(combinedSamples, now)
+	return weightedCirculacMean(combinedSamples, reminderDay)
 }
