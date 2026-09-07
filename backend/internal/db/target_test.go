@@ -449,3 +449,53 @@ func TestAutoMigrateAllModelsRenamesLegacyNicknameColumn(t *testing.T) {
 		t.Fatalf("expected nickname %q, got %q", "Legacy Nick", user.Nickname)
 	}
 }
+
+func TestUnplannedIdentPreservesExistingTargetAndRollsBack(t *testing.T) {
+	database, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "unplanned.sqlite")), GormConfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+	AutoMigrateAllModels(database)
+	services := NewServices(database)
+	user := models.User{UserID: "unplanned", Email: "unplanned@example.com", Username: "unplanned"}
+	team := models.Team{Slug: "unplanned", Name: "Unplanned"}
+	if err := database.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Create(&team).Error; err != nil {
+		t.Fatal(err)
+	}
+	day, _ := util.ParseDateInAppLocation("2026-09-08")
+	target, err := ReplaceTargetDays(context.Background(), services, models.Target{TimeStart: day, UserID: user.ID, TeamID: team.ID}, []time.Time{day})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ident, err := CreateIdentWithUnplannedTarget(context.Background(), services, models.Ident{Time: day}, user.ID, team.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ident.TargetID != target.ID {
+		t.Fatal("existing target not reused")
+	}
+	var days int64
+	if err := database.Model(&models.TargetDay{}).Where("target_id = ?", target.ID).Count(&days).Error; err != nil {
+		t.Fatal(err)
+	}
+	if days != 1 {
+		t.Fatal("existing planned days were changed")
+	}
+	if err := database.Exec("CREATE TRIGGER reject_ident BEFORE INSERT ON idents BEGIN SELECT RAISE(ABORT, 'test failure'); END").Error; err != nil {
+		t.Fatal(err)
+	}
+	_, err = CreateIdentWithUnplannedTarget(context.Background(), services, models.Ident{Time: day.AddDate(0, 0, 7)}, user.ID, team.ID)
+	if err == nil {
+		t.Fatal("expected ident insert failure")
+	}
+	var targets int64
+	if err := database.Model(&models.Target{}).Count(&targets).Error; err != nil {
+		t.Fatal(err)
+	}
+	if targets != 1 {
+		t.Fatal("failed ident left an empty target behind")
+	}
+}

@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"gorm.io/gorm/clause"
 	"identeam/models"
+	"identeam/util"
 	"log"
 
 	"gorm.io/gorm"
@@ -106,4 +108,27 @@ func UpdateIdentKey(ctx context.Context, app AppContext, identID uint, key strin
 		Where("id = ?", identID).
 		Update("image_s3_key", key).
 		Error
+}
+
+// CreateIdentWithUnplannedTarget creates both records atomically. A concurrent
+// target creation is reused, without changing its planned days.
+func CreateIdentWithUnplannedTarget(ctx context.Context, app AppContext, ident models.Ident, userID, teamID uint) (*models.Ident, error) {
+	err := app.Database().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		target := models.Target{TimeStart: util.TimeToWeekStart(ident.Time), UserID: userID, TeamID: teamID}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "time_start"}, {Name: "user_id"}, {Name: "team_id"}},
+			DoNothing: true,
+		}).Create(&target).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("time_start = ? AND user_id = ? AND team_id = ?", target.TimeStart, userID, teamID).First(&target).Error; err != nil {
+			return err
+		}
+		ident.TargetID = target.ID
+		return tx.Create(&ident).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &ident, nil
 }

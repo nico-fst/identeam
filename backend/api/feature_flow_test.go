@@ -347,7 +347,6 @@ func TestFeatureFlow_PutTargetRejectsInvalidDates(t *testing.T) {
 		name  string
 		dates []string
 	}{
-		{name: "empty", dates: []string{}},
 		{name: "invalid format", dates: []string{"08.04.2026"}},
 		{name: "duplicate", dates: []string{futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02")}},
 		{name: "outside requested week", dates: []string{futureTargetWeek().AddDate(0, 0, 7).Format("2006-01-02")}},
@@ -673,8 +672,9 @@ func futureTargetWeek() time.Time {
 	return util.TimeToWeekStart(util.Now()).AddDate(0, 0, 7)
 }
 
-func TestFeatureFlow_TargetsOnlyAllowFutureWeeks(t *testing.T) {
+func TestFeatureFlow_TargetsOnlyAllowFutureWeeksAfterMonday(t *testing.T) {
 	app := newFeatureTestApp(t)
+	app.Now = func() time.Time { return util.TimeToWeekStart(util.Now()).AddDate(0, 0, 1) }
 	server := httptest.NewServer(app.SetupRoutesWithoutSwagger())
 	defer server.Close()
 	owner := signupUser(t, server.URL, "future-targets@example.com")
@@ -713,5 +713,87 @@ func TestFeatureFlow_TargetsOnlyAllowFutureWeeks(t *testing.T) {
 	app.DB.Model(&models.Target{}).Where("time_start <= ?", currentWeek).Count(&count)
 	if count != 0 {
 		t.Fatalf("rejected requests persisted %d targets", count)
+	}
+}
+
+func TestFeatureFlow_MondayPlanningAndUnplannedIdent(t *testing.T) {
+	for _, tc := range []struct {
+		name, now string
+		monday    bool
+	}{
+		{"Monday start Berlin", "2026-09-06T22:00:00Z", true},
+		{"Monday end Berlin", "2026-09-07T21:59:59Z", true},
+		{"Tuesday start Berlin", "2026-09-07T22:00:00Z", false},
+		{"Sunday", "2026-09-13T12:00:00Z", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			app := newFeatureTestApp(t)
+			now, _ := time.Parse(time.RFC3339, tc.now)
+			app.Now = func() time.Time { return now }
+			server := httptest.NewServer(app.SetupRoutesWithoutSwagger())
+			defer server.Close()
+			owner := signupUser(t, server.URL, "monday-flow@example.com")
+			team := createTeam(t, server.URL, owner.SessionToken, "Monday Flow")
+			week := util.TimeToWeekStart(now)
+			create := func(allow bool, when time.Time, want int) models.IdentDTO {
+				t.Helper()
+				resp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create",
+					api.AddIdentPayload{Time: when.Format(time.RFC3339), UserText: "An ident", AllowWithoutTarget: allow}, owner.SessionToken)
+				envelope := decodeEnvelope(t, resp)
+				if resp.StatusCode != want {
+					t.Fatalf("status %d, want %d: %s", resp.StatusCode, want, envelope.Message)
+				}
+				if want == 200 {
+					return decodeData[models.IdentDTO](t, envelope)
+				}
+				return models.IdentDTO{}
+			}
+			create(false, now, 404)
+			create(true, week.AddDate(0, 0, -1), 404)
+			create(true, week.AddDate(0, 0, 7), 404)
+			var count int64
+			if err := app.DB.Model(&models.Target{}).Count(&count).Error; err != nil {
+				t.Fatal(err)
+			}
+			if count != 0 {
+				t.Fatal("unconfirmed requests must not create a target")
+			}
+			if tc.monday {
+				create(true, now, 404)
+			} else {
+				first := create(true, now, 200)
+				second := create(false, now, 200)
+				if first.ID == second.ID {
+					t.Fatal("expected two idents")
+				}
+				var targets []models.Target
+				if err := app.DB.Preload("TargetDays").Preload("Idents").Find(&targets).Error; err != nil {
+					t.Fatal(err)
+				}
+				if len(targets) != 1 || len(targets[0].TargetDays) != 0 || len(targets[0].Idents) != 2 {
+					t.Fatalf("wrong unplanned target: %#v", targets)
+				}
+			}
+			// Monday can still set or explicitly clear this week's plan.
+			for _, days := range [][]string{{week.Format("2006-01-02"), week.AddDate(0, 0, 6).Format("2006-01-02")}, {}} {
+				resp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+week.Format("2006-01-02"), api.PutTargetPayload{TargetDays: days}, owner.SessionToken)
+				envelope := decodeEnvelope(t, resp)
+				want := 400
+				if tc.monday {
+					want = 200
+				}
+				if resp.StatusCode != want {
+					t.Fatalf("planning status %d, want %d: %s", resp.StatusCode, want, envelope.Message)
+				}
+			}
+			if tc.monday {
+				create(false, now, 200)
+			}
+			resp := doJSONRequest(t, http.DefaultClient, http.MethodGet, server.URL+"/teams/"+team.Slug+"/week/"+week.Format("2006-01-02"), nil, owner.SessionToken)
+			result := decodeData[getTeamWeekResponse](t, decodeEnvelope(t, resp))
+			if result.TargetSum != 0 || result.IdentSum == 0 || len(result.Members) != 1 || len(result.Members[0].TargetDays) != 0 {
+				t.Fatalf("wrong zero-target week: %#v", result)
+			}
+		})
 	}
 }

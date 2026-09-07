@@ -16,9 +16,10 @@ import (
 )
 
 type AddIdentPayload struct {
-	TeamSlug string `json:"teamSlug,omitempty"`
-	Time     string `json:"time"`
-	UserText string `json:"userText"`
+	TeamSlug           string `json:"teamSlug,omitempty"`
+	Time               string `json:"time"`
+	UserText           string `json:"userText"`
+	AllowWithoutTarget bool   `json:"allowWithoutTarget,omitempty"`
 }
 
 var (
@@ -27,7 +28,7 @@ var (
 
 // CreateIdent godoc
 // @Summary		Create ident
-// @Description	Creates an ident for the authenticated user in the team week identified by the path team slug and payload time, then notifies the team.
+// @Description	Creates an ident for the authenticated user in the team week identified by the path team slug and payload time, then notifies the team. A missing weekly target returns 404 without creating an ident. From Tuesday through Sunday (Europe/Berlin), retrying for the current week with allowWithoutTarget=true atomically creates an empty target and the ident. Monday requires setting a target first.
 // @Tags			Idents
 // @Accept			json
 // @Produce		json
@@ -61,22 +62,27 @@ func (app *App) CreateIdent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	target, err := db.GetTargetByTimeUserTeam(r.Context(), app, identTime, user.ID, slug)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	newIdent := models.Ident{Time: identTime, UserText: payload.UserText}
+	var ident *models.Ident
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if !payload.AllowWithoutTarget || !util.CanCreateUnplannedTarget(identTime, app.now()) {
 			util.ErrorJSON(w, errTargetNotSet, http.StatusNotFound)
-		} else {
-			util.ErrorJSON(w, err, http.StatusBadRequest)
+			return
 		}
+		team, teamErr := db.GetTeamBySlug(r.Context(), app, slug)
+		if teamErr != nil {
+			util.ErrorJSON(w, errors.New("team not found"), http.StatusBadRequest)
+			return
+		}
+		ident, err = db.CreateIdentWithUnplannedTarget(r.Context(), app, newIdent, user.ID, team.ID)
+	} else if err != nil {
+		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return
+	} else {
+		newIdent.TargetID = target.ID
+		ident, err = db.CreateIdent(r.Context(), app, newIdent)
 	}
 
-	newIdent := models.Ident{
-		Time:     identTime,
-		UserText: payload.UserText,
-		TargetID: target.ID,
-	}
-
-	ident, err := db.CreateIdent(r.Context(), app, newIdent)
 	if err != nil {
 		util.ErrorJSON(w, err, http.StatusBadRequest)
 		return

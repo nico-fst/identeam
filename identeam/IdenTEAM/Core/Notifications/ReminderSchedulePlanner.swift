@@ -31,8 +31,15 @@ nonisolated enum ReminderSchedulePlanner {
         return formatter.date(from: value)
     }
 
-    static func isFutureWeek(_ date: Date, now: Date = Date()) -> Bool {
-        startOfWeek(containing: date) > startOfWeek(containing: now)
+    static func canSetTargetWeek(_ date: Date, now: Date = Date()) -> Bool {
+        startOfWeek(containing: date) >= firstPlannableWeek(now: now)
+    }
+
+    static func firstPlannableWeek(now: Date = Date()) -> Date {
+        if calendar.component(.weekday, from: now) == 2 {
+            return startOfWeek(containing: now)
+        }
+        return nextMonday(after: now)
     }
 
     static func nextMonday(

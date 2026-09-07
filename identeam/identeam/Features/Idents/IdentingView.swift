@@ -69,6 +69,7 @@ struct IdentingView: View {
                 VStack {
                     TeamWheel(textColor: .white, selectedTeamSlug: $identingVM.selectedTeamSlug)
                         .frame(width: 300, height: 110)
+                .disabled(identingVM.isUploadingImage)
                     
                     Spacer() // at bottom of screen
                     
@@ -179,6 +180,7 @@ struct IdentingPhotoPreview: View {
                 TeamWheel(textColor: colorScheme == .dark ? .white : .black,
                           selectedTeamSlug: $identingVM.selectedTeamSlug)
                 .frame(width: 300, height: 110)
+                .disabled(identingVM.isUploadingImage)
                 
                 Image(uiImage: item.image)
                     .resizable()
@@ -265,10 +267,24 @@ struct IdentingPhotoPreview: View {
                 .disabled(identingVM.isUploadingImage)
             }
         }
+        .interactiveDismissDisabled(identingVM.isUploadingImage)
+        .alert("Weekly target reminder", isPresented: $identingVM.showMissingTargetWarning) {
+            Button("Upload without target") {
+                identingVM.resolveMissingTargetWarning(continueUpload: true)
+            }
+            Button("Cancel", role: .cancel) {
+                identingVM.resolveMissingTargetWarning(continueUpload: false)
+            }
+        } message: {
+            Text("Remember to set your weekly target by Monday. You can still upload this Ident without a target.")
+        }
+        .onDisappear {
+            identingVM.resolveMissingTargetWarning(continueUpload: false)
+        }
         .sheet(isPresented: $identingVM.isSettingTarget) {
             if let slug = identingVM.selectedTeamSlug {
                 NavigationStack {
-                    TargetPicker(slug: slug) { _ in
+                    TargetPicker(slug: slug, referenceDate: Date()) { _ in
                         identingVM.isSettingTarget = false
                     }
                 }

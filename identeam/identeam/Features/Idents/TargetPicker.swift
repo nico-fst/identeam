@@ -15,14 +15,14 @@ struct TargetPicker: View {
 
     init(
         slug: String,
-        referenceDate: Date = ReminderSchedulePlanner.nextMonday(after: Date()),
+        referenceDate: Date = ReminderSchedulePlanner.firstPlannableWeek(),
         initialSelectedDays: [Date] = [],
         onChange: @escaping (Bool) -> Void
     ) {
         self.slug = slug
         _referenceDate = State(initialValue: max(
             ReminderSchedulePlanner.startOfWeek(containing: referenceDate),
-            ReminderSchedulePlanner.nextMonday(after: Date())
+            ReminderSchedulePlanner.firstPlannableWeek()
         ))
         self.onChange = onChange
         _selectedDays = State(initialValue: Set(initialSelectedDays))
@@ -59,7 +59,7 @@ struct TargetPicker: View {
         VStack {
             HStack {
                 Button { changeWeek(by: -7) } label: { Image(systemName: "chevron.left") }
-                    .disabled(!ReminderSchedulePlanner.isFutureWeek(cal.date(byAdding: .day, value: -7, to: referenceDate)!))
+                    .disabled(!ReminderSchedulePlanner.canSetTargetWeek(cal.date(byAdding: .day, value: -7, to: referenceDate)!))
                 Spacer()
                 Text("Week of \(ReminderSchedulePlanner.dateString(referenceDate))")
                 Spacer()

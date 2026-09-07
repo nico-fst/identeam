@@ -10,15 +10,16 @@ import Foundation
 class IdentAPI {
     static let shared = IdentAPI()
     
-    func createIdent(slug: String, text: String) async throws -> IdentDTO {
+    func createIdent(slug: String, text: String, date: Date = Date(), allowWithoutTarget: Bool = false) async throws -> IdentDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "/teams/\(slug)/idents/create"
         )
         
         let formatter = ISO8601DateFormatter()
         let payload: [String: Any] = [
-            "time": formatter.string(from: Date()),
-            "userText": text
+            "time": formatter.string(from: date),
+            "userText": text,
+            "allowWithoutTarget": allowWithoutTarget
         ]
 
         let response: BackendResponse<IdentDTO> =

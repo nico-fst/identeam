@@ -46,3 +46,33 @@ func TestParseDateInAppLocationUsesBerlinMidnight(t *testing.T) {
 		t.Fatalf("expected Berlin midnight %v, got %v", want, got)
 	}
 }
+
+func TestTargetPlanningMondayBoundary(t *testing.T) {
+	monday, _ := util.ParseDateInAppLocation("2026-09-07")
+	for _, tc := range []struct {
+		now     string
+		allowed bool
+	}{
+		{"2026-09-06T22:00:00Z", true},
+		{"2026-09-07T21:59:59Z", true},
+		{"2026-09-07T22:00:00Z", false},
+		{"2026-09-13T21:59:59Z", false},
+	} {
+		now, _ := time.Parse(time.RFC3339, tc.now)
+		if got := util.CanSetTargetWeek(monday, now); got != tc.allowed {
+			t.Fatalf("%s: allowed %v", tc.now, got)
+		}
+		if got := util.CanCreateUnplannedTarget(monday, now); got == tc.allowed {
+			t.Fatalf("%s: unplanned %v", tc.now, got)
+		}
+		if !util.CanSetTargetWeek(monday.AddDate(0, 0, 7), now) {
+			t.Fatal("future week rejected")
+		}
+		if util.CanSetTargetWeek(monday.AddDate(0, 0, -7), now) {
+			t.Fatal("past week accepted")
+		}
+		if util.CanCreateUnplannedTarget(monday.AddDate(0, 0, 7), now) {
+			t.Fatal("future unplanned target accepted")
+		}
+	}
+}

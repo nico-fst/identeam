@@ -102,7 +102,7 @@ struct TeamWeekView: View {
                                 teamVM.showSettingTarget = true
                             } label: {
                                 Label(
-                                    "Plan Future Targets",
+                                    "Plan Targets",
                                     systemImage: "target"
                                 )
                             }

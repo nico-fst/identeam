@@ -17,7 +17,7 @@ type PutTargetPayload struct {
 
 // PutTarget godoc
 // @Summary		Create or replace weekly target days
-// @Description	Creates or replaces 1 to 7 distinct planned days for the authenticated user. Only weeks after the current Europe/Berlin week are allowed. dateStart is normalized to Monday; every target day must belong to that week.
+// @Description	Creates or replaces up to 7 distinct planned days for the authenticated user. Future weeks are allowed; the current Europe/Berlin week can also be planned through Monday. An empty array clears planned days while retaining the weekly target. dateStart is normalized to Monday; every target day must belong to that week.
 // @Tags			Targets
 // @Accept			json
 // @Produce		json
@@ -56,8 +56,8 @@ func (app *App) PutTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	weekStart := util.TimeToWeekStart(timeStart) // never trust the user
-	if !weekStart.After(util.TimeToWeekStart(util.Now())) {
-		util.ErrorJSON(w, errors.New("targets can only be set for future weeks"), http.StatusBadRequest)
+	if !util.CanSetTargetWeek(weekStart, app.now()) {
+		util.ErrorJSON(w, errors.New("targets can only be set for future weeks or the current week on Monday"), http.StatusBadRequest)
 		return
 	}
 	weekEnd := weekStart.AddDate(0, 0, 7)

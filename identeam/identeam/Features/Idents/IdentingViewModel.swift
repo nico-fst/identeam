@@ -11,6 +11,12 @@ import SwiftData
 
 @MainActor
 class IdentingViewModel: ObservableObject {
+    private let now: () -> Date
+
+    init(now: @escaping () -> Date = { Date() }) {
+        self.now = now
+    }
+
     @Published var createIdentUserText: String = ""
     @Published var selectedTeamSlug: String?
     
@@ -18,6 +24,22 @@ class IdentingViewModel: ObservableObject {
     @Published var uploadError: String?
     
     @Published var isSettingTarget = false
+    @Published var showMissingTargetWarning = false
+    private var missingTargetConfirmation: CheckedContinuation<Bool, Never>?
+
+    func resolveMissingTargetWarning(continueUpload: Bool) {
+        let confirmation = missingTargetConfirmation
+        missingTargetConfirmation = nil
+        showMissingTargetWarning = false
+        confirmation?.resume(returning: continueUpload)
+    }
+
+    private func confirmUploadWithoutTarget() async -> Bool {
+        await withCheckedContinuation { continuation in
+            missingTargetConfirmation = continuation
+            showMissingTargetWarning = true
+        }
+    }
     
     func tryCreatingIdentWithImage(
         image: IdentifiableImage,
@@ -25,6 +47,7 @@ class IdentingViewModel: ObservableObject {
         ctx: ModelContext,
         teamsVM: TeamsViewModel
     ) async -> Bool {
+        guard !isUploadingImage else { return false }
         guard let slug = selectedTeamSlug else {
             vm.showAlert("Error creating Ident", "You must select a team")
             return false
@@ -41,7 +64,20 @@ class IdentingViewModel: ObservableObject {
         defer { isUploadingImage = false }
 
         do {
-            let ident = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText)
+            let identDate = now()
+            let ident: IdentDTO
+            do {
+                ident = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText, date: identDate)
+            } catch TeamError.targetNotSet {
+                if ReminderSchedulePlanner.canSetTargetWeek(identDate, now: now()) {
+                    isSettingTarget = true
+                    return false
+                }
+                guard await confirmUploadWithoutTarget() else { return false }
+                ident = try await IdentAPI.shared.createIdent(
+                    slug: slug, text: trimmedUserText, date: identDate, allowWithoutTarget: true
+                )
+            }
             try await IdentAPI.shared.storeIdentImage(
                 slug: slug,
                 identID: String(ident.id),
@@ -53,14 +89,10 @@ class IdentingViewModel: ObservableObject {
             createIdentUserText = ""
             await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
             return true
-        } catch TeamError.targetNotSet {
-            uploadError = "No target was planned for this week. Targets must be set before the week starts."
         } catch {
             uploadError = error.localizedDescription
             return false
         }
-        
-        return false
     }
 }
 

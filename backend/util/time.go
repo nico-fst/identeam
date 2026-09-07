@@ -123,3 +123,14 @@ func DatesToWeekdays(dates []time.Time, joinOperator string) string {
 
 	return strings.Join(weekdays, joinOperator)
 }
+
+// CanSetTargetWeek allows the current Berlin week until Monday ends.
+func CanSetTargetWeek(date, now time.Time) bool {
+	week := TimeToWeekStart(date)
+	current := TimeToWeekStart(now)
+	return week.After(current) || (week.Equal(current) && TimeInAppLocation(now).Weekday() == time.Monday)
+}
+
+func CanCreateUnplannedTarget(date, now time.Time) bool {
+	return TimeToWeekStart(date).Equal(TimeToWeekStart(now)) && TimeInAppLocation(now).Weekday() != time.Monday
+}

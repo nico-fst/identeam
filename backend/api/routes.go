@@ -7,9 +7,11 @@ import (
 	"identeam/internal/db"
 	"identeam/internal/media"
 	"identeam/middleware"
+	"identeam/util"
 	"log"
 	"net/http"
 	"os/exec"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -19,6 +21,7 @@ import (
 )
 
 type App struct {
+	Now          func() time.Time // Optional clock for deterministic request tests.
 	ApnsProvider apns.Provider
 	DB           *gorm.DB
 	R2Client     *media.R2Client
@@ -143,4 +146,11 @@ func (app *App) SetupServer() {
 	if err != nil {
 		log.Fatalf("ERROR starting server: %v", err)
 	}
+}
+
+func (app *App) now() time.Time {
+	if app.Now != nil {
+		return app.Now()
+	}
+	return util.Now()
 }
