@@ -10,5 +10,5 @@ import SwiftData
 
 struct TargetDTO: Decodable {
     let timeStart: Date
-    let targetCount: Int
+    let targetDays: [String]
 }

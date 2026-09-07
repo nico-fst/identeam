@@ -60,6 +60,9 @@ struct ContentView: View {
         }
         .task {
             await authVM.trySiwaLogin(vm: vm)
+        }
+        .task(id: authVM.authState) {
+            guard authVM.authState == .authenticated else { return }
             await teamsVM.reloadTeams(ctx: modelContext)
         }
     }

@@ -54,7 +54,7 @@ class IdentingViewModel: ObservableObject {
             await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
             return true
         } catch TeamError.targetNotSet {
-            isSettingTarget = true
+            uploadError = "No target was planned for this week. Targets must be set before the week starts."
         } catch {
             uploadError = error.localizedDescription
             return false

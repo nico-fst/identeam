@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"identeam/models"
+	"identeam/util"
 	"log"
 	"strings"
 	"time"
@@ -248,14 +249,20 @@ func NotifyTeamMembersAboutTargetSet(ctx context.Context, app AppContext, target
 	err := app.Database().Model(&models.Target{}).
 		Preload("User").
 		Preload("Team").
+		Preload("TargetDays", func(db *gorm.DB) *gorm.DB {
+			return db.Order("date ASC")
+		}).
 		First(&target, targetID).Error
 	if err != nil {
 		return nil, err
 	}
 
+	countTargetDays := len(target.TargetDays)
+	weekdaysString := util.DatesToWeekdays(util.TargetDaysToDates(target.TargetDays), ", ")
+
 	alert := models.Alert{
 		Title: fmt.Sprintf("🔥 %v 🔥", target.Team.Name),
-		Body:  fmt.Sprintf("%v set Target to %d", target.User.Nickname, target.TargetCount),
+		Body:  fmt.Sprintf("%v plans %d Idents: %v", target.User.Nickname, countTargetDays, weekdaysString),
 	}
 
 	members, err := NotifyTeamMembers(ctx, app, target.Team.Slug, alert)

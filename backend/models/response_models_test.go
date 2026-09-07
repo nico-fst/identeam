@@ -94,8 +94,12 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 	weekStart := time.Date(2026, 4, 7, 0, 0, 0, 0, time.UTC)
 	targets := []models.Target{
 		{
-			TimeStart:   weekStart,
-			TargetCount: 3,
+			TimeStart: weekStart,
+			TargetDays: []models.TargetDay{
+				{Date: weekStart.AddDate(0, 0, 2)},
+				{Date: weekStart},
+				{Date: weekStart.AddDate(0, 0, 4)},
+			},
 			User: models.User{
 				UserID:   "user-1",
 				Email:    "one@example.com",
@@ -111,8 +115,11 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 			},
 		},
 		{
-			TimeStart:   weekStart,
-			TargetCount: 2,
+			TimeStart: weekStart,
+			TargetDays: []models.TargetDay{
+				{Date: weekStart.AddDate(0, 0, 1)},
+				{Date: weekStart.AddDate(0, 0, 3)},
+			},
 			User: models.User{
 				UserID:   "user-2",
 				Email:    "two@example.com",
@@ -144,6 +151,9 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 	}
 	if got.Members[0].User.UserID != "user-1" {
 		t.Fatalf("expected first member user %q, got %q", "user-1", got.Members[0].User.UserID)
+	}
+	if !reflect.DeepEqual(got.Members[0].TargetDays, []string{"2026-04-07", "2026-04-09", "2026-04-11"}) {
+		t.Fatalf("unexpected first member target days: %#v", got.Members[0].TargetDays)
 	}
 	if len(got.Members[0].Idents) != 2 {
 		t.Fatalf("expected first member to have 2 idents, got %d", len(got.Members[0].Idents))

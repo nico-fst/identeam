@@ -91,6 +91,7 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 		&models.User{},
 		&models.Team{},
 		&models.Target{},
+		&models.TargetDay{},
 		&models.Ident{},
 		&models.Comment{},
 	)
@@ -128,10 +129,12 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 
 	weekTime := time.Date(2026, 6, 30, 13, 0, 0, 0, time.UTC)
 	target := models.Target{
-		TimeStart:   util.TimeToWeekStart(weekTime),
-		UserID:      owner.ID,
-		TeamID:      team.ID,
-		TargetCount: 3,
+		TimeStart: util.TimeToWeekStart(weekTime),
+		UserID:    owner.ID,
+		TeamID:    team.ID,
+		TargetDays: []models.TargetDay{
+			{Date: util.TimeToWeekStart(weekTime)},
+		},
 	}
 	if err := sqliteDB.Create(&target).Error; err != nil {
 		t.Fatalf("create target: %v", err)
@@ -168,6 +171,9 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	if len(targets[0].Idents) != 1 {
 		t.Fatalf("expected one ident, got %d", len(targets[0].Idents))
 	}
+	if len(targets[0].TargetDays) != 1 {
+		t.Fatalf("expected one target day, got %d", len(targets[0].TargetDays))
+	}
 	comments := targets[0].Idents[0].Comments
 	if len(comments) != 1 {
 		t.Fatalf("expected one comment, got %d", len(comments))
@@ -180,6 +186,91 @@ func TestGetTeamsWeekTargetsPreloadsIdentCommentsAndUsers(t *testing.T) {
 	}
 }
 
+func TestReplaceTargetDaysCreatesReplacesAndRollsBack(t *testing.T) {
+	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "replace-target-days.sqlite")), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite db: %v", err)
+	}
+	if err := sqliteDB.AutoMigrate(
+		&models.User{},
+		&models.Team{},
+		&models.Target{},
+		&models.TargetDay{},
+	); err != nil {
+		t.Fatalf("automigrate: %v", err)
+	}
+
+	user := models.User{UserID: "target-days-user", Email: "target-days@example.com", Username: "target-days"}
+	team := models.Team{Name: "Target Days", Slug: "target-days"}
+	if err := sqliteDB.Create(&user).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := sqliteDB.Create(&team).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+
+	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, util.AppLocation())
+	weekStart := util.TimeToWeekStart(weekDate)
+	targetInput := models.Target{TimeStart: weekDate, UserID: user.ID, TeamID: team.ID}
+
+	created, err := ReplaceTargetDays(
+		context.Background(),
+		NewServices(sqliteDB),
+		targetInput,
+		[]time.Time{weekStart.AddDate(0, 0, 4), weekStart},
+	)
+	if err != nil {
+		t.Fatalf("create target days: %v", err)
+	}
+	if created.ID == 0 {
+		t.Fatal("expected database-generated target ID")
+	}
+	if !created.TimeStart.Equal(weekStart) {
+		t.Fatalf("expected normalized week start %v, got %v", weekStart, created.TimeStart)
+	}
+	if len(created.TargetDays) != 2 {
+		t.Fatalf("expected two target days, got %d", len(created.TargetDays))
+	}
+	if !created.TargetDays[0].Date.Equal(weekStart) || !created.TargetDays[1].Date.Equal(weekStart.AddDate(0, 0, 4)) {
+		t.Fatalf("expected sorted target days, got %#v", created.TargetDays)
+	}
+
+	replacementDate := weekStart.AddDate(0, 0, 2)
+	replaced, err := ReplaceTargetDays(
+		context.Background(),
+		NewServices(sqliteDB),
+		targetInput,
+		[]time.Time{replacementDate},
+	)
+	if err != nil {
+		t.Fatalf("replace target days: %v", err)
+	}
+	if replaced.ID != created.ID {
+		t.Fatalf("expected target ID %d to be reused, got %d", created.ID, replaced.ID)
+	}
+	if len(replaced.TargetDays) != 1 || !replaced.TargetDays[0].Date.Equal(replacementDate) {
+		t.Fatalf("unexpected replacement target days: %#v", replaced.TargetDays)
+	}
+
+	_, err = ReplaceTargetDays(
+		context.Background(),
+		NewServices(sqliteDB),
+		targetInput,
+		[]time.Time{replacementDate, replacementDate},
+	)
+	if err == nil {
+		t.Fatal("expected duplicate target days to violate the unique constraint")
+	}
+
+	var persistedDays []models.TargetDay
+	if err := sqliteDB.Where("target_id = ?", created.ID).Find(&persistedDays).Error; err != nil {
+		t.Fatalf("load target days after rollback: %v", err)
+	}
+	if len(persistedDays) != 1 || !persistedDays[0].Date.Equal(replacementDate) {
+		t.Fatalf("expected previous target day to survive rollback, got %#v", persistedDays)
+	}
+}
+
 func TestGetTargetsLast21DaysIncludesCurrentWeek(t *testing.T) {
 	sqliteDB, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "recent-targets.sqlite")), &gorm.Config{})
 	if err != nil {
@@ -189,6 +280,7 @@ func TestGetTargetsLast21DaysIncludesCurrentWeek(t *testing.T) {
 		&models.User{},
 		&models.Team{},
 		&models.Target{},
+		&models.TargetDay{},
 	); err != nil {
 		t.Fatalf("automigrate: %v", err)
 	}
@@ -204,10 +296,9 @@ func TestGetTargetsLast21DaysIncludesCurrentWeek(t *testing.T) {
 
 	now := time.Date(2026, time.September, 4, 12, 0, 0, 0, util.AppLocation())
 	target := models.Target{
-		TimeStart:   util.TimeToWeekStart(now),
-		UserID:      user.ID,
-		TeamID:      team.ID,
-		TargetCount: 3,
+		TimeStart: util.TimeToWeekStart(now),
+		UserID:    user.ID,
+		TeamID:    team.ID,
 	}
 	if err := sqliteDB.Create(&target).Error; err != nil {
 		t.Fatalf("create current target: %v", err)
@@ -298,8 +389,8 @@ func TestAutoMigrateAllModelsRenamesLegacyTargetsTableAndIdentColumn(t *testing.
 	if err := sqliteDB.Raw("SELECT target_count FROM targets WHERE id = ?", 1).Scan(&rawTargetCount).Error; err != nil {
 		t.Fatalf("load raw migrated target count: %v", err)
 	}
-	if target.TargetCount != 5 {
-		t.Fatalf("expected target count 5, got %d via gorm and %d via raw SQL", target.TargetCount, rawTargetCount)
+	if target.LegacyTargetCount != 5 || rawTargetCount != 5 {
+		t.Fatalf("expected legacy target count 5, got %d via gorm and %d via raw SQL", target.LegacyTargetCount, rawTargetCount)
 	}
 
 	var ident models.Ident

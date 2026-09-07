@@ -8,9 +8,11 @@ import (
 	"identeam/api"
 	dbpkg "identeam/internal/db"
 	"identeam/models"
+	"identeam/util"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -40,9 +42,10 @@ type getMyTeamsResponse struct {
 }
 
 type teamWeekMemberResponse struct {
-	User        models.UserDTO    `json:"user"`
-	TargetCount uint              `json:"targetCount"`
-	Idents      []models.IdentDTO `json:"idents"`
+	User       models.UserDTO `json:"user"`
+	TargetDays []string       `json:"targetDays"`
+
+	Idents []models.IdentDTO `json:"idents"`
 }
 
 type getTeamWeekResponse struct {
@@ -67,6 +70,7 @@ func newFeatureTestApp(t *testing.T) *api.App {
 		&models.DeviceToken{},
 		&models.Team{},
 		&models.Target{},
+		&models.TargetDay{},
 		&models.Ident{},
 		&models.Comment{},
 	)
@@ -258,10 +262,10 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 		t.Fatalf("expected joined user %q, got %q", member.User.UserID, joinData.User.UserID)
 	}
 
-	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+	weekDate := futureTargetWeek().AddDate(0, 0, 2).Add(12 * time.Hour)
 
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 3,
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")},
 	}, owner.SessionToken)
 
 	if targetResp.StatusCode != http.StatusOK {
@@ -275,8 +279,8 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	}
 
 	targetData := decodeData[models.TargetDTO](t, targetEnvelope)
-	if targetData.TargetCount != 3 {
-		t.Fatalf("expected target count 3, got %d", targetData.TargetCount)
+	if !reflect.DeepEqual(targetData.TargetDays, []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")}) {
+		t.Fatalf("unexpected target days: %#v", targetData.TargetDays)
 	}
 
 	identResp := doJSONRequest(t, http.DefaultClient, http.MethodPost, server.URL+"/teams/"+team.Slug+"/idents/create", api.AddIdentPayload{
@@ -327,8 +331,54 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	if len(weekData.Members) != 1 {
 		t.Fatalf("expected one member with target activity, got %d", len(weekData.Members))
 	}
+	if len(weekData.Members[0].TargetDays) != 3 {
+		t.Fatalf("expected derived target count 3, got %d", len(weekData.Members[0].TargetDays))
+	}
+	if !reflect.DeepEqual(weekData.Members[0].TargetDays, []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")}) {
+		t.Fatalf("unexpected week target days: %#v", weekData.Members[0].TargetDays)
+	}
 	if len(weekData.Members[0].Idents) != 1 {
 		t.Fatalf("expected one ident for active member, got %d", len(weekData.Members[0].Idents))
+	}
+}
+
+func TestFeatureFlow_PutTargetRejectsInvalidDates(t *testing.T) {
+	tests := []struct {
+		name  string
+		dates []string
+	}{
+		{name: "empty", dates: []string{}},
+		{name: "invalid format", dates: []string{"08.04.2026"}},
+		{name: "duplicate", dates: []string{futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02")}},
+		{name: "outside requested week", dates: []string{futureTargetWeek().AddDate(0, 0, 7).Format("2006-01-02")}},
+		{name: "more than seven", dates: []string{
+			futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 1).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 3).Format("2006-01-02"),
+			futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 5).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 6).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 6).Format("2006-01-02"),
+		}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := newFeatureTestServer(t)
+			defer server.Close()
+
+			owner := signupUser(t, server.URL, "target-validation@example.com")
+			team := createTeam(t, server.URL, owner.SessionToken, "Target Validation Team")
+
+			resp := doJSONRequest(
+				t,
+				http.DefaultClient,
+				http.MethodPut,
+				server.URL+"/teams/"+team.Slug+"/targets/"+futureTargetWeek().Format("2006-01-02"),
+				api.PutTargetPayload{TargetDays: tt.dates},
+				owner.SessionToken,
+			)
+			if resp.StatusCode != http.StatusBadRequest {
+				envelope := decodeEnvelope(t, resp)
+				t.Fatalf("expected status 400, got %d: %s", resp.StatusCode, envelope.Message)
+			}
+			decodeEnvelope(t, resp)
+		})
 	}
 }
 
@@ -339,10 +389,10 @@ func TestFeatureFlow_CreateIdentSucceedsWithoutNotificationTemplate(t *testing.T
 	owner := signupUser(t, server.URL, "owner-no-template@example.com")
 	team := createTeam(t, server.URL, owner.SessionToken, "No Template Team")
 
-	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+	weekDate := futureTargetWeek().AddDate(0, 0, 2).Add(12 * time.Hour)
 
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 1,
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02")},
 	}, owner.SessionToken)
 	if targetResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, targetResp)
@@ -390,9 +440,9 @@ func TestFeatureFlow_DeleteIdentRequiresOwner(t *testing.T) {
 	}
 	decodeEnvelope(t, joinResp)
 
-	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 1,
+	weekDate := futureTargetWeek().AddDate(0, 0, 2).Add(12 * time.Hour)
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02")},
 	}, owner.SessionToken)
 	if targetResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, targetResp)
@@ -464,9 +514,9 @@ func TestFeatureFlow_DeleteCommentRequiresCommentAuthorAndMatchingIdent(t *testi
 	}
 	decodeEnvelope(t, joinResp)
 
-	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
-	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 1,
+	weekDate := futureTargetWeek().AddDate(0, 0, 2).Add(12 * time.Hour)
+	targetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02")},
 	}, owner.SessionToken)
 	if targetResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, targetResp)
@@ -558,18 +608,18 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 		t.Fatalf("join team returned error: %s", joinEnvelope.Message)
 	}
 
-	weekDate := time.Date(2026, 4, 8, 12, 0, 0, 0, time.UTC)
+	weekDate := futureTargetWeek().AddDate(0, 0, 2).Add(12 * time.Hour)
 
-	ownerTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 3,
+	ownerTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")},
 	}, owner.SessionToken)
 	if ownerTargetResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, ownerTargetResp)
 		t.Fatalf("create owner target failed with status %d: %s", ownerTargetResp.StatusCode, envelope.Message)
 	}
 
-	memberTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.CreateTargetPayload{
-		TargetCount: 2,
+	memberTargetResp := doJSONRequest(t, http.DefaultClient, http.MethodPut, server.URL+"/teams/"+team.Slug+"/targets/"+weekDate.Format("2006-01-02"), api.PutTargetPayload{
+		TargetDays: []string{futureTargetWeek().AddDate(0, 0, 1).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 3).Format("2006-01-02")},
 	}, member.SessionToken)
 	if memberTargetResp.StatusCode != http.StatusOK {
 		envelope := decodeEnvelope(t, memberTargetResp)
@@ -615,5 +665,53 @@ func TestFeatureFlow_GetTeamWeekAggregatesMultipleMembers(t *testing.T) {
 	}
 	if len(weekData.Members) != 2 {
 		t.Fatalf("expected 2 members, got %d", len(weekData.Members))
+	}
+}
+
+// Keep feature fixtures in a week that can legally be planned, regardless of run date.
+func futureTargetWeek() time.Time {
+	return util.TimeToWeekStart(util.Now()).AddDate(0, 0, 7)
+}
+
+func TestFeatureFlow_TargetsOnlyAllowFutureWeeks(t *testing.T) {
+	app := newFeatureTestApp(t)
+	server := httptest.NewServer(app.SetupRoutesWithoutSwagger())
+	defer server.Close()
+	owner := signupUser(t, server.URL, "future-targets@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "Future Targets")
+	currentWeek := util.TimeToWeekStart(util.Now())
+	for _, tc := range []struct {
+		name   string
+		offset int
+		status int
+	}{
+		{"past", -7, 400}, {"current Monday", 0, 400},
+		{"current Sunday", 6, 400}, {"next Monday", 7, 200},
+		{"next Sunday", 13, 200}, {"later week", 21, 200},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			day := currentWeek.AddDate(0, 0, tc.offset).Format("2006-01-02")
+			resp := doJSONRequest(t, http.DefaultClient, http.MethodPut,
+				server.URL+"/teams/"+team.Slug+"/targets/"+day,
+				api.PutTargetPayload{TargetDays: []string{day}}, owner.SessionToken)
+			envelope := decodeEnvelope(t, resp)
+			if resp.StatusCode != tc.status {
+				t.Fatalf("status %d, want %d: %s", resp.StatusCode, tc.status, envelope.Message)
+			}
+			if tc.status == 200 {
+				got := decodeData[models.TargetDTO](t, envelope)
+				if !got.TimeStart.Equal(util.TimeToWeekStart(currentWeek.AddDate(0, 0, tc.offset))) {
+					t.Fatalf("wrong week: %v", got.TimeStart)
+				}
+				if !reflect.DeepEqual(got.TargetDays, []string{day}) {
+					t.Fatalf("wrong replacement: %v", got.TargetDays)
+				}
+			}
+		})
+	}
+	var count int64
+	app.DB.Model(&models.Target{}).Where("time_start <= ?", currentWeek).Count(&count)
+	if count != 0 {
+		t.Fatalf("rejected requests persisted %d targets", count)
 	}
 }

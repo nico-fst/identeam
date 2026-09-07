@@ -102,9 +102,7 @@ struct TeamWeekView: View {
                                 teamVM.showSettingTarget = true
                             } label: {
                                 Label(
-                                    ownMember?.targetCount ?? 0 > 0
-                                        ? "Change Target (\(ownMember?.targetCount ?? 0))"
-                                        : "Set Target",
+                                    "Plan Future Targets",
                                     systemImage: "target"
                                 )
                             }
@@ -133,7 +131,7 @@ struct TeamWeekView: View {
                                     HStack {
                                         avatar(image: member.user.avatar)
                                         TextLabeled(
-                                            "\(member.idents.count) / \(member.targetCount)",
+                                            "\(member.idents.count) / \(member.targetDays.count)",
                                             member.user.nickname
                                         )
                                     }
@@ -160,8 +158,7 @@ struct TeamWeekView: View {
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
-                            slug: team.slug,
-                            initialTargetCount: Int(ownMember?.targetCount ?? 3)
+                            slug: team.slug
                         ) { didChange in
                             teamVM.showSettingTarget = false
                             if didChange {

@@ -98,6 +98,7 @@ func AutoMigrateAllModels(db *gorm.DB) {
 		&models.DeviceToken{},
 		&models.Team{},
 		&models.Target{},
+		&models.TargetDay{},
 		&models.Ident{},
 		&models.Comment{},
 	)

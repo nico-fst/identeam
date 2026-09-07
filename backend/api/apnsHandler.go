@@ -97,11 +97,13 @@ func (app *App) RemindTeam(w http.ResponseWriter, r *http.Request) {
 
 // GetLocalNotificationsForWeek godoc
 // @Summary		Get local notification suggestions
-// @Description	Returns intelligent local notification suggestions for the authenticated user in the specified team for the upcoming week. An empty list is returned when there is not enough ident history; the client supplies its per-team default time.
+// @Description	Returns intelligent local notification suggestions for the authenticated user in the specified team for the week containing the required dateStart query parameter (YYYY-MM-DD, Europe/Berlin, normalized to Monday). An empty list is returned when there is not enough ident history; the client supplies its per-team default time.
 // @Tags			Notifications
 // @Produce		json
 // @Security		BearerAuth
 // @Param			slug	path		string	true	"Team slug"
+// @Param          dateStart query string true "Date in the requested week (YYYY-MM-DD)"
+// @Failure        400 {object} util.JSONResponse
 // @Success		200		{object}	util.JSONResponse{data=[]models.LocalNotificationDTO}
 // @Failure		401		{object}	util.JSONResponse
 // @Failure		500		{object}	util.JSONResponse
@@ -119,18 +121,12 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// TODO erst wenn Wochentage spezifiziert werden
-	// upcomingTargets, err := db.GetTargetsByUserTeam(
-	// 	r.Context(),
-	// 	app,
-	// 	user.ID,
-	// 	team.ID,
-	// 	util.NextMon(time.Now().AddDate(0, 0, -7)),
-	// )
-	// if err != nil {
-	// 	util.ErrorJSON(w, fmt.Errorf("ERROR querying user's targets: %w", err), http.StatusInternalServerError)
-	// 	return
-	// }
+	dateStart, err := util.ParseDateInAppLocation(r.URL.Query().Get("dateStart"))
+	if err != nil {
+		util.ErrorJSON(w, fmt.Errorf("dateStart must be YYYY-MM-DD: %w", err), http.StatusBadRequest)
+		return
+	}
+	weekStart := util.TimeToWeekStart(dateStart)
 
 	now := util.Now()
 	recentTargets, err := db.GetTargetsLast21DaysByUserTeam(
@@ -153,7 +149,8 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	for _, day := range util.NextMonToSun(now) {
+	for offset := 0; offset < 7; offset++ {
+		day := weekStart.AddDate(0, 0, offset)
 
 		reminder, ok := apns.BuildIntelligentReminderTime(idents, day, now)
 		if !ok {
@@ -174,7 +171,7 @@ func (app *App) GetLocalNotificationsForWeek(w http.ResponseWriter, r *http.Requ
 
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
-		Message: "Gathered notification times for upcoming week",
+		Message: "Gathered notification times for requested week",
 		Data:    reminders,
 	})
 }

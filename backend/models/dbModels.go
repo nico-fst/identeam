@@ -77,14 +77,26 @@ type Target struct {
 	TimeStart time.Time `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
 	UserID    uint      `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
 	TeamID    uint      `gorm:"not null;uniqueIndex:idx_targets_user_team_time"`
-
-	TargetCount uint `gorm:"not null"`
+	// Kept temporarily so existing databases with a NOT NULL target_count column
+	// can still create targets during the TargetDay migration.
+	LegacyTargetCount uint `gorm:"column:target_count;not null;default:0"`
 
 	// GORM & Relations
 	gorm.Model
-	User   User // gorm-idiomatic: allows .Joins("Team")
-	Team   Team
-	Idents []Ident // Target has many Idents
+	User       User // gorm-idiomatic: allows .Joins("Team")
+	Team       Team
+	TargetDays []TargetDay `gorm:"constraint:OnDelete:CASCADE;"`
+	Idents     []Ident     // Target has many Idents
+}
+
+type TargetDay struct {
+	ID   uint      `gorm:"primaryKey"` // manual since no gorm.Model
+	Date time.Time `gorm:"type:date;not null;uniqueIndex:idx_target_day"`
+
+	// GORM & Relations
+	// NO Soft-Delete via gorm.Model - could block insertion on same date
+	// gorm.Model
+	TargetID uint `gorm:"not null;uniqueIndex:idx_target_day"`
 }
 
 type Ident struct {

@@ -10,7 +10,7 @@ import SwiftData
 
 struct TeamMemberDTO: Decodable {
     let user: UserDTO
-    let targetCount: UInt
+    let targetDays: [String]
     let idents: [IdentDTO]
 }
 
@@ -18,23 +18,24 @@ struct TeamMemberDTO: Decodable {
 final class TeamMember: Identifiable {
     var id = UUID()
     var user: User
-    var targetCount: UInt
+    var targetDays: [Date]
     var idents: [Ident]
     
     init(
         user: User,
-        targetCount: UInt,
+        targetDays: [String],
         idents: [Ident]
     ) {
         self.user = user
-        self.targetCount = targetCount
+        
+        self.targetDays = targetDays.compactMap(ReminderSchedulePlanner.parseDate)
         self.idents = idents
     }
     
     convenience init(dto: TeamMemberDTO) {
         self.init(
             user: User(dto: dto.user),
-            targetCount: dto.targetCount,
+            targetDays: dto.targetDays,
             idents: dto.idents.map { Ident(dto: $0) }
         )
     }
@@ -44,7 +45,7 @@ extension TeamMember {
     static var templateGretaKanten: TeamMember {
         TeamMember(
             user: .templateGreta,
-            targetCount: 3,
+            targetDays: ["2026-02-02", "2026-02-03", "2026-02-04"],
             idents: [
                 .templateGym,
                 .templateOtherGym,
@@ -55,7 +56,7 @@ extension TeamMember {
     static var templateNicoKanten: TeamMember {
         TeamMember(
             user: .templateNico,
-            targetCount: 3,
+            targetDays: ["2026-02-02", "2026-02-04"],
             idents: [
                 .templateEvenOtherGym,
             ]

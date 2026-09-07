@@ -10,19 +10,27 @@ import SwiftData
 
 struct TargetPicker: View {
     let slug: String
+    @State private var referenceDate: Date
     let onChange: (Bool) -> Void // == new value set
-    
+
     init(
         slug: String,
-        initialTargetCount: Int = 3,
+        referenceDate: Date = ReminderSchedulePlanner.nextMonday(after: Date()),
+        initialSelectedDays: [Date] = [],
         onChange: @escaping (Bool) -> Void
     ) {
         self.slug = slug
+        _referenceDate = State(initialValue: max(
+            ReminderSchedulePlanner.startOfWeek(containing: referenceDate),
+            ReminderSchedulePlanner.nextMonday(after: Date())
+        ))
         self.onChange = onChange
-        _selectedTargetCount = State(initialValue: initialTargetCount)
+        _selectedDays = State(initialValue: Set(initialSelectedDays))
     }
     
-    @State private var selectedTargetCount: Int
+    @State private var selectedDays = Set<Date>()
+    @State private var isLoading = true
+    @State private var hasLoaded = false
     @State private var isSettingTarget = false
     @State private var settingError = ""
     
@@ -31,18 +39,60 @@ struct TargetPicker: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
     
+    private var cal: Calendar {
+        ReminderSchedulePlanner.calendar
+    }
+    private var daysOfWeek: [Date] {
+        guard let monday = cal.dateInterval(of: .weekOfYear, for: referenceDate)?.start
+        else { return [] }
+        
+        return (0..<7).compactMap { offset in
+            cal.date(byAdding: .day, value: offset, to: monday)
+        }
+    }
+    
+    private var kw: Int {
+        cal.component(.weekOfYear, from: referenceDate)
+    }
+    
     var body: some View {
         VStack {
-            Picker("Target", selection: $selectedTargetCount) {
-                ForEach(1...7, id: \.self) { count in
-                    Text("\(count)").tag(count)
+            HStack {
+                Button { changeWeek(by: -7) } label: { Image(systemName: "chevron.left") }
+                    .disabled(!ReminderSchedulePlanner.isFutureWeek(cal.date(byAdding: .day, value: -7, to: referenceDate)!))
+                Spacer()
+                Text("Week of \(ReminderSchedulePlanner.dateString(referenceDate))")
+                Spacer()
+                Button { changeWeek(by: 7) } label: { Image(systemName: "chevron.right") }
+            }
+            .padding(.horizontal)
+            .disabled(isSettingTarget)
+            if isLoading { ProgressView() }
+            List(selection: $selectedDays) {
+                Section("Dates in KW\(kw)") {
+                    ForEach(daysOfWeek, id: \.self) { day in
+                        Text(
+                            day.formatted(
+                                .dateTime
+                                    .weekday(.wide)
+                                    .day()
+                                    .month()
+                            )
+                        )
+                        .tag(day)
+                    }
                 }
             }
-            .pickerStyle(.wheel)
-            
+            .environment(\.editMode, .constant(.active))
+            .disabled(isLoading || !hasLoaded || isSettingTarget)
+
             Text(settingError)
                 .foregroundStyle(.red)
+            if !isLoading && !hasLoaded {
+                Button("Retry") { Task { await loadTargetDays() } }
+            }
         }
+        .padding()
         .toolbar {
             // left: X
             ToolbarItem(placement: .topBarLeading) {
@@ -62,7 +112,8 @@ struct TargetPicker: View {
                             vm: vm,
                             ctx: ctx,
                         )
-                        
+                       
+                        // TODO redundant
                         if success {
                             dismiss()
                         }
@@ -75,24 +126,47 @@ struct TargetPicker: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isSettingTarget)
+                .disabled(isSettingTarget || isLoading || !hasLoaded)
             }
         }
+        .environment(\.timeZone, cal.timeZone)
+        .task(id: referenceDate) { await loadTargetDays() }
         .interactiveDismissDisabled()
         .navigationTitle("Set Target")
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
     }
     
+    private func changeWeek(by days: Int) {
+        isLoading = true
+        hasLoaded = false
+        selectedDays = []
+        referenceDate = cal.date(byAdding: .day, value: days, to: referenceDate)!
+    }
+
+    @MainActor
+    private func loadTargetDays() async {
+        isLoading = true
+        hasLoaded = false
+        settingError = ""
+        do {
+            let week = try await TeamAPI.shared.fetchTeamWeek(slug: slug, date: referenceDate)
+            guard !Task.isCancelled else { return }
+            selectedDays = Set(week.members.first { $0.user.userID == userID }?.targetDays ?? [])
+            isLoading = false
+            hasLoaded = true
+        } catch {
+            guard !Task.isCancelled else { return }
+            isLoading = false
+            settingError = error.localizedDescription
+        }
+    }
+
+    @MainActor
     private func trySettingTarget(
         slug: String,
         vm: AppViewModel,
         ctx: ModelContext,
     ) async -> Bool {
-        guard selectedTargetCount != 0 else {
-            settingError = "You must select a value first"
-            return false
-        }
-        
         var notificationsScheduled = false
         
         settingError = ""
@@ -102,8 +176,8 @@ struct TargetPicker: View {
         do {
             try await TeamAPI.shared.setTarget(
                 slug: slug,
-                dateStart: Date(),
-                count: selectedTargetCount
+                dateStart: referenceDate,
+                targetDays: Array(selectedDays)
             )
            
             // schedule notifications
@@ -119,7 +193,8 @@ struct TargetPicker: View {
             if try await refreshLocalNotifications(
                 slug: slug,
                 teamName: teamName ?? slug,
-                userID: userID
+                userID: userID,
+                dateStart: referenceDate
             ) > 0 {
                 notificationsScheduled = true
             }

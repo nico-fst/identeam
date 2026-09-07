@@ -4,6 +4,7 @@ import (
 	"context"
 	"identeam/internal/appclock"
 	"identeam/internal/media"
+	"sort"
 	"time"
 )
 
@@ -171,7 +172,7 @@ func (comments Comments) ToDTOs(ctx context.Context, r2Client *media.R2Client) [
 
 type TeamWeekMemberResponse struct {
 	User        UserDTO    `json:"user"`
-	TargetCount uint       `json:"targetCount"`
+	TargetDays  []string   `json:"targetDays"`
 	Idents      []IdentDTO `json:"idents"`
 }
 
@@ -195,11 +196,13 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 	}
 
 	for _, target := range targets {
-		resp.TargetSum += target.TargetCount
+		targetDays := targetDayStrings(target.TargetDays)
+		resp.TargetSum += uint(len(target.TargetDays))
+
 		resp.IdentSum += uint(len(target.Idents))
 		resp.Members = append(resp.Members, TeamWeekMemberResponse{
 			User:        target.User.ToDTO(ctx, r2Client),
-			TargetCount: target.TargetCount,
+			TargetDays:  targetDays,
 			Idents:      Idents(target.Idents).ToDTOs(ctx, r2Client),
 		})
 	}
@@ -208,15 +211,24 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 }
 
 type TargetDTO struct {
-	TimeStart   time.Time `json:"timeStart"`
-	TargetCount uint      `json:"targetCount"`
+	TimeStart  time.Time `json:"timeStart"`
+	TargetDays []string  `json:"targetDays"`
 }
 
 func (t Target) ToDTO() TargetDTO {
 	return TargetDTO{
-		TimeStart:   t.TimeStart,
-		TargetCount: t.TargetCount,
+		TimeStart:  t.TimeStart,
+		TargetDays: targetDayStrings(t.TargetDays),
 	}
+}
+
+func targetDayStrings(targetDays []TargetDay) []string {
+	days := make([]string, 0, len(targetDays))
+	for _, day := range targetDays {
+		days = append(days, day.Date.Format("2006-01-02"))
+	}
+	sort.Strings(days)
+	return days
 }
 
 type PresignedResponse struct {

@@ -2,6 +2,8 @@ package util
 
 import (
 	"identeam/internal/appclock"
+	"identeam/models"
+	"strings"
 	"time"
 )
 
@@ -85,4 +87,39 @@ func NextMonToSun(from time.Time) []time.Time {
 	}
 
 	return days
+}
+
+func StringsToDates(dates []string) ([]time.Time, error) {
+	parsedDates := make([]time.Time, 0, len(dates))
+
+	for _, dateString := range dates {
+		date, err := ParseDateInAppLocation(dateString)
+		if err != nil {
+			return nil, err
+		}
+
+		parsedDates = append(parsedDates, date)
+	}
+
+	return parsedDates, nil
+}
+
+func TargetDaysToDates(targetdays []models.TargetDay) []time.Time {
+	dates := make([]time.Time, 0, len(targetdays))
+
+	for _, targetDay := range targetdays {
+		dates = append(dates, targetDay.Date)
+	}
+
+	return dates
+}
+
+func DatesToWeekdays(dates []time.Time, joinOperator string) string {
+	weekdays := make([]string, 0, len(dates))
+
+	for _, date := range dates {
+		weekdays = append(weekdays, date.Format("Mon"))
+	}
+
+	return strings.Join(weekdays, joinOperator)
 }

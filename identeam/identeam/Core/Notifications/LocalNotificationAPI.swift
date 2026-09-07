@@ -10,10 +10,10 @@ import Foundation
 class LocalNotificationAPI {
     static let shared = LocalNotificationAPI()
     
-    func fetchUpcomingNotifications(slug: String) async throws -> [LocalReminderDTO] {
+    func fetchNotifications(slug: String, dateStart: Date) async throws -> [LocalReminderDTO] {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "teams/\(slug)/week/notifications"
-        )
+        ).appending(queryItems: [URLQueryItem(name: "dateStart", value: ReminderSchedulePlanner.dateString(dateStart))])
         
         let response: BackendResponse<[LocalReminderDTO]> = try await API.shared.getToBackend(url: url)
         
