@@ -31,7 +31,16 @@ struct IdenteamApp: App {
                 configurations: [modelConfiguration]
             )
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("ERROR loading SwiftData:", error)
+            do {
+                try deleteSwiftDataStore(at: modelConfiguration.url)
+                return try ModelContainer(
+                    for: schema,
+                    configurations: [modelConfiguration]
+                )
+            } catch {
+                fatalError("ERROR recreating ModelContainer: \(error)")
+            }
         }
     }()
 

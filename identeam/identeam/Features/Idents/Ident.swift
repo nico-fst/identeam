@@ -55,7 +55,7 @@ extension Ident {
             time: Date(),
             userText: "Ich war grad im Gym",
             image: .templatePicsum1,
-            comments: [.templateSiuu]
+            comments: [.templateSiuu, .templateWow]
         )
     }
     

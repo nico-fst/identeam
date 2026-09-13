@@ -10,6 +10,7 @@ import SwiftUI
 struct Floating3DEffect: ViewModifier {
     let isActive: Bool
     let animationFactor: CGFloat
+    let showShadow: Bool
     
     @State private var animate = false
 
@@ -28,8 +29,8 @@ struct Floating3DEffect: ViewModifier {
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: .black.opacity(isActive ? 0.5 : 0),
-                radius: isActive ? 16 : 0,
+                color: .black.opacity(isActive && showShadow ? 0.5 : 0),
+                radius: isActive && showShadow ? 16 : 0,
                 x: animate ? 8 : -8,
                 y: animate ? 12 : 6
             )

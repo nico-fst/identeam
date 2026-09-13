@@ -199,7 +199,11 @@ struct IdentingPhotoPreview: View {
                             .scaledToFit()
                             .foregroundStyle(.accent)
                     }
-                    .modifier(Floating3DEffect(isActive: true, animationFactor: 1))
+                    .modifier(Floating3DEffect(
+                        isActive: true,
+                        animationFactor: 1,
+                        showShadow: true
+                    ))
                     .padding(.bottom, 75)
             }
             

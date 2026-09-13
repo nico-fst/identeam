@@ -14,18 +14,34 @@ struct TeamWeekView: View {
 
     @State private var hasLoadedFreshTeamWeek = false
     @State private var showTeamSettings = false
-    
+    @State private var showTeamInfo = false
+    @State private var showWeekGridSettings = false
+
     @AppStorage("userID") private var userID: String = ""
     @AppStorage("username") private var username: String = ""
+    @AppStorage private var showIdentImages: Bool // filled in init()
     
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
     @EnvironmentObject var teamVM: TeamWeekViewModel
     @Environment(\.modelContext) private var ctx
     
-    @Namespace private var settingsTransition
+    @Namespace private var transitions
     
     let isXcodePreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    
+    init(slug: String) {
+        self.slug = slug
+        _showIdentImages = AppStorage(
+            wrappedValue: false,
+            "week.\(slug).weekgrid.showIdentImages"
+        )
+    }
+    
+    @Query private var users: [User]
+    private func getUser(userID: String) -> User? {
+        users.first { $0.userID == userID }
+    }
 
     @Query private var teams: [Team]
     private var team: Team? {
@@ -47,23 +63,6 @@ struct TeamWeekView: View {
         }
     }
 
-    private func sortedIdents(for member: TeamMember) -> [Ident] {
-        member.idents.sorted { a, b in
-            a.time > b.time
-        }
-    }
-
-    private func formattedDateString(for date: Date) -> String {
-        date.formatted(
-            .dateTime
-                .weekday(.abbreviated)
-                .day()
-                .month(.wide)
-                .hour()
-                .minute()
-        )
-    }
-    
     private func formattedDateStringShort(for date: Date) -> String {
         date.formatted(
             .dateTime
@@ -73,15 +72,140 @@ struct TeamWeekView: View {
                 .minute(.twoDigits)
         )
     }
+    
+    private let teamGridColumns = Array(
+        repeating: GridItem(
+            .flexible(minimum: 0),
+            spacing: 0
+        ),
+        count: 8
+    )
+    
+    private func cell<Content: View>(
+        isHeader: Bool = false,
+        isToday: Bool = false,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .font(isHeader && isToday ? .headline : .body)
+            .frame(maxWidth: .infinity, minHeight: 50)
+            .background {
+                if isHeader {
+                    if isToday {
+                        Circle().fill(Color("AccentColor").opacity(0.12))
+                            .scaleEffect(0.8)
+                    } else {
+                        Circle().fill(Color.secondary.opacity(0.12))
+                            .scaleEffect(0.8)
+                    }
+                }
+            }
+            .padding(2)
+    }
+
+    @ViewBuilder
+    private func dayCell(_ day: MemberDay<Ident>, member: TeamMember) -> some View {
+        cell {
+            if let ident = day.ident {
+                Button {
+                    teamVM.selectedIdent = ident
+                } label: {
+                    VStack(spacing: 4) {
+                        identImage(ident: ident, member: member)
+                            .frame(height: 55)
+                    }
+                }
+                .buttonStyle(.plain)
+            } else if day.isTargetDay {
+                Image(systemName: "calendar.badge.clock")
+            } else {
+                Text("—")
+                    .foregroundStyle(.tertiary)
+                    .accessibilityLabel("Nothing planned")
+            }
+        }
+    }
 
     var body: some View {
-        Group {
+        Group { // .refreshable doesn't work on plain View
             if let team {
                 List {
-                    Section("Info") {
-                        TextLabeled("Slug", team.slug)
-                        TextLabeled("Details", team.details)
-                        
+                    if hasLoadedFreshTeamWeek, let teamWeek {
+                        let members = sortedMembers(for: teamWeek)
+                        let dates = TeamWeekGridCalendar.dates(containing: Date())
+
+                        // WeekGrid
+                        Section {
+                            // lazy grid auto wrangles in rows
+                            LazyVGrid(columns: teamGridColumns, spacing: 0) {
+                                // header
+                                Group {
+                                    cell() {
+                                        Text("")
+                                    }
+                                    ForEach(dates, id: \.self) { date in
+                                        cell(
+                                            isHeader: true,
+                                            isToday: Calendar.current.isDateInToday(date)
+                                        ) {
+                                            Text(ReminderSchedulePlanner.weekdayString(date))
+                                        }
+                                    }
+                                }
+                                .padding(.bottom, 10)
+                                
+                                // row per member
+                                ForEach(members, id: \.id) { member in
+                                    cell() {
+                                        VStack(spacing: 2) {
+                                            avatar(image: member.user.avatar)
+                                                .padding(1)
+                                            Text("\(member.idents.count) / \(member.targetDays.count)")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(5)
+                                        .frame(maxWidth: .infinity, minHeight: 60)
+                                        .clipShape( // Squircle by .continuous
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        )
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .fill(.secondary.opacity(0.12))
+                                        }
+                                    }
+                                    ForEach(dates, id: \.self) { date in
+                                        dayCell(
+                                            MemberDay(
+                                                date: date,
+                                                idents: member.idents,
+                                                time: \.time,
+                                                targetDays: member.targetDays
+                                            ),
+                                            member: member
+                                        )
+                                    }
+                                }
+                            }
+                        } header: {
+                            HStack {
+                                Text("Current Week")
+                                Button {
+                                    showWeekGridSettings = true
+                                } label: {
+                                    Image(systemName: "gearshape")
+                                }
+                            }
+                        } footer: {
+                            Text("So far, your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents this week")
+                        }
+                    } else {
+                        Section("TeamWeek") {
+                            Text("No Info...").opacity(0.25)
+                        }
+                    }
+                    
+                    Section("Actions") {
                         Button() {
                             Task {
                                 await teamVM.tryRemindingTeam(slug: team.slug, vm: vm)
@@ -94,9 +218,7 @@ struct TeamWeekView: View {
                         }
                         .disabled(teamVM.remindButtonDisabled)
                         .opacity(teamVM.remindButtonDisabled ? 0.3 : 1)
-                    }
-                    
-                    Section("My Target") {
+                        
                         if hasLoadedFreshTeamWeek {
                             Button() {
                                 teamVM.showSettingTarget = true
@@ -107,41 +229,23 @@ struct TeamWeekView: View {
                                 )
                             }
                         } else {
-                            ProgressView("Loading current team week...")
+                            ProgressView()
                         }
                     }
-                    .navigationTitle(team.name)
                     
-                    if hasLoadedFreshTeamWeek, let teamWeek {
-                        Section("Members ⋅ \(teamWeek.identSum) / \(teamWeek.targetSum) Idents ") {
-                            ForEach(sortedMembers(for: teamWeek), id: \.id) { member in
-                                DisclosureGroup {
-                                    ForEach(sortedIdents(for: member), id: \.id) { ident in
-                                        let dateString = formattedDateString(for: ident.time)
-                                        HStack {
-                                            identImage(ident: ident)
-                                                .frame(height: 100)
-                                            TextLabeled(dateString, ident.userText)
-                                        }
-                                        .onTapGesture {
-                                            teamVM.selectedIdent = ident
-                                        }
-                                    }
-                                } label: {
-                                    HStack {
-                                        avatar(image: member.user.avatar)
-                                        TextLabeled(
-                                            "\(member.idents.count) / \(member.targetDays.count)",
-                                            member.user.nickname
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Section("TeamWeek") {
-                            Text("No Info...").opacity(0.25)
-                        }
+                    Section("Chat") {
+                        Text("Coming soon :)")
+                            .foregroundStyle(.primary.opacity(0.3))
+                    }
+                    .navigationTitle(team.name)
+                }
+                .refreshable {
+                    if await teamsVM.reloadTeamWeek(
+                        slug: team.slug,
+                        vm: vm,
+                        ctx: ctx
+                    ) != nil {
+                        hasLoadedFreshTeamWeek = true
                     }
                 }
                 .listStyle(InsetGroupedListStyle())
@@ -152,7 +256,15 @@ struct TeamWeekView: View {
                         } label: {
                             Image(systemName: "gearshape")
                         }
-                        .matchedTransitionSource(id: "settings-button", in: settingsTransition)
+                        .matchedTransitionSource(id: "settings-button", in: transitions)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showTeamInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+                        .matchedTransitionSource(id: "info-button", in: transitions)
                     }
                 }
                 .sheet(isPresented: $teamVM.showSettingTarget) {
@@ -184,8 +296,34 @@ struct TeamWeekView: View {
                         )
                     }
                     .navigationTransition(
-                        .zoom(sourceID: "settings-button", in: settingsTransition)
+                        .zoom(sourceID: "settings-button", in: transitions)
                     )
+                }
+                .sheet(isPresented: $showTeamInfo) {
+                    NavigationStack {
+                        List {
+                            TextLabeled("Slug", team.slug)
+                            TextLabeled("Details", team.details)
+                        }
+                        .navigationTitle(team.name)
+                    }
+                    .navigationTransition(
+                        .zoom(sourceID: "info-button", in: transitions)
+                    )
+                }
+                .sheet(isPresented: $showWeekGridSettings) {
+                    NavigationStack {
+                        List {
+                            Section {
+                                Toggle("Idents show images", isOn: $showIdentImages)
+                            } footer: {
+                                Text("Controls wether ident are filled with user's image or just a color.")
+                            }
+                        }
+                        .padding()
+                        .navigationTitle("Grid Settings")
+                    }
+                    .presentationDetents([.medium])
                 }
                 .sheet(
                     item: $teamVM.selectedIdent,
@@ -195,77 +333,97 @@ struct TeamWeekView: View {
                     }
                 ) { ident in
                     NavigationStack {
-                        VStack() {
-                            Text(ident.userText)
-                                .padding()
-                                .bold()
-                            
-                            identImage(ident: ident)
-                                .modifier(Floating3DEffect(isActive: true, animationFactor: 1.2))
-                                .cornerRadius(12)
-                            
-                            // Comments
-                            VStack(alignment: .leading) {
-                                ForEach(ident.comments.sorted(by: {
-                                    $0.time < $1.time
-                                })) { comment in
+                        // TODO outsource
+                        if let member = teamWeek?.members.first(where: { member in
+                            member.idents.contains(where: { $0.id == ident.id })
+                        }) {
+                            List {
+                                Section {
+                                    HStack {
+                                        Spacer()
+                                        identImage(ident: ident, member: member, forceShowImage: true)
+                                            .modifier(Floating3DEffect(
+                                                isActive: true,
+                                                animationFactor: 1.2,
+                                                showShadow: true
+                                            ))
+                                            .frame(height: 300)
+                                        Spacer()
+                                    }
                                     VStack(alignment: .leading) {
-                                        Text(formattedDateStringShort(for: comment.time))
+                                        Text(formattedDateStringShort(for: ident.time))
                                             .font(.caption)
                                             .opacity(0.5)
                                         
-                                        HStack(spacing: 10) {
-                                            Text(comment.user.nickname)
-                                                .bold()
-                                            Text(comment.text)
-                                        }
+                                        Text(member.user.nickname).bold() + Text("  \(ident.userText)")
                                     }
-                                    .padding(5)
-                                    .contextMenu {
-                                        Button {
-                                            UIPasteboard.general.string = comment.text
-                                        } label: {
-                                            Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                
+                                // Comments
+                                if !ident.comments.isEmpty { // otherwise VStack empty list entry
+                                    ForEach(ident.comments.sorted(by: {
+                                        $0.time < $1.time
+                                    })) { comment in
+                                        VStack(alignment: .leading) {
+                                            Text(formattedDateStringShort(for: comment.time))
+                                                .font(.caption)
+                                                .opacity(0.5)
+                                            
+                                            Text(comment.user.nickname).bold() + Text("  \(comment.text)")
                                         }
-                                        
-                                        if comment.user.userID == userID {
-                                            Button(role: .destructive) {
-                                                Task {
-                                                    await teamVM.tryDeletingComment(
-                                                        commentID: comment.id,
-                                                        slug: team.slug,
-                                                        vm: vm,
-                                                        ctx: ctx,
-                                                        teamsVM: teamsVM
-                                                    )
-                                                }
+                                        .contextMenu {
+                                            // copy
+                                            Button {
+                                                UIPasteboard.general.string = comment.text
                                             } label: {
-                                                Label("Delete", systemImage: "trash")
+                                                Label("Copy", systemImage: "doc.on.doc")
+                                            }
+                                            
+                                            // [own comment] delete
+                                            if comment.user.userID == userID {
+                                                Button(role: .destructive) {
+                                                    Task {
+                                                        await teamVM.tryDeletingComment(
+                                                            commentID: comment.id,
+                                                            slug: team.slug,
+                                                            vm: vm,
+                                                            ctx: ctx,
+                                                            teamsVM: teamsVM
+                                                        )
+                                                    }
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
                                             }
                                         }
                                     }
                                 }
                                 
-                                TextField("Comment...", text: $teamVM.commentInput)
-                                    .padding(5)
-                                Text(teamVM.commentError)
-                                    .foregroundStyle(.red)
-                                
-                            }
-                            .padding()
-                            
-                            Button {
-                                Task {
-                                    await teamVM.tryCommenting(slug: team.slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                                // Comment... prompt
+                                VStack {
+                                    HStack {
+                                        TextField("Comment...", text: $teamVM.commentInput)
+                                        Button("Comment") {
+                                            Task {
+                                                await teamVM.tryCommenting(slug: team.slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                                            }
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .glassEffect(.regular.interactive())
+                                    }
+                                    
+                                    if !teamVM.commentError.isEmpty {
+                                        Text(teamVM.commentError)
+                                            .foregroundStyle(.red)
+                                    }
                                 }
-                            } label: {
-                                Text("Comment")
-                                    .padding(5)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .glassEffect(.regular.interactive())
+                        } else {
+                            ContentUnavailableView(
+                                "Failed to load Ident",
+                                systemImage: "exclamationmark.triangle"
+                            )
                         }
-                        .padding()
                     }
                     .presentationDetents([.large])
                 }
@@ -274,17 +432,6 @@ struct TeamWeekView: View {
                     "Team not found",
                     systemImage: "person.2.slash"
                 )
-            }
-        }
-        .refreshable {
-            if let team {
-                if await teamsVM.reloadTeamWeek(
-                    slug: team.slug,
-                    vm: vm,
-                    ctx: ctx
-                ) != nil {
-                    hasLoadedFreshTeamWeek = true
-                }
             }
         }
         .task {
@@ -304,24 +451,88 @@ struct TeamWeekView: View {
         }
     }
     
-    @ViewBuilder
-    private func identImage(ident: Ident) -> some View {
-        let resource = KF.ImageResource(
-            downloadURL: ident.image.url,
-            cacheKey: ident.image.key
-        )
-        
-        KFImage(source: .network(resource))
-            .placeholder {
-                ProgressView()
+    func getCachedImage(for item: S3Item) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            ImageCache.default.retrieveImage(
+                forKey: item.key
+            ) { result in
+                switch result {
+                case .success(let value):
+                    continuation.resume(returning: value.image)
+                case .failure:
+                    continuation.resume(returning: nil)
+                }
             }
-            .resizable()
-            .scaledToFit()
-            .mask(
-                Image("Flash")
-                    .resizable()
-                    .scaledToFill()
+        }
+    }
+    
+    func getUserColor(userID: String) async -> Color {
+        guard
+            let avatarItem = getUser(userID: userID)?.avatar,
+            let avatar = await getCachedImage(for: avatarItem)
+        else {
+            return .accent
+        }
+
+        return Color(
+            uiColor: avatar.averageColor?.adjustedForUI() ?? .accent
+        )
+    }
+    
+    @ViewBuilder
+    private func identImage(
+        ident: Ident,
+        member: TeamMember,
+        forceShowImage: Bool = false
+    ) -> some View {
+        if showIdentImages || forceShowImage {
+            let resource = KF.ImageResource(
+                downloadURL: ident.image.url,
+                cacheKey: ident.image.key
             )
+            
+            KFImage(source: .network(resource))
+                .placeholder {
+                    ProgressView()
+                }
+                .resizable()
+                .scaledToFit()
+                .mask(
+                    Image("Flash")
+                        .resizable()
+                        .scaledToFill()
+                )
+                // TODO no overlay since
+        } else {
+            UserColorFlash(
+                userID: member.user.userID,
+                getUserColor: getUserColor
+            )
+        }
+    }
+    
+    private struct UserColorFlash: View {
+        let userID: String
+        let getUserColor: (String) async -> Color
+        
+        @State private var userColor: Color?
+        
+        var body: some View {
+            Group {
+                if let userColor {
+                    Image("Flash")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFill()
+                        .foregroundStyle(userColor.opacity(0.7))
+                } else {
+                    ProgressView()
+                }
+            }
+            .task(id: userID) {
+                userColor = await getUserColor(userID)
+            }
+        }
     }
     
     @ViewBuilder
@@ -337,17 +548,18 @@ struct TeamWeekView: View {
             }
             .resizable()
             .scaledToFill()
-            .frame(width: 50, height: 50)
             .clipShape(Circle())
     }
 }
 
 private struct TeamView_PreviewContainer: View {
     let container: ModelContainer
+    @StateObject private var teamVM: TeamWeekViewModel
 
-    init() {
+    init(openIdent: Bool = false) {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        self.container = try! ModelContainer(
+
+        let container = try! ModelContainer(
             for: Team.self,
             TeamWeek.self,
             TeamMember.self,
@@ -358,20 +570,37 @@ private struct TeamView_PreviewContainer: View {
             configurations: config
         )
 
-        // Insert mock data into the in-memory context
-        container.mainContext.insert(Team.templateKanten)
-        container.mainContext.insert(TeamWeek.templateKanten)
+        let team = Team.templateKanten
+        let teamWeek = TeamWeek.templateKanten
+
+        container.mainContext.insert(team)
+        container.mainContext.insert(teamWeek)
+
+        let teamVM = TeamWeekViewModel()
+
+        if openIdent {
+            teamVM.selectedIdent = teamWeek.members
+                .flatMap(\.idents)
+                .first
+        }
+
+        self.container = container
+        _teamVM = StateObject(wrappedValue: teamVM)
     }
 
     var body: some View {
         TeamWeekView(slug: "die-kanten")
             .environmentObject(AppViewModel())
             .environmentObject(TeamsViewModel())
-            .environmentObject(TeamWeekViewModel())
+            .environmentObject(teamVM)
             .modelContainer(container)
     }
 }
 
-#Preview {
+#Preview("Default") {
     TeamView_PreviewContainer()
+}
+
+#Preview("Ident Open") {
+    TeamView_PreviewContainer(openIdent: true)
 }

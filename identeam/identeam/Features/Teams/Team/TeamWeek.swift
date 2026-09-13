@@ -10,7 +10,7 @@ import SwiftData
 
 struct TeamMemberDTO: Decodable {
     let user: UserDTO
-    let targetDays: [String]
+    let targetDays: [String] // yyy-mm-dd
     let idents: [IdentDTO]
 }
 

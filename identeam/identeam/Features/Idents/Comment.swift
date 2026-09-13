@@ -54,6 +54,9 @@ extension Comment {
     }
     
     static var templateSiuu: Comment {
-        Comment(time: Date(), text: "Siuu", user: .templateNico)
+        Comment(
+            time: Date(),
+            text: "Siuu Aliquip quis sunt aute qui est aliqua ullamco proident laborum est esse voluptate aute dolore. Mollit velit ipsum consectetur officia. Aliquip elit aliqua nulla est commodo consectetur. Minim sint nostrud ea ut enim velit sunt.",
+            user: .templateNico)
     }
 }

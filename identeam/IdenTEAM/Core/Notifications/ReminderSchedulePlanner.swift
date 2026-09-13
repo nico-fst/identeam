@@ -21,6 +21,15 @@ nonisolated enum ReminderSchedulePlanner {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
+    
+    static func weekdayString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "EEEEE"
+        return formatter.string(from: date)
+    }
 
     static func parseDate(_ value: String) -> Date? {
         let formatter = DateFormatter()

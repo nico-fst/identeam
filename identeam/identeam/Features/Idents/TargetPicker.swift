@@ -55,26 +55,72 @@ struct TargetPicker: View {
         cal.component(.weekOfYear, from: referenceDate)
     }
     
+    private var weekName: String {
+        let thisWeek = ReminderSchedulePlanner.startOfWeek(containing: Date())
+        let weekStart = ReminderSchedulePlanner.startOfWeek(containing: referenceDate)
+
+        if weekStart == thisWeek {
+            return "This week"
+        }
+
+        if let nextWeek = cal.date(byAdding: .day, value: 7, to: thisWeek),
+           weekStart == nextWeek {
+            return "Next week"
+        }
+        
+        if let nextWeek = cal.date(byAdding: .day, value: 14, to: thisWeek),
+           weekStart == nextWeek {
+            return "The week after next"
+        }
+
+        return "Week of \(ReminderSchedulePlanner.dateString(weekStart))"
+    }
+    
     var body: some View {
-        VStack {
-            HStack {
-                Button { changeWeek(by: -7) } label: { Image(systemName: "chevron.left") }
-                    .disabled(!ReminderSchedulePlanner.canSetTargetWeek(cal.date(byAdding: .day, value: -7, to: referenceDate)!))
-                Spacer()
-                Text("Week of \(ReminderSchedulePlanner.dateString(referenceDate))")
-                Spacer()
-                Button { changeWeek(by: 7) } label: { Image(systemName: "chevron.right") }
+        List(selection: $selectedDays) {
+            Section {
+                HStack {
+                    Button {
+                        changeWeek(by: -7)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .disabled(
+                        !ReminderSchedulePlanner.canSetTargetWeek(
+                            cal.date(byAdding: .day, value: -7, to: referenceDate)!
+                        )
+                    )
+
+                    Spacer()
+
+                    Text(weekName)
+                        .font(.headline)
+
+                    Spacer()
+
+                    Button {
+                        changeWeek(by: 7)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                }
+                .disabled(isSettingTarget)
+                .buttonStyle(.glassProminent)
             }
-            .padding(.horizontal)
-            .disabled(isSettingTarget)
-            if isLoading { ProgressView() }
-            List(selection: $selectedDays) {
-                Section("Dates in KW\(kw)") {
+
+            Section {
+                if isLoading {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                } else {
                     ForEach(daysOfWeek, id: \.self) { day in
                         Text(
                             day.formatted(
                                 .dateTime
-                                    .weekday(.wide)
+                                    .weekday(.abbreviated)
                                     .day()
                                     .month()
                             )
@@ -82,17 +128,31 @@ struct TargetPicker: View {
                         .tag(day)
                     }
                 }
+            } header: {
+                Text("Select Ident days")
+            } footer: {	
+                if settingError.isEmpty {
+                    Text("Your target will be \(selectedDays.count)")
+                } else {
+                    Text(settingError)
+                        .foregroundStyle(.red)
+                }
             }
-            .environment(\.editMode, .constant(.active))
-            .disabled(isLoading || !hasLoaded || isSettingTarget)
 
-            Text(settingError)
-                .foregroundStyle(.red)
-            if !isLoading && !hasLoaded {
-                Button("Retry") { Task { await loadTargetDays() } }
+            if !settingError.isEmpty {
+                Section {
+                    if !isLoading && !hasLoaded {
+                        Button("Retry") {
+                            Task {
+                                await loadTargetDays()
+                            }
+                        }
+                    }
+                }
             }
         }
-        .padding()
+        .environment(\.editMode, .constant(.active))
+        .disabled(isSettingTarget)
         .toolbar {
             // left: X
             ToolbarItem(placement: .topBarLeading) {
@@ -130,7 +190,9 @@ struct TargetPicker: View {
             }
         }
         .environment(\.timeZone, cal.timeZone)
-        .task(id: referenceDate) { await loadTargetDays() }
+        .task(id: referenceDate) {
+            await loadTargetDays()
+        }
         .interactiveDismissDisabled()
         .navigationTitle("Set Target")
         .presentationDetents([.large])
