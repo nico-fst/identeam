@@ -1,10 +1,3 @@
-//
-//  AuthViewModel.swift
-//  identeam
-//
-//  Created by Nico Stern on 15.12.25.
-//
-
 import Combine
 import Foundation
 import SwiftData

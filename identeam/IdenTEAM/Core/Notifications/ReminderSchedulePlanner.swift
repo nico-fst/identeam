@@ -1,83 +1,15 @@
 import Foundation
 
-nonisolated struct LocalReminderDTO: Decodable {
-    let title: String
-    let body: String
-    let date: Date
-}
-
 nonisolated enum ReminderSchedulePlanner {
-    static var calendar: Calendar {
-        var calendar = Calendar(identifier: .iso8601)
-        calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
-        return calendar
-    }
-
-    static func dateString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-    
-    static func weekdayString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "EEEEE"
-        return formatter.string(from: date)
-    }
-
-    static func parseDate(_ value: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.date(from: value)
-    }
-
-    static func canSetTargetWeek(_ date: Date, now: Date = Date()) -> Bool {
-        startOfWeek(containing: date) >= firstPlannableWeek(now: now)
-    }
-
-    static func firstPlannableWeek(now: Date = Date()) -> Date {
-        if calendar.component(.weekday, from: now) == 2 {
-            return startOfWeek(containing: now)
-        }
-        return nextMonday(after: now)
-    }
-
-    static func nextMonday(
-        after referenceDate: Date,
-        calendar: Calendar = ReminderSchedulePlanner.calendar
-    ) -> Date {
-        let startOfDay = calendar.startOfDay(for: referenceDate)
-        let weekday = calendar.component(.weekday, from: startOfDay)
-        var daysUntilMonday = (9 - weekday) % 7
-        if daysUntilMonday == 0 {
-            daysUntilMonday = 7
-        }
-
-        return calendar.date(
-            byAdding: .day,
-            value: daysUntilMonday,
-            to: startOfDay
-        )!
-    }
-
     static func remindersForWeek(
         intelligentSuggestions: [LocalReminderDTO],
         defaultTime: DateComponents,
         teamName: String,
         dateStart: Date,
         targetDays: [Date],
-        calendar: Calendar = ReminderSchedulePlanner.calendar
+        calendar: Calendar = AppCalendar.calendar
     ) -> [LocalReminderDTO] {
-        let weekStart = startOfWeek(containing: dateStart, calendar: calendar)
+        let weekStart = AppCalendar.startOfWeek(containing: dateStart, calendar: calendar)
         let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart)!
 
         let suggestionsByDay = Dictionary(
@@ -116,17 +48,4 @@ nonisolated enum ReminderSchedulePlanner {
         }
     }
 
-    static func startOfWeek(
-        containing date: Date,
-        calendar: Calendar = ReminderSchedulePlanner.calendar
-    ) -> Date {
-        let day = calendar.startOfDay(for: date)
-        let weekday = calendar.component(.weekday, from: day)
-        let daysSinceMonday = (weekday + 5) % 7
-        return calendar.date(
-            byAdding: .day,
-            value: -daysSinceMonday,
-            to: day
-        )!
-    }
 }

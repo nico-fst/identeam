@@ -1,10 +1,3 @@
-//
-//  IdentingViewModel.swift
-//  identeam
-//
-//  Created by Nico Stern on 13.05.26.
-//
-
 import Foundation
 import Combine
 import SwiftData
@@ -69,7 +62,7 @@ class IdentingViewModel: ObservableObject {
             do {
                 ident = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText, date: identDate)
             } catch TeamError.targetNotSet {
-                if ReminderSchedulePlanner.canSetTargetWeek(identDate, now: now()) {
+                if TargetPlanning.canSetTargetWeek(identDate, now: now()) {
                     isSettingTarget = true
                     return false
                 }

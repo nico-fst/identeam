@@ -1,10 +1,3 @@
-//
-//  CommentAPI.swift
-//  identeam
-//
-//  Created by Nico Stern on 05.07.26.
-//
-
 import Foundation
 
 class CommentAPI {

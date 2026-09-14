@@ -1,10 +1,3 @@
-//
-//  Ident.swift
-//  identeam
-//
-//  Created by Nico Stern on 13.03.26.
-//
-
 import Foundation
 import SwiftData
 
@@ -52,6 +45,7 @@ final class Ident {
 extension Ident {
     static var templateGym: Ident {
         Ident(
+            remoteID: 1,
             time: Date(),
             userText: "Ich war grad im Gym",
             image: .templatePicsum1,
@@ -61,6 +55,7 @@ extension Ident {
     
     static var templateOtherGym: Ident {
         Ident(
+            remoteID: 2,
             time: Date(),
             userText: "Ich war auch grad im Gym und dieser Text hier ist sehr lang",
             image: .templatePicsum1,
@@ -70,6 +65,7 @@ extension Ident {
     
     static var templateEvenOtherGym: Ident {
         Ident(
+            remoteID: 3,
             time: Date(),
             userText: "Und auch ich war auch grad im Gym und dieser Text ist äußerst lang",
             image: .templatePicsum1,
@@ -79,6 +75,7 @@ extension Ident {
     
     static var templatePiano: Ident {
         Ident(
+            remoteID: 4,
             time: Date(),
             userText: "Ich hab grad Piano gespielt",
             image: .templatePicsum1,

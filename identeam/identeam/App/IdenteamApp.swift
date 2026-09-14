@@ -1,10 +1,3 @@
-//
-//  identeamApp.swift
-//  identeam
-//
-//  Created by Nico Stern on 23.11.25.
-//
-
 import SwiftData
 import SwiftUI
 

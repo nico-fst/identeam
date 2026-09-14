@@ -1,10 +1,3 @@
-//
-//  AuthSheetView.swift
-//  identeam
-//
-//  Created by Nico Stern on 28.12.25.
-//
-
 import SwiftUI
 
 struct AuthSheetView: View {

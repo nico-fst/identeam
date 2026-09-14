@@ -1,10 +1,3 @@
-//
-//  User.swift
-//  identeam
-//
-//  Created by Nico Stern on 15.03.26.
-//
-
 import Foundation
 import SwiftData
 

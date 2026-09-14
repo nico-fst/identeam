@@ -1,10 +1,3 @@
-//
-//  TextLabeled.swift
-//  identeam
-//
-//  Created by Nico Stern on 10.04.26.
-//
-
 import SwiftUI
 
 struct TextLabeled: View {

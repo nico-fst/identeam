@@ -1,10 +1,3 @@
-//
-//  Floating3DEffect.swift
-//  identeam
-//
-//  Created by Nico Stern on 20.05.26.
-//
-
 import SwiftUI
 
 struct Floating3DEffect: ViewModifier {

@@ -1,10 +1,3 @@
-//
-//  AppDelegate.swift
-//  identeam
-//
-//  Created by Nico Stern on 09.12.25.
-//
-
 import SwiftUI
 import UIKit
 import UserNotifications

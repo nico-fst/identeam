@@ -1,10 +1,3 @@
-//
-//  IdentAPI.swift
-//  identeam
-//
-//  Created by Nico Stern on 13.05.26.
-//
-
 import Foundation
 
 class IdentAPI {

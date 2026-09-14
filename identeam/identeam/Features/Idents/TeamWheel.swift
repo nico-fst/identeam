@@ -1,10 +1,3 @@
-//
-//  TeamWheel.swift
-//  identeam
-//
-//  Created by Nico Stern on 12.05.26.
-//
-
 import SwiftUI
 import SwiftData
 

@@ -1,10 +1,3 @@
-//
-//  PhotoMetadataService.swift
-//  identeam
-//
-//  Created by Nico Stern on 06.05.26.
-//
-
 import SwiftUI
 import CoreLocation
 

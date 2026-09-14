@@ -1,10 +1,3 @@
-//
-//  DebugInfoView.swift
-//  identeam
-//
-//  Created by Nico Stern on 28.12.25.
-//
-
 import PhotosUI
 import SwiftData
 import SwiftUI

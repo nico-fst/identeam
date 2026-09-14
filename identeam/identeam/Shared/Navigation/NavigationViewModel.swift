@@ -1,10 +1,3 @@
-//
-//  NavigationViewModel.swift
-//  identeam
-//
-//  Created by Nico Stern on 13.03.26.
-//
-
 import Foundation
 import SwiftUI
 import Combine

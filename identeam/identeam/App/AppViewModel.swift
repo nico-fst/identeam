@@ -1,10 +1,3 @@
-//
-//  ViewModel.swift
-//  identeam
-//
-//  Created by Nico Stern on 28.12.25.
-//
-
 import Combine
 import Foundation
 

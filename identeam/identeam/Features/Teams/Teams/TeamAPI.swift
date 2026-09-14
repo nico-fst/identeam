@@ -1,10 +1,3 @@
-//
-//  AuthService.swift
-//  identeam
-//
-//  Created by Nico Stern on 15.12.25.
-//
-
 import Foundation
 import SwiftData
 import SwiftUI
@@ -109,7 +102,7 @@ class TeamAPI {
     }
     
     func fetchTeamWeek(slug: String, date: Date) async throws -> TeamWeek {
-        let formatDate = ReminderSchedulePlanner.dateString
+        let formatDate = AppCalendar.dateString
         
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "teams/\(slug)/week/\(formatDate(date))"
@@ -144,7 +137,7 @@ class TeamAPI {
     }
     
     func setTarget(slug: String, dateStart: Date, targetDays: [Date]) async throws {
-        let formatDate = ReminderSchedulePlanner.dateString
+        let formatDate = AppCalendar.dateString
         
         let formattedDays: [String] = targetDays
             .sorted()

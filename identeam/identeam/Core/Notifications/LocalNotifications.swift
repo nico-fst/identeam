@@ -1,10 +1,3 @@
-//
-//  LocalNotifications.swift
-//  identeam
-//
-//  Created by Nico Stern on 03.06.26.
-//
-
 import Foundation
 import UserNotifications
 
@@ -14,7 +7,7 @@ func refreshLocalNotifications(
     slug: String,
     teamName: String,
     userID: String,
-    dateStart: Date = ReminderSchedulePlanner.nextMonday(after: Date())
+    dateStart: Date = AppCalendar.nextMonday(after: Date())
 ) async throws -> Int {
     let week = try await TeamAPI.shared.fetchTeamWeek(slug: slug, date: dateStart)
     let targetDays = week.members.first { $0.user.userID == userID }?.targetDays ?? []
@@ -43,9 +36,9 @@ func scheduleLocalNotifications(_ reminders: [LocalReminderDTO], slug: String, d
     let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
     guard granted else { return }
     
-    let weekStart = ReminderSchedulePlanner.startOfWeek(containing: dateStart)
-    let weekEnd = ReminderSchedulePlanner.calendar.date(byAdding: .day, value: 7, to: weekStart)!
-    let weekPrefix = "identeam-reminder-\(slug)-\(ReminderSchedulePlanner.dateString(weekStart))-"
+    let weekStart = AppCalendar.startOfWeek(containing: dateStart)
+    let weekEnd = AppCalendar.calendar.date(byAdding: .day, value: 7, to: weekStart)!
+    let weekPrefix = "identeam-reminder-\(slug)-\(AppCalendar.dateString(weekStart))-"
     // Replace only this week; keep reminders for other planned weeks.
     let oldRequests = await center.pendingNotificationRequests()
     let oldIDs = oldRequests
@@ -67,12 +60,12 @@ func scheduleLocalNotifications(_ reminders: [LocalReminderDTO], slug: String, d
         content.body = reminder.body
         content.sound = .default
         
-        var components = ReminderSchedulePlanner.calendar.dateComponents(
+        var components = AppCalendar.calendar.dateComponents(
             [.year, .month, .day, .hour, .minute],
             from: reminder.date
         )
         
-        components.timeZone = ReminderSchedulePlanner.calendar.timeZone
+        components.timeZone = AppCalendar.calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: components,
             repeats: false
