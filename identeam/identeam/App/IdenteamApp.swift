@@ -8,32 +8,19 @@ struct IdenteamApp: App {
     @StateObject private var vm = AppViewModel()
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var teamsVM = TeamsViewModel()
-    @StateObject private var teamVM = TeamWeekViewModel()
+    // TeamWeekViewModel defined in TeamWeekView
     @StateObject private var navVM = NavigationViewModel()
     @StateObject private var cameraVM = CameraViewModel()
     @StateObject private var avatarVM = AvatarViewModel()
     @StateObject private var identingVM = IdentingViewModel()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self, S3Item.self, Comment.self])
-        let modelConfiguration = ModelConfiguration(schema: schema)
-
+        let schema = Schema(localCacheModelTypes)
+        let configuration = ModelConfiguration(schema: schema)
         do {
-            return try ModelContainer(
-                for: schema,
-                configurations: [modelConfiguration]
-            )
+            return try makeLocalCacheContainer(schema: schema, configuration: configuration)
         } catch {
-            print("ERROR loading SwiftData:", error)
-            do {
-                try deleteSwiftDataStore(at: modelConfiguration.url)
-                return try ModelContainer(
-                    for: schema,
-                    configurations: [modelConfiguration]
-                )
-            } catch {
-                fatalError("ERROR recreating ModelContainer: \(error)")
-            }
+            fatalError("ERROR creating local cache: \(error)")
         }
     }()
 
@@ -46,7 +33,6 @@ struct IdenteamApp: App {
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)
         .environmentObject(teamsVM)
-        .environmentObject(teamVM)
         .environmentObject(vm)
         .environmentObject(navVM)
         .environmentObject(cameraVM)

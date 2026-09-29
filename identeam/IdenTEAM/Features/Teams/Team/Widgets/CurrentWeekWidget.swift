@@ -27,7 +27,7 @@ struct CurrentWeekWidget: View {
                 }
             }
         } footer: {
-            Text("So far, your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents this week")
+//            Text("Your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents in total")
         }
         .sheet(isPresented: $showSettings) {
             settings
@@ -95,7 +95,7 @@ struct CurrentWeekWidget: View {
         let members = teamWeek.members.sorted {
             $0.user.username.lowercased() < $1.user.username.lowercased()
         }
-        let dates = AppCalendar.datesInWeek(containing: referenceDate)
+        let dates = AppCalendar.datesInWeek(containing: teamWeek.weekStart)
         
         return LazyVGrid(columns: columns, spacing: 0) {
             // header
@@ -103,9 +103,17 @@ struct CurrentWeekWidget: View {
                 cell() {
                     HStack(spacing: 2) {
                         Text(String(teamWeek.teamStreak))
-                        Image(systemName: "flame.fill")
+                        
+                        if teamWeek.teamStreak > 0 {
+                            Image(systemName: "flame.fill")
+                        } else {
+                            Image(systemName: "snowflake")
+                        }
                     }
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(teamWeek.teamStreak > 0
+                                     ? .orange
+                                     : .blue
+                    )
                     .bold()
                 }
                 ForEach(dates, id: \.self) { date in

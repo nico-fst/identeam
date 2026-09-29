@@ -26,9 +26,6 @@ class TeamsViewModel: ObservableObject {
     @Published var createNotificationTemplate: String = ""
     @Published var createError: String = ""
     
-    // TeamWeek
-    let selectedWeek = Date()
-    
     @Published var isFetching: Bool = false // used for creating, joining
     
     func reloadTeams(ctx modelContext: ModelContext) async {
@@ -47,26 +44,38 @@ class TeamsViewModel: ObservableObject {
     
     @MainActor
     @discardableResult
-    func reloadTeamWeek(slug: String, vm: AppViewModel, ctx modelContext: ModelContext) async -> TeamWeek? {
+    func reloadTeamWeek(slug: String, weekStart date: Date, vm: AppViewModel, ctx modelContext: ModelContext) async -> TeamWeek? {
+        let weekStart = AppCalendar.startOfWeek(containing: date)
         do {
             let descriptor = FetchDescriptor<TeamWeek>(
                 predicate: #Predicate<TeamWeek> { teamWeek in
-                    teamWeek.slug == slug
+                    teamWeek.slug == slug && teamWeek.weekStart == weekStart
                 }
             )
             
-            let newTeamWeek: TeamWeek = try await fetchTeamWeek(slug, selectedWeek)
+            let fetchedWeek = try await fetchTeamWeek(slug, weekStart)
+            try Task.checkCancellation()
+            guard fetchedWeek.slug == slug, fetchedWeek.weekStart == weekStart else {
+                throw DecodingError.dataCorrupted(.init(
+                    codingPath: [], debugDescription: "Team week does not match the requested slug and weekStart"
+                ))
+            }
 
-            let oldTeamWeek: TeamWeek? = try modelContext.fetch(descriptor).first
-            modelContext.insert(newTeamWeek)
-            if let oldTeamWeek {
-                print("Replacing old teamWeek with slug:", oldTeamWeek.slug)
-                modelContext.delete(oldTeamWeek)
+            // Fetch after the await so overlapping reloads update the same object.
+            let cachedWeek = try modelContext.fetch(descriptor).first
+            let result: TeamWeek
+            if let cachedWeek {
+                cachedWeek.targetSum = fetchedWeek.targetSum
+                cachedWeek.identSum = fetchedWeek.identSum
+                cachedWeek.teamStreak = fetchedWeek.teamStreak
+                cachedWeek.members = fetchedWeek.members
+                result = cachedWeek
+            } else {
+                modelContext.insert(fetchedWeek)
+                result = fetchedWeek
             }
             try modelContext.save()
-
-            print("Refresh Teamweek of \(slug)")
-            return newTeamWeek
+            return result
         } catch is CancellationError {
             return nil
         } catch {

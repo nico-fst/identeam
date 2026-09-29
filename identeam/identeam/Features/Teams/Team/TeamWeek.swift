@@ -3,6 +3,7 @@ import SwiftData
 
 struct TeamWeekDTO: Decodable {
     let slug: String
+    let weekStart: Date
     let targetSum: UInt
     let identSum: UInt
     let members: [TeamMemberDTO]
@@ -10,7 +11,9 @@ struct TeamWeekDTO: Decodable {
 }
 
 @Model final class TeamWeek {
+    #Unique<TeamWeek>([\.slug, \.weekStart])
     var slug: String
+    var weekStart: Date
     var targetSum: UInt
     var identSum: UInt
     var members: [TeamMember]
@@ -18,12 +21,14 @@ struct TeamWeekDTO: Decodable {
 
     init(
         slug: String,
+        weekStart: Date,
         targetSum: UInt,
         identSum: UInt,
         members: [TeamMember],
         teamStreak: UInt
     ) {
         self.slug = slug
+        self.weekStart = AppCalendar.startOfWeek(containing: weekStart)
         self.targetSum = targetSum
         self.identSum = identSum
         self.members = members
@@ -33,6 +38,7 @@ struct TeamWeekDTO: Decodable {
     convenience init(dto: TeamWeekDTO) {
         self.init(
             slug: dto.slug,
+            weekStart: dto.weekStart,
             targetSum: dto.targetSum,
             identSum: dto.identSum,
             members: dto.members.map { TeamMember(dto: $0) },
@@ -45,6 +51,7 @@ extension TeamWeek {
     static var templateKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
+            weekStart: Date(),
             targetSum: 6,
             identSum: 3,
             members: [
@@ -58,6 +65,7 @@ extension TeamWeek {
     static var templateBadKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
+            weekStart: AppCalendar.calendar.date(byAdding: .day, value: -7, to: Date())!,
             targetSum: 6,
             identSum: 1,
             members: [
@@ -71,6 +79,7 @@ extension TeamWeek {
     static var templateGoodkanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
+            weekStart: AppCalendar.calendar.date(byAdding: .day, value: -7, to: Date())!,
             targetSum: 6,
             identSum: 7,
             members: [

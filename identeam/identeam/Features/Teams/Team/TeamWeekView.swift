@@ -12,7 +12,7 @@ struct TeamWeekView: View {
 
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var teamsVM: TeamsViewModel
-    @EnvironmentObject var teamVM: TeamWeekViewModel
+    @StateObject var teamVM = TeamWeekViewModel()
     @Environment(\.modelContext) private var ctx
 
     @Namespace private var transitions
@@ -26,12 +26,47 @@ struct TeamWeekView: View {
 
     @Query private var teamWeeks: [TeamWeek]
     private var teamWeek: TeamWeek? {
-        teamWeeks.first(where: { $0.slug == slug })
+        teamWeeks.first {
+            $0.slug == slug && $0.weekStart == teamVM.weekStart
+        }
     }
 
     var body: some View {
         Group { // .refreshable doesn't work on plain View
             if let team {
+                    // << This week >>
+                    HStack {
+                        Button {
+                            teamVM.changeWeek(by: -7)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .padding(5)
+                        }
+
+                        Spacer()
+                        
+                        Button {
+                            teamVM.referenceDate = Date()
+                        } label: {
+                            Text(TargetPlanning.weekName(for: teamVM.referenceDate))
+                                .font(.title3)
+                                .padding(5)
+                        }
+                        .buttonStyle(.glass)
+
+                        Spacer()
+
+                        Button {
+                            teamVM.changeWeek(by: 7)
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .padding(5)
+                        }
+                    }
+                    .padding()
+                    .disabled(!hasLoadedFreshTeamWeek)
+                    .buttonStyle(.glassProminent)
+                
                 List {
                     if hasLoadedFreshTeamWeek, let teamWeek {
                         CurrentWeekWidget(teamWeek: teamWeek) { ident in
@@ -41,7 +76,7 @@ struct TeamWeekView: View {
                         CurrentProgressWidget(week: teamWeek)
                     } else {
                         Section("TeamWeek") {
-                            Text("No Info...").opacity(0.25)
+                            ProgressView()
                         }
                     }
 
@@ -135,7 +170,8 @@ struct TeamWeekView: View {
                 )
             }
         }
-        .task {
+        .task(id: "\(slug)|\(AppCalendar.dateString(teamVM.weekStart))") {
+            hasLoadedFreshTeamWeek = false
             if !isXcodePreview {
                 if team != nil {
                     await reloadWeek()
@@ -144,12 +180,13 @@ struct TeamWeekView: View {
                 hasLoadedFreshTeamWeek = true
             }
         }
+        .environmentObject(teamVM)
     }
 
     @MainActor
     private func reloadWeek() async {
-        if await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx) != nil {
-            hasLoadedFreshTeamWeek = true
+        if await teamsVM.reloadTeamWeek(slug: slug, weekStart: teamVM.weekStart, vm: vm, ctx: ctx) != nil {
+            if !Task.isCancelled { hasLoadedFreshTeamWeek = true }
         }
     }
 }

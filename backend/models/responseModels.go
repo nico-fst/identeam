@@ -178,15 +178,17 @@ type TeamWeekMemberResponse struct {
 
 type TeamWeekResponse struct {
 	Slug       string                   `json:"slug"`
+	WeekStart  time.Time                `json:"weekStart"`
 	TargetSum  uint                     `json:"targetSum"`
 	IdentSum   uint                     `json:"identSum"`
 	Members    []TeamWeekMemberResponse `json:"members"`
 	TeamStreak uint                     `json:"teamStreak"`
 }
 
-func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []Target) TeamWeekResponse {
+func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []Target, weekStart time.Time) TeamWeekResponse {
 	resp := TeamWeekResponse{
 		Slug:       teamSlug,
+		WeekStart:  appclock.WeekStart(weekStart),
 		TargetSum:  0,
 		IdentSum:   0,
 		Members:    make([]TeamWeekMemberResponse, 0, len(targets)),

@@ -13,7 +13,6 @@ struct UserDTO: Decodable {
 final class User {
     var userID: String
     var email: String
-    @Attribute(originalName: "fullName")
     var nickname: String
     var username: String
     var avatar: S3Item

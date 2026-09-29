@@ -3,7 +3,7 @@ import SwiftData
 
 struct TargetPicker: View {
     let slug: String
-    @StateObject private var model: TargetPickerViewModel
+    @StateObject private var targetPickerVM: TargetPickerViewModel
     let onChange: (Bool) -> Void // == new value set
 
     init(
@@ -13,7 +13,7 @@ struct TargetPicker: View {
         onChange: @escaping (Bool) -> Void
     ) {
         self.slug = slug
-        _model = StateObject(wrappedValue: TargetPickerViewModel(
+        _targetPickerVM = StateObject(wrappedValue: TargetPickerViewModel(
             referenceDate: referenceDate,
             initialSelectedDays: initialSelectedDays
         ))
@@ -29,43 +29,43 @@ struct TargetPicker: View {
         AppCalendar.calendar
     }
     private var daysOfWeek: [Date] {
-        AppCalendar.datesInWeek(containing: model.referenceDate)
+        AppCalendar.datesInWeek(containing: targetPickerVM.referenceDate)
     }
 
     var body: some View {
-        List(selection: $model.selectedDays) {
+        List(selection: $targetPickerVM.selectedDays) {
             Section {
                 HStack {
                     Button {
-                        model.changeWeek(by: -7)
+                        targetPickerVM.changeWeek(by: -7)
                     } label: {
                         Image(systemName: "chevron.left")
                     }
                     .disabled(
                         !TargetPlanning.canSetTargetWeek(
-                            cal.date(byAdding: .day, value: -7, to: model.referenceDate)!
+                            cal.date(byAdding: .day, value: -7, to: targetPickerVM.referenceDate)!
                         )
                     )
 
                     Spacer()
 
-                    Text(TargetPlanning.weekName(for: model.referenceDate))
+                    Text(TargetPlanning.weekName(for: targetPickerVM.referenceDate))
                         .font(.headline)
 
                     Spacer()
 
                     Button {
-                        model.changeWeek(by: 7)
+                        targetPickerVM.changeWeek(by: 7)
                     } label: {
                         Image(systemName: "chevron.right")
                     }
                 }
-                .disabled(model.isSettingTarget)
+                .disabled(targetPickerVM.isSettingTarget)
                 .buttonStyle(.glassProminent)
             }
 
             Section {
-                if model.isLoading {
+                if targetPickerVM.isLoading {
                     HStack {
                         Spacer()
                         ProgressView()
@@ -87,20 +87,20 @@ struct TargetPicker: View {
             } header: {
                 Text("Select Ident days")
             } footer: {
-                if model.settingError.isEmpty {
-                    Text("Your target will be \(model.selectedDays.count)")
+                if targetPickerVM.settingError.isEmpty {
+                    Text("Your target will be \(targetPickerVM.selectedDays.count)")
                 } else {
-                    Text(model.settingError)
+                    Text(targetPickerVM.settingError)
                         .foregroundStyle(.red)
                 }
             }
 
-            if !model.settingError.isEmpty {
+            if !targetPickerVM.settingError.isEmpty {
                 Section {
-                    if !model.isLoading && !model.hasLoaded {
+                    if !targetPickerVM.isLoading && !targetPickerVM.hasLoaded {
                         Button("Retry") {
                             Task {
-                                await model.loadTargetDays(slug: slug, userID: userID)
+                                await targetPickerVM.loadTargetDays(slug: slug, userID: userID)
                             }
                         }
                     }
@@ -108,7 +108,7 @@ struct TargetPicker: View {
             }
         }
         .environment(\.editMode, .constant(.active))
-        .disabled(model.isSettingTarget)
+        .disabled(targetPickerVM.isSettingTarget)
         .toolbar {
             // left: X
             ToolbarItem(placement: .topBarLeading) {
@@ -123,7 +123,7 @@ struct TargetPicker: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
-                        let success = await model.trySettingTarget(
+                        let success = await targetPickerVM.trySettingTarget(
                             slug: slug,
                             vm: vm,
                             ctx: ctx,
@@ -136,19 +136,19 @@ struct TargetPicker: View {
                         }
                     }
                 } label: {
-                    if model.isSettingTarget {
+                    if targetPickerVM.isSettingTarget {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(model.isSettingTarget || model.isLoading || !model.hasLoaded)
+                .disabled(targetPickerVM.isSettingTarget || targetPickerVM.isLoading || !targetPickerVM.hasLoaded)
             }
         }
         .environment(\.timeZone, cal.timeZone)
-        .task(id: model.referenceDate) {
-            await model.loadTargetDays(slug: slug, userID: userID)
+        .task(id: targetPickerVM.referenceDate) {
+            await targetPickerVM.loadTargetDays(slug: slug, userID: userID)
         }
         .interactiveDismissDisabled()
         .navigationTitle("Set Target")

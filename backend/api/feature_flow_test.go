@@ -49,6 +49,7 @@ type teamWeekMemberResponse struct {
 }
 
 type getTeamWeekResponse struct {
+	WeekStart time.Time                `json:"weekStart"`
 	Slug      string                   `json:"slug"`
 	TargetSum uint                     `json:"targetSum"`
 	IdentSum  uint                     `json:"identSum"`
@@ -319,6 +320,9 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	}
 
 	weekData := decodeData[getTeamWeekResponse](t, weekEnvelope)
+	if !weekData.WeekStart.Equal(util.TimeToWeekStart(weekDate)) {
+		t.Fatalf("unexpected weekStart: %q", weekData.WeekStart)
+	}
 	if weekData.Slug != team.Slug {
 		t.Fatalf("expected week slug %q, got %q", team.Slug, weekData.Slug)
 	}
@@ -795,5 +799,25 @@ func TestFeatureFlow_MondayPlanningAndUnplannedIdent(t *testing.T) {
 				t.Fatalf("wrong zero-target week: %#v", result)
 			}
 		})
+	}
+}
+
+func TestFeatureFlow_EmptyTeamWeeksHaveDistinctIdentity(t *testing.T) {
+	server := newFeatureTestServer(t)
+	defer server.Close()
+	owner := signupUser(t, server.URL, "week-identity@example.com")
+	team := createTeam(t, server.URL, owner.SessionToken, "Week Identity")
+	for _, tc := range []struct{ date, want string }{
+		{"2026-09-30", "2026-09-28"},
+		{"2026-10-07", "2026-10-05"},
+	} {
+		resp := doJSONRequest(t, http.DefaultClient, http.MethodGet, server.URL+"/teams/"+team.Slug+"/week/"+tc.date, nil, owner.SessionToken)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("status = %d", resp.StatusCode)
+		}
+		week := decodeData[getTeamWeekResponse](t, decodeEnvelope(t, resp))
+		if week.Slug != team.Slug || week.WeekStart.In(util.AppLocation()).Format("2006-01-02") != tc.want || len(week.Members) != 0 {
+			t.Fatalf("unexpected empty week: %#v", week)
+		}
 	}
 }

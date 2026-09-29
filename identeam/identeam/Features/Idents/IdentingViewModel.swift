@@ -80,7 +80,7 @@ class IdentingViewModel: ObservableObject {
             
             vm.toastMessage = "Ident created"
             createIdentUserText = ""
-            await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
+            await teamsVM.reloadTeamWeek(slug: slug, weekStart: ident.time, vm: vm, ctx: ctx)
             return true
         } catch {
             uploadError = error.localizedDescription

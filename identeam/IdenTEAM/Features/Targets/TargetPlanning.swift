@@ -16,21 +16,16 @@ nonisolated enum TargetPlanning {
         let thisWeek = AppCalendar.startOfWeek(containing: now)
         let weekStart = AppCalendar.startOfWeek(containing: referenceDate)
 
-        if weekStart == thisWeek {
-            return "This week"
+        return switch AppCalendar.calendar.dateComponents(
+            [.weekOfYear],
+            from: thisWeek,
+            to: weekStart
+        ).weekOfYear { // offset in weeks
+        case -1: "Last week"
+        case 0:  "This week"
+        case 1:  "Next week"
+        case 2:  "The week after next"
+        default: "Week of \(AppCalendar.dateString(weekStart))"
         }
-
-        if let nextWeek = AppCalendar.calendar.date(byAdding: .day, value: 7, to: thisWeek),
-           weekStart == nextWeek {
-            return "Next week"
-        }
-
-        if let nextWeek = AppCalendar.calendar.date(byAdding: .day, value: 14, to: thisWeek),
-           weekStart == nextWeek {
-            return "The week after next"
-        }
-
-        return "Week of \(AppCalendar.dateString(weekStart))"
     }
-
 }

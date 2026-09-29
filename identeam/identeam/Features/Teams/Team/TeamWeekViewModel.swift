@@ -14,11 +14,21 @@ class TeamWeekViewModel: ObservableObject {
     
     @Published var remindButtonDisabled = false
     @Published var remindDisabledUntil: Date?
+    
     @Published var now = Date()
+    @Published var referenceDate: Date = AppCalendar.startOfWeek(containing: Date())
+    
+    var weekStart: Date {
+        AppCalendar.startOfWeek(containing: referenceDate)
+    }
     
     var remindCooldownRemaining: Int {
         guard let remindDisabledUntil else { return 0 }
         return max(0, Int(ceil(remindDisabledUntil.timeIntervalSince(now))))
+    }
+    
+    func changeWeek(by days: Int) {
+        referenceDate = AppCalendar.calendar.date(byAdding: .day, value: days, to: referenceDate)!
     }
     
     func tryRemindingTeam(slug: String, vm: AppViewModel) async {
@@ -65,7 +75,8 @@ class TeamWeekViewModel: ObservableObject {
         }
 
         do {
-            _ = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText)
+            let ident = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText)
+            await teamsVM.reloadTeamWeek(slug: slug, weekStart: ident.time, vm: vm, ctx: ctx)
         } catch {
             vm.showAlert("Error creating Ident", error.localizedDescription)
             return
@@ -73,7 +84,6 @@ class TeamWeekViewModel: ObservableObject {
         
         vm.toastMessage = "Ident created"
         createIdentUserText = ""
-        await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
     }
     
     func tryCommenting(
@@ -87,11 +97,13 @@ class TeamWeekViewModel: ObservableObject {
             commentError = "Write something first..."
             return
         }
-        guard let identID = selectedIdent?.remoteID else {
+        guard let selectedIdent else {
             commentError = "ERROR: No Ident selected"
             return
         }
 
+        let identID = selectedIdent.remoteID
+        let weekStart = AppCalendar.startOfWeek(containing: selectedIdent.time)
         do {
             _ = try await CommentAPI.shared.comment(
                 text: trimmedCommentText,
@@ -106,8 +118,8 @@ class TeamWeekViewModel: ObservableObject {
         vm.toastMessage = "Commented"
         commentInput = ""
         commentError = ""
-        let reloadedTeamWeek = await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
-        selectedIdent = reloadedTeamWeek? // temporary workaround for seeing new comment
+        let reloadedTeamWeek = await teamsVM.reloadTeamWeek(slug: slug, weekStart: weekStart, vm: vm, ctx: ctx)
+        self.selectedIdent = reloadedTeamWeek? // temporary workaround for seeing new comment
             .members
             .flatMap(\.idents)
             .first { $0.remoteID == identID }
@@ -120,11 +132,13 @@ class TeamWeekViewModel: ObservableObject {
         ctx: ModelContext,
         teamsVM: TeamsViewModel
     ) async {
-        guard let identID = selectedIdent?.remoteID else {
+        guard let selectedIdent else {
             commentError = "ERROR: No Ident selected"
             return
         }
 
+        let identID = selectedIdent.remoteID
+        let weekStart = AppCalendar.startOfWeek(containing: selectedIdent.time)
         do {
             _ = try await CommentAPI.shared.uncomment(
                 slug: slug,
@@ -138,8 +152,8 @@ class TeamWeekViewModel: ObservableObject {
 
         vm.toastMessage = "Comment deleted"
         commentError = ""
-        let reloadedTeamWeek = await teamsVM.reloadTeamWeek(slug: slug, vm: vm, ctx: ctx)
-        selectedIdent = reloadedTeamWeek?
+        let reloadedTeamWeek = await teamsVM.reloadTeamWeek(slug: slug, weekStart: weekStart, vm: vm, ctx: ctx)
+        self.selectedIdent = reloadedTeamWeek?
             .members
             .flatMap(\.idents)
             .first { $0.remoteID == identID }

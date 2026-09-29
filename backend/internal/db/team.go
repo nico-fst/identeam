@@ -139,12 +139,13 @@ func GetTeamMembers(ctx context.Context, app AppContext, userID uint, teamSlug s
 }
 
 func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart time.Time) (*models.TeamWeekResponse, error) {
+	timeStart = util.TimeToWeekStart(timeStart)
 	targets, err := GetTeamsWeekTargets(ctx, app, teamSlug, timeStart)
 	if err != nil {
 		return nil, err
 	}
 
-	currentWeek := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
+	currentWeek := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets, timeStart)
 
 	// determine streak length
 	pivotTimeStart := timeStart.AddDate(0, 0, -7)
@@ -154,7 +155,7 @@ func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart
 			return nil, err
 		}
 
-		week := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
+		week := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets, pivotTimeStart)
 
 		// stop if streak ends
 		if week.TeamStreak == 0 {

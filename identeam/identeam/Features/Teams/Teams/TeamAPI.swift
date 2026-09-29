@@ -105,7 +105,7 @@ class TeamAPI {
         let formatDate = AppCalendar.dateString
         
         let url = AppConfig.apiBaseURL.appendingPathComponent(
-            "teams/\(slug)/week/\(formatDate(date))"
+            "teams/\(slug)/week/\(formatDate(AppCalendar.startOfWeek(containing: date)))"
         )
         
         let response: BackendResponse<TeamWeekDTO> =

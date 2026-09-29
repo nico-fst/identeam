@@ -6,6 +6,7 @@ struct DebugInfoView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var vm: AppViewModel
     @EnvironmentObject var avatarVM: AvatarViewModel
+    @EnvironmentObject var navVM: NavigationViewModel
     
     @Environment(\.modelContext) private var ctx
 
@@ -50,6 +51,15 @@ struct DebugInfoView: View {
                     Text("Entering User Details...")
                 case .authenticated:
                     CheckTokensButton()
+                    Button("Clear local cache") {
+                        navVM.popToRoot()
+                        do {
+                            try clearLocalCache(in: ctx)
+                            vm.toastMessage = "Local cache cleared"
+                        } catch {
+                            vm.showAlert("Error clearing local cache", error.localizedDescription)
+                        }
+                    }
                     Button("Logout") {
                         authVM.logout(ctx: ctx)
                     }
@@ -79,4 +89,6 @@ struct DebugInfoView: View {
         .environmentObject(AuthViewModel())
         .environmentObject(AppViewModel())
         .environmentObject(AvatarViewModel())
+        .environmentObject(TeamWeekViewModel())
+        .environmentObject(NavigationViewModel())
 }

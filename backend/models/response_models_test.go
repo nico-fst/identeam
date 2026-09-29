@@ -135,7 +135,7 @@ func TestNewTeamWeekResponseAggregatesTargetsAndIdents(t *testing.T) {
 		},
 	}
 
-	got := models.NewTeamWeekResponse(context.Background(), nil, "fallback-slug", targets)
+	got := models.NewTeamWeekResponse(context.Background(), nil, "fallback-slug", targets, weekStart)
 
 	if got.Slug != "alpha" {
 		t.Fatalf("expected slug %q, got %q", "alpha", got.Slug)

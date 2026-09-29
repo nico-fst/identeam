@@ -178,7 +178,7 @@ func (app *App) GetMyTeams(w http.ResponseWriter, r *http.Request) {
 // GetTeamWeek godoc
 //
 //	@Summary		Get team week overview
-//	@Description	Returns the team week overview, including weekly targets and idents for the provided YYYY-MM-DD week start date.
+//	@Description	Returns weekly targets and idents identified by slug and weekStart. weekStart is the Monday of the requested week in Europe/Berlin, serialized as an RFC3339 timestamp, including for empty weeks.
 //	@Tags			Teams
 //	@Produce		json
 //	@Security		BearerAuth
