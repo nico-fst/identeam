@@ -13,11 +13,11 @@ final class S3Item {
     var key: String
     var expiresAt: Date
     var kindRaw: String
-    
+
     var isExpired: Bool {
         expiresAt <= Date()
     }
-    
+
     var kind: S3ItemKind {
         get { S3ItemKind(rawValue: kindRaw) ?? .avatar }
         set { kindRaw = newValue.rawValue }
@@ -25,7 +25,7 @@ final class S3Item {
 
     var ownerID: String? {
         let parts = key.split(separator: "/")
-        
+
         switch kind {
         case .avatar, .ownAvatar:
             guard parts.count == 4 else {
@@ -33,13 +33,13 @@ final class S3Item {
             }
             return String(parts[1])
         case .identImage:
-            guard parts.count == 5  else {
+            guard parts.count == 5 else {
                 return nil
             }
             return String(parts[3])
         }
     }
-    
+
     init(
         url: URL,
         key: String,
@@ -51,7 +51,7 @@ final class S3Item {
         self.expiresAt = expiresAt
         self.kindRaw = kind.rawValue
     }
-    
+
     convenience init(dto: PresignedDTO, kind: S3ItemKind) {
         self.init(
             url: URL(string: dto.presignedURL)!,
@@ -71,7 +71,7 @@ extension S3Item {
             kind: .identImage
         )
     }
-    
+
     static var templatePicsum2: S3Item {
         S3Item(
             url: URL(string: "https://picsum.photos/200")!,
@@ -80,7 +80,7 @@ extension S3Item {
             kind: .identImage
         )
     }
-    
+
     static var templatePicsum3: S3Item {
         S3Item(
             url: URL(string: "https://picsum.photos/250")!,

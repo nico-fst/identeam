@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 import SwiftData
 
 @MainActor
@@ -12,10 +12,10 @@ class IdentingVM: ObservableObject {
 
     @Published var createIdentUserText: String = ""
     @Published var selectedTeamSlug: String?
-    
+
     @Published var isUploadingImage = false
     @Published var uploadError: String?
-    
+
     @Published var isSettingTarget = false
     @Published var showMissingTargetWarning = false
     private var missingTargetConfirmation: CheckedContinuation<Bool, Never>?
@@ -33,7 +33,7 @@ class IdentingVM: ObservableObject {
             showMissingTargetWarning = true
         }
     }
-    
+
     func tryCreatingIdentWithImage(
         image: IdentifiableImage,
         vm: AppVM,
@@ -60,7 +60,8 @@ class IdentingVM: ObservableObject {
             let identDate = now()
             let ident: IdentDTO
             do {
-                ident = try await IdentAPI.shared.createIdent(slug: slug, text: trimmedUserText, date: identDate)
+                ident = try await IdentAPI.shared.createIdent(
+                    slug: slug, text: trimmedUserText, date: identDate)
             } catch TeamError.targetNotSet {
                 if TargetPlanning.canSetTargetWeek(identDate, now: now()) {
                     isSettingTarget = true
@@ -77,7 +78,7 @@ class IdentingVM: ObservableObject {
                 imageData: image.imageData,
                 contentType: "image/jpeg"
             )
-            
+
             vm.toastMessage = "Ident created"
             createIdentUserText = ""
             await teamsVM.reloadTeamWeek(slug: slug, weekStart: ident.time, vm: vm, ctx: ctx)
@@ -88,4 +89,3 @@ class IdentingVM: ObservableObject {
         }
     }
 }
-

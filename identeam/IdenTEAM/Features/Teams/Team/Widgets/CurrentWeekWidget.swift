@@ -3,15 +3,16 @@ import SwiftUI
 struct CurrentWeekWidget: View {
     let teamWeek: TeamWeek
     let onSelectIdent: (Ident) -> Void
-    
+
     @State private var showSettings = false
-    
+
     @AppStorage private var showIdentImages: Bool
 
     init(teamWeek: TeamWeek, onSelectIdent: @escaping (Ident) -> Void) {
         self.teamWeek = teamWeek
         self.onSelectIdent = onSelectIdent
-        _showIdentImages = AppStorage(wrappedValue: true, "week.\(teamWeek.slug).weekgrid.showIdentImages")
+        _showIdentImages = AppStorage(
+            wrappedValue: true, "week.\(teamWeek.slug).weekgrid.showIdentImages")
     }
 
     var body: some View {
@@ -27,7 +28,7 @@ struct CurrentWeekWidget: View {
                 }
             }
         } footer: {
-//            Text("Your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents in total")
+            //            Text("Your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents in total")
         }
         .sheet(isPresented: $showSettings) {
             settings
@@ -96,23 +97,24 @@ struct CurrentWeekWidget: View {
             $0.user.username.lowercased() < $1.user.username.lowercased()
         }
         let dates = AppCalendar.datesInWeek(containing: teamWeek.weekStart)
-        
+
         return LazyVGrid(columns: columns, spacing: 0) {
             // header
             Group {
-                cell() {
+                cell {
                     HStack(spacing: 2) {
                         Text(String(teamWeek.teamStreak))
-                        
+
                         if teamWeek.teamStreak > 0 {
                             Image(systemName: "flame.fill")
                         } else {
                             Image(systemName: "snowflake")
                         }
                     }
-                    .foregroundStyle(teamWeek.teamStreak > 0
-                                     ? .orange
-                                     : .blue
+                    .foregroundStyle(
+                        teamWeek.teamStreak > 0
+                            ? .orange
+                            : .blue
                     )
                     .bold()
                 }
@@ -128,7 +130,7 @@ struct CurrentWeekWidget: View {
 
             // row per member
             ForEach(members, id: \.id) { member in
-                cell() {
+                cell {
                     VStack(spacing: 2) {
                         FilledUserAvatar(
                             image: RemoteImageReference(item: member.user.avatar),
@@ -144,14 +146,16 @@ struct CurrentWeekWidget: View {
                     .padding(5)
                     .frame(maxWidth: .infinity, minHeight: 60)
                     .background {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous) // squircle by .continuous
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)  // squircle by .continuous
                             .fill(.secondary.opacity(0.12))
                     }
                 }
-                
+
                 ForEach(dates, id: \.self) { date in
                     dayCell(
-                        MemberDay(date: date, idents: member.idents, time: \.time, targetDays: member.targetDays),
+                        MemberDay(
+                            date: date, idents: member.idents, time: \.time,
+                            targetDays: member.targetDays),
                         member: member
                     )
                 }
@@ -185,7 +189,8 @@ private nonisolated struct MemberDay<IdentValue>: Identifiable {
     init(date: Date, idents: [IdentValue], time: KeyPath<IdentValue, Date>, targetDays: [Date]) {
         let calendar = AppCalendar.calendar
         self.date = date
-        self.ident = idents
+        self.ident =
+            idents
             .filter { calendar.isDate($0[keyPath: time], inSameDayAs: date) }
             .max { $0[keyPath: time] < $1[keyPath: time] }
         self.isTargetDay = targetDays.contains {

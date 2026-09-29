@@ -1,6 +1,6 @@
+import Combine
 import Foundation
 import SwiftUI
-import Combine
 
 enum Route: Hashable {
     case team(slug: String)
@@ -15,16 +15,16 @@ enum AppTab: Hashable {
 class NavigationVM: ObservableObject {
     @Published var teamPath: [Route] = []
     @Published var selectedTab: AppTab = .teams
-    
+
     func push(_ route: Route) {
         teamPath.append(route)
     }
-    
+
     func pop() {
         guard !teamPath.isEmpty else { return }
         teamPath.removeLast()
     }
-    
+
     func popToRoot() {
         teamPath.removeAll()
     }

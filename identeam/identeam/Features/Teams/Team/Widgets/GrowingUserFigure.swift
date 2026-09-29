@@ -1,17 +1,18 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct GrowingUserFigure: View {
     let member: TeamMember
 
     @State private var userColor: Color = .accent
     @State private var phase: CGFloat = 0
-    
+
     var body: some View {
-        let progress = member.targetDays.isEmpty
+        let progress =
+            member.targetDays.isEmpty
             ? 0
             : CGFloat(member.idents.count) / CGFloat(member.targetDays.count)
-        
+
         GrowingUserFigureLayout {
             head
         } torso: {
@@ -68,14 +69,14 @@ struct GrowingUserFigure: View {
             )
         }
     }
-    
+
     @ViewBuilder
     private var head: some View {
         let resource = KF.ImageResource(
             downloadURL: member.user.avatar.url,
             cacheKey: member.user.avatar.key
         )
-        
+
         GeometryReader { geometry in
             let metrics = GrowingUserFigureMetrics(size: geometry.size)
 

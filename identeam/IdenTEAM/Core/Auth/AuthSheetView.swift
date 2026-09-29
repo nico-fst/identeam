@@ -3,7 +3,6 @@ import SwiftUI
 struct AuthSheetView: View {
     @EnvironmentObject var authVM: AuthVM
     @EnvironmentObject var vm: AppVM
-    
 
     var body: some View {
         VStack {
@@ -11,11 +10,11 @@ struct AuthSheetView: View {
                 // step 1: Login / Sign up
                 VStack {
                     SignInWithAppleButtonComponent()
-                    
+
                     Text("or")
                         .opacity(0.5)
                         .padding()
-                    
+
                     VStack(spacing: 5) {
                         List {
                             TextField(
@@ -27,7 +26,7 @@ struct AuthSheetView: View {
                                 text: $authVM.passwordInput
                             )
                         }
-                        
+
                         Button {
                             Task {
                                 do {
@@ -35,7 +34,8 @@ struct AuthSheetView: View {
                                         authMode: .login,
                                         vm: vm)
                                 } catch AuthError.userNotFound {
-                                    try await authVM.tryPasswordLoginOrSignup(authMode: .signup, vm: vm)
+                                    try await authVM.tryPasswordLoginOrSignup(
+                                        authMode: .signup, vm: vm)
                                 } catch {
                                     authVM.signupError = error.localizedDescription
                                 }
@@ -81,7 +81,7 @@ struct AuthSheetView: View {
                 }
                 .padding()
             }
-            
+
             Text(authVM.signupError ?? "")
                 .foregroundColor(.red)
         }

@@ -7,7 +7,7 @@ struct DebugInfoView: View {
     @EnvironmentObject var vm: AppVM
     @EnvironmentObject var avatarVM: AvatarVM
     @EnvironmentObject var navVM: NavigationVM
-    
+
     @Environment(\.modelContext) private var ctx
 
     @AppStorage("userID") private var userID: String?
@@ -16,23 +16,24 @@ struct DebugInfoView: View {
     @AppStorage("username") private var username: String?
     @AppStorage("deviceToken") private var deviceToken: String?
     @AppStorage("sessionToken") private var sessionToken: String?
-    
-    @Query(filter: #Predicate<S3Item> {
-        $0.kindRaw == "ownAvatar"
-    }) private var avatars: [S3Item]
-    
+
+    @Query(
+        filter: #Predicate<S3Item> {
+            $0.kindRaw == "ownAvatar"
+        }) private var avatars: [S3Item]
+
     var body: some View {
         NavigationStack {
             List {
                 Section("Profile") {
                     AvatarPicker()
                 }
-                
+
                 Section("Device Config") {
                     TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
                     TextLabeled("Device Token", deviceToken ?? "")
                 }
-                
+
                 Section("Authentication ⋅ \(authVM.authState.rawValue)") {
                     TextLabeled("Session Token", sessionToken ?? "")
                     TextLabeled("UserID", userID ?? "")
@@ -40,7 +41,7 @@ struct DebugInfoView: View {
                     TextLabeled("Nickname", nickname ?? "")
                     TextLabeled("Username", username ?? "")
                 }
-                
+
                 switch authVM.authState {
                 case .unknown:
                     ProgressView("Checking Session...")

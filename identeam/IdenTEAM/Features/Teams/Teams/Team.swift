@@ -13,7 +13,7 @@ final class Team {
     var slug: String
     var name: String
     var details: String
-    
+
     init(
         name: String,
         slug: String,
@@ -23,7 +23,7 @@ final class Team {
         self.slug = slug
         self.details = details
     }
-    
+
     convenience init(dto: TeamDTO) {
         self.init(
             name: dto.name,
@@ -31,7 +31,7 @@ final class Team {
             details: dto.details
         )
     }
-    
+
     static func fromDTOs(_ dtos: [TeamDTO]) -> [Team] {
         dtos.map { Team(dto: $0) }
     }

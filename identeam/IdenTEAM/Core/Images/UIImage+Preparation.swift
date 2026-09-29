@@ -36,4 +36,3 @@ extension UIImage {
         return normalizedImage.jpegData(compressionQuality: compressionQuality)
     }
 }
-

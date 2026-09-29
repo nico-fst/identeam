@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authVM: AuthVM
@@ -14,20 +14,21 @@ struct ContentView: View {
                 Tab("Teams", systemImage: "person.2.fill", value: AppTab.teams) {
                     TeamsView()
                 }
-                
+
                 Tab("Ident", systemImage: "plus", value: AppTab.create) {
-                   IdentingView()
+                    IdentingView()
                 }
-                
+
                 Tab("Debug", systemImage: "info.circle.fill", value: AppTab.debug) {
                     DebugInfoView()
                 }
-                
+
             }
             .sheet(
                 isPresented: Binding<Bool>(
                     get: {
-                        (authVM.authState == .unauthenticated) || (authVM.authState == .enteringUserDetails)
+                        (authVM.authState == .unauthenticated)
+                            || (authVM.authState == .enteringUserDetails)
                     },
                     set: { newValue in
                         // When the sheet is dismissed (newValue == false), reset auth state if needed

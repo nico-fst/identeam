@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct IdentDetailView: View {
     let ident: Ident
@@ -28,11 +28,13 @@ struct IdentDetailView: View {
                 HStack {
                     Spacer()
                     IdentImageView(image: RemoteImageReference(item: ident.image))
-                        .modifier(Floating3DEffect(
-                            isActive: true,
-                            animationFactor: 1.2,
-                            showShadow: true
-                        ))
+                        .modifier(
+                            Floating3DEffect(
+                                isActive: true,
+                                animationFactor: 1.2,
+                                showShadow: true
+                            )
+                        )
                         .frame(height: 300)
                     Spacer()
                 }
@@ -46,10 +48,12 @@ struct IdentDetailView: View {
             }
 
             // Comments
-            if !ident.comments.isEmpty { // otherwise VStack empty list entry
-                ForEach(ident.comments.sorted(by: {
-                    $0.time < $1.time
-                })) { comment in
+            if !ident.comments.isEmpty {  // otherwise VStack empty list entry
+                ForEach(
+                    ident.comments.sorted(by: {
+                        $0.time < $1.time
+                    })
+                ) { comment in
                     VStack(alignment: .leading) {
                         Text(formattedDateStringShort(for: comment.time))
                             .font(.caption)
@@ -91,7 +95,8 @@ struct IdentDetailView: View {
                     TextField("Comment...", text: $teamVM.commentInput)
                     Button("Comment") {
                         Task {
-                            await teamVM.tryCommenting(slug: slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                            await teamVM.tryCommenting(
+                                slug: slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
                         }
                     }
                     .buttonStyle(.borderedProminent)

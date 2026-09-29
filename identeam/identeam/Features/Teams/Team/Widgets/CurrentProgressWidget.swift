@@ -50,7 +50,7 @@ struct CurrentProgressWidget: View {
         HStack(spacing: 2) {
             Text(String(week.teamStreak))
                 .bold()
-            
+
             if week.teamStreak > 0 {
                 Image(systemName: "flame.fill")
             } else {
@@ -62,10 +62,11 @@ struct CurrentProgressWidget: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(week.teamStreak > 0
-                    ? .orange.opacity(0.9)
-                      : .blue.opacity(0.9)
-                 )
+                .fill(
+                    week.teamStreak > 0
+                        ? .orange.opacity(0.9)
+                        : .blue.opacity(0.9)
+                )
         )
         .scaleEffect(0.75)
     }

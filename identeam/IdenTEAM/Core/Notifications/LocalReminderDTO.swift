@@ -5,4 +5,3 @@ nonisolated struct LocalReminderDTO: Decodable {
     let body: String
     let date: Date
 }
-

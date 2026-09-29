@@ -30,53 +30,57 @@ func refreshLocalNotifications(
     return reminders.count
 }
 
-func scheduleLocalNotifications(_ reminders: [LocalReminderDTO], slug: String, dateStart: Date) async throws {
+func scheduleLocalNotifications(_ reminders: [LocalReminderDTO], slug: String, dateStart: Date)
+    async throws
+{
     let center = UNUserNotificationCenter.current()
-    
+
     let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
     guard granted else { return }
-    
+
     let weekStart = AppCalendar.startOfWeek(containing: dateStart)
     let weekEnd = AppCalendar.calendar.date(byAdding: .day, value: 7, to: weekStart)!
     let weekPrefix = "identeam-reminder-\(slug)-\(AppCalendar.dateString(weekStart))-"
     // Replace only this week; keep reminders for other planned weeks.
     let oldRequests = await center.pendingNotificationRequests()
-    let oldIDs = oldRequests
+    let oldIDs =
+        oldRequests
         .filter { request in
             if request.identifier.hasPrefix(weekPrefix) { return true }
             let legacyPrefix = "identeam-reminder-\(slug)-"
             guard request.identifier.hasPrefix(legacyPrefix),
-                  Double(request.identifier.dropFirst(legacyPrefix.count)) != nil,
-                  let trigger = request.trigger as? UNCalendarNotificationTrigger,
-                  let date = trigger.nextTriggerDate() else { return false }
+                Double(request.identifier.dropFirst(legacyPrefix.count)) != nil,
+                let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                let date = trigger.nextTriggerDate()
+            else { return false }
             return date >= weekStart && date < weekEnd
         }
         .map(\.identifier)
     center.removePendingNotificationRequests(withIdentifiers: oldIDs)
-    
+
     for reminder in reminders {
         let content = UNMutableNotificationContent()
         content.title = reminder.title
         content.body = reminder.body
         content.sound = .default
-        
+
         var components = AppCalendar.calendar.dateComponents(
             [.year, .month, .day, .hour, .minute],
             from: reminder.date
         )
-        
+
         components.timeZone = AppCalendar.calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: components,
             repeats: false
         )
-        
+
         let request = UNNotificationRequest(
             identifier: "\(weekPrefix)\(reminder.date.timeIntervalSince1970)",
             content: content,
             trigger: trigger
         )
-        
+
         try await center.add(request)
     }
 }

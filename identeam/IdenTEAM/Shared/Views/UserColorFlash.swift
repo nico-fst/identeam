@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct UserColorFlash: View {
     let avatar: RemoteImageReference

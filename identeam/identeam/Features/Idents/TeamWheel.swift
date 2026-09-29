@@ -1,11 +1,11 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct TeamWheel: View {
     let textColor: Color
     @Binding var selectedTeamSlug: String?
     @Query(sort: \Team.slug) private var teams: [Team]
-    
+
     var body: some View {
         Picker("Team", selection: $selectedTeamSlug) {
             if !teams.isEmpty {

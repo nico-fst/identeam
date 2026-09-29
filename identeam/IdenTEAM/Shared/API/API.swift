@@ -14,7 +14,7 @@ struct BackendResponse<T: Decodable> {
 enum APIError: LocalizedError {
     case decodingDataFailed(reason: String)
     case backend(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .decodingDataFailed(let reason):
@@ -36,7 +36,7 @@ class API {
     @AppStorage("sessionToken") private var sessionToken: String?
 
     static let shared = API()
-    
+
     private var decoder: JSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -87,7 +87,7 @@ class API {
         let error = json?["error"] as? Bool ?? false
         let message = json?["message"] as? String ?? ""
 
-        var decoded: T? = nil
+        var decoded: T?
         if (200...299).contains(statusCode) {  // only OKs have body
             if let dataObject = json?["data"] {
                 let dataJSON = try JSONSerialization.data(

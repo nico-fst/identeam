@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct UserAvatarView: View {
     let image: RemoteImageReference
@@ -44,7 +44,7 @@ struct FilledUserAvatar: View {
         .onAppear {
             withAnimation(
                 .linear(duration: 1.5)
-                .repeatForever(autoreverses: false)
+                    .repeatForever(autoreverses: false)
             ) {
                 phase = .pi * 2
             }

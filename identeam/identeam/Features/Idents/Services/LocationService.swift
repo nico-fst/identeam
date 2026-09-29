@@ -3,13 +3,13 @@ import CoreLocation
 final class LocationService: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private(set) var currentLocation: CLLocation?
-    
+
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
     }
-    
+
     func requestAuthorizationIfNeeded() {
         switch manager.authorizationStatus {
         case .notDetermined:
@@ -22,7 +22,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             print("Unknown location authorization status. GPS metadata will not be added.")
         }
     }
-    
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
@@ -36,18 +36,18 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             currentLocation = nil
         }
     }
-    
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation = locations.last
     }
-    
+
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         if let locationError = error as? CLError, locationError.code == .denied {
             manager.stopUpdatingLocation()
             currentLocation = nil
             return
         }
-        
+
         print("ERROR updating location: \(error.localizedDescription)")
     }
 }

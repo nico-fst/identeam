@@ -5,7 +5,9 @@ struct CommitS3DTO: Decodable {
 }
 
 enum S3UploadAPI {
-    private static func uploadData(_ data: Data, to uploadURL: URL, contentType: String) async throws {
+    private static func uploadData(_ data: Data, to uploadURL: URL, contentType: String)
+        async throws
+    {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "PUT"
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
@@ -13,7 +15,8 @@ enum S3UploadAPI {
         let (_, response) = try await URLSession.shared.upload(for: request, from: data)
 
         guard let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode) else {
+            (200..<300).contains(http.statusCode)
+        else {
             throw URLError(.badServerResponse)
         }
     }

@@ -2,7 +2,7 @@ import Foundation
 
 class CommentAPI {
     static let shared = CommentAPI()
-    
+
     func comment(text: String, slug: String, identID: Int) async throws -> CommentDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "/teams/\(slug)/idents/\(identID)/comment"

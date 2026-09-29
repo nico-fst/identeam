@@ -12,7 +12,8 @@ Start your habit challenge now - elevate your **iden**tity as a TEAM!
 - Insert `/backend/apns_key.p8` (created as Key for APNs on Apple Developer)
   - NOTICE there are different keys for Sandbox and Production!!!
 - Insert `/backend/siwa_key.p8` (created as Key for SIWA on Apple Developer)
-- Install pre-commit and golangci-lint: `brew install pre-commit golangci-lint`
+- Install pre-commit hooks
+  - Tools: `brew install pre-commit golangci-lint swift-format swiftlint`
   - Install hooks: `pre-commit install`
   - Verify setup and run all hooks manually: `pre-commit run --all-files`
 

@@ -11,7 +11,8 @@ struct TeamReminderSettingsStore {
     }
 
     func defaultTime(userID: String, slug: String) -> DateComponents {
-        let minutes = defaults.object(forKey: key(userID: userID, slug: slug)) as? Int
+        let minutes =
+            defaults.object(forKey: key(userID: userID, slug: slug)) as? Int
             ?? 18 * 60
         return DateComponents(hour: minutes / 60, minute: minutes % 60)
     }

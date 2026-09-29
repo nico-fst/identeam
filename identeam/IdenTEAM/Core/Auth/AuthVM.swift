@@ -13,21 +13,21 @@ enum AuthState: String {
 enum AuthMode: String, CaseIterable, Identifiable {
     case login = "login"
     case signup = "sign up"
-    
+
     var id: String { self.rawValue }
 }
 
 class AuthVM: ObservableObject {
     @Published var authState: AuthState = .unknown
-    @Published var authError: String? = nil
+    @Published var authError: String?
     @Published var isAuthing: Bool = false
-    
+
     @Published var nicknameInput: String = ""
     @Published var usernameInput: String = ""
     @Published var emailInput: String = ""
     @Published var passwordInput: String = ""
-    
-    @Published var signupError: String? = nil
+
+    @Published var signupError: String?
 
     @AppStorage("userID") private var userID: String?
     @AppStorage("email") private var email: String?
@@ -52,7 +52,7 @@ class AuthVM: ObservableObject {
     private func migrateLegacyNicknameStorage() {
         let defaults = UserDefaults.standard
         guard defaults.string(forKey: "nickname") == nil,
-              let legacyNickname = defaults.string(forKey: "fullName")
+            let legacyNickname = defaults.string(forKey: "fullName")
         else { return }
 
         defaults.set(legacyNickname, forKey: "nickname")
@@ -61,7 +61,7 @@ class AuthVM: ObservableObject {
 
     func tryChangeUserDetails() async {
         guard nicknameInput != "", usernameInput != "" else { return }
-        
+
         do {
             let newUser = try await UserAPI.shared
                 .requestUserDetailsChange(
@@ -109,13 +109,13 @@ class AuthVM: ObservableObject {
             logout()
         }
     }
-    
+
     func tryPasswordLoginOrSignup(authMode: AuthMode, vm: AppVM) async throws {
         isAuthing = true
         defer { isAuthing = false }
-        
+
         // Validate inputs first; show feedback on MainActor to avoid publishing during view updates
-        
+
         if emailInput.isEmpty || passwordInput.isEmpty {
             throw AuthError.emailOrPasswordMissing
         }
@@ -126,7 +126,7 @@ class AuthVM: ObservableObject {
                 email: emailInput,
                 password: passwordInput
             )
-            
+
             completeLogin(
                 sessionToken: response.sessionToken,
                 userID: response.user.userID,
@@ -135,7 +135,7 @@ class AuthVM: ObservableObject {
                 username: response.user.username,
                 created: response.created
             )
-            
+
             try await TokenAPI.shared.sendDeviceTokenToBackend()
         } catch {
             throw error
@@ -152,12 +152,12 @@ class AuthVM: ObservableObject {
         sessionToken = nil
 
         authState = .unauthenticated
-        
+
         if let ctx {
             deleteUserModels(ctx: ctx)
         }
     }
-    
+
     @MainActor
     private func deleteUserModels(ctx: ModelContext) {
         do {
@@ -168,15 +168,15 @@ class AuthVM: ObservableObject {
             for ident in try ctx.fetch(FetchDescriptor<Ident>()) {
                 ctx.delete(ident)
             }
-            
+
             for teamMember in try ctx.fetch(FetchDescriptor<TeamMember>()) {
                 ctx.delete(teamMember)
             }
-            
+
             for teamWeek in try ctx.fetch(FetchDescriptor<TeamWeek>()) {
                 ctx.delete(teamWeek)
             }
-            
+
             for user in try ctx.fetch(FetchDescriptor<User>()) {
                 ctx.delete(user)
             }
@@ -184,7 +184,7 @@ class AuthVM: ObservableObject {
             for s3Item in try ctx.fetch(FetchDescriptor<S3Item>()) {
                 ctx.delete(s3Item)
             }
-            
+
             for comment in try ctx.fetch(FetchDescriptor<Comment>()) {
                 ctx.delete(comment)
             }
@@ -194,7 +194,6 @@ class AuthVM: ObservableObject {
             authError = error.localizedDescription
         }
     }
-
 
     // in SIWA button: not tryLogin() since in async and variables not stable yet
     @MainActor
@@ -208,7 +207,7 @@ class AuthVM: ObservableObject {
     ) {
         print("Saving SessionToken: \(sessionToken)")
         self.sessionToken = sessionToken
-        
+
         if created && self.username != "" {
             // sign up: ask for name, username
             authState = .enteringUserDetails
@@ -221,7 +220,7 @@ class AuthVM: ObservableObject {
         self.email = email
         self.nickname = nickname
         self.username = username
-        
+
         self.isAuthing = false
     }
 }

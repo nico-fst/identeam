@@ -14,7 +14,7 @@ final class Comment {
     var time: Date
     var text: String
     var user: User
-    
+
     init(
         id: Int = 0,
         time: Date,
@@ -26,7 +26,7 @@ final class Comment {
         self.text = text
         self.user = user
     }
-    
+
     convenience init(dto: CommentDTO) {
         self.init(
             id: dto.id,
@@ -41,15 +41,20 @@ extension Comment {
     static var templateWow: Comment {
         Comment(time: Date(), text: "Wow that's so cool", user: .templateGreta)
     }
-    
+
     static var templateGood: Comment {
         Comment(time: Date(), text: "Good job!", user: .templateGreta)
     }
-    
+
     static var templateSiuu: Comment {
         Comment(
             time: Date(),
-            text: "Siuu Aliquip quis sunt aute qui est aliqua ullamco proident laborum est esse voluptate aute dolore. Mollit velit ipsum consectetur officia. Aliquip elit aliqua nulla est commodo consectetur. Minim sint nostrud ea ut enim velit sunt.",
+            text:
+                """
+                Siuu Aliquip quis sunt aute qui est aliqua ullamco proident laborum est esse \
+                voluptate aute dolore. Mollit velit ipsum consectetur officia. Aliquip elit \
+                aliqua nulla est commodo consectetur. Minim sint nostrud ea ut enim velit sunt.
+                """,
             user: .templateNico)
     }
 }

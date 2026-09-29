@@ -1,5 +1,5 @@
-import UIKit
 import CoreImage
+import UIKit
 
 extension UIImage {
     /// Scales down provided image to 1x1 for an user representing color
@@ -45,12 +45,14 @@ extension UIColor {
         var brightness: CGFloat = 0
         var alpha: CGFloat = 0
 
-        guard getHue(
-            &hue,
-            saturation: &saturation,
-            brightness: &brightness,
-            alpha: &alpha
-        ) else {
+        guard
+            getHue(
+                &hue,
+                saturation: &saturation,
+                brightness: &brightness,
+                alpha: &alpha
+            )
+        else {
             return self
         }
 
@@ -62,4 +64,3 @@ extension UIColor {
         )
     }
 }
-

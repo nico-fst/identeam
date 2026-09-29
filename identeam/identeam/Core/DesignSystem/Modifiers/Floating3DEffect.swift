@@ -4,14 +4,14 @@ struct Floating3DEffect: ViewModifier {
     let isActive: Bool
     let animationFactor: CGFloat
     let showShadow: Bool
-    
+
     @State private var animate = false
 
     @State private var xAngle: Double = 5
     @State private var yAngle: Double = 5
     @State private var zAngle: Double = 1.5
     @State private var duration: Double = 4
-    
+
     private func randomize() {
         xAngle = Double.random(in: 2...7) * animationFactor
         yAngle = Double.random(in: 2...7) * animationFactor
@@ -28,23 +28,26 @@ struct Floating3DEffect: ViewModifier {
                 y: animate ? 12 : 6
             )
             .rotation3DEffect(
-                .degrees(isActive
-                    ? (animate ? xAngle : -xAngle)
-                    : 0
+                .degrees(
+                    isActive
+                        ? (animate ? xAngle : -xAngle)
+                        : 0
                 ),
                 axis: (x: 1, y: 0, z: 0)
             )
             .rotation3DEffect(
-                .degrees(isActive
-                    ? (animate ? yAngle : -yAngle)
-                    : 0
+                .degrees(
+                    isActive
+                        ? (animate ? yAngle : -yAngle)
+                        : 0
                 ),
                 axis: (x: 0, y: 1, z: 0)
             )
             .rotation3DEffect(
-                .degrees(isActive
-                    ? (animate ? zAngle : -zAngle)
-                    : 0
+                .degrees(
+                    isActive
+                        ? (animate ? zAngle : -zAngle)
+                        : 0
                 ),
                 axis: (x: 0, y: 0, z: 1)
             )
@@ -76,6 +79,6 @@ struct Floating3DEffect: ViewModifier {
                     animate.toggle()
                 }
             }
-        
+
     }
 }

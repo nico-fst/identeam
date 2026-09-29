@@ -19,13 +19,15 @@ func deleteSwiftDataStore(at storeURL: URL) throws {
 }
 
 let localCacheModelTypes: [any PersistentModel.Type] = [
-    Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self, S3Item.self, Comment.self
+    Team.self, Ident.self, TeamMember.self, TeamWeek.self, User.self, S3Item.self, Comment.self,
 ]
 
 /// Checks the stored schema before SwiftData can automatically migrate it.
 /// Only call this during startup, with no live container using the store.
 @MainActor
-func makeLocalCacheContainer(schema: Schema, configuration: ModelConfiguration) throws -> ModelContainer {
+func makeLocalCacheContainer(schema: Schema, configuration: ModelConfiguration) throws
+    -> ModelContainer
+{
     guard let model = NSManagedObjectModel.makeManagedObjectModel(for: schema) else {
         throw CocoaError(.coderInvalidValue)
     }

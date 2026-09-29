@@ -16,7 +16,7 @@ final class User {
     var nickname: String
     var username: String
     var avatar: S3Item
-    
+
     init(
         userID: String,
         email: String,
@@ -30,7 +30,7 @@ final class User {
         self.username = username
         self.avatar = avatar
     }
-    
+
     convenience init(dto: UserDTO) {
         self.init(
             userID: dto.userID,
@@ -52,7 +52,7 @@ extension User {
             avatar: .templatePicsum2
         )
     }
-    
+
     static var templateNico: User {
         User(
             userID: "xyz",
@@ -72,11 +72,13 @@ enum DiceBear {
             URLQueryItem(
                 name: "backgroundColor",
                 value: [
-                    "cbf0ff", "d3e2ff", "d9c9fe", "efcaff", "f9d3e0", "ffdbd8", "ffe2d6", "ffecd4", "fff2d5", "fefcdd", "f7fadb", "dfeed4"
+                    "cbf0ff", "d3e2ff", "d9c9fe", "efcaff", "f9d3e0", "ffdbd8", "ffe2d6", "ffecd4",
+                    "fff2d5",
+                    "fefcdd", "f7fadb", "dfeed4",
                 ].joined(separator: ",")
-            )
+            ),
         ]
-        
+
         return components.url!
     }
 }

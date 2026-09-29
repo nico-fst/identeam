@@ -9,25 +9,25 @@ class AvatarVM: ObservableObject {
 
     func refreshAvatarIfNeeded(avatars: [S3Item], ctx: ModelContext) async throws {
         guard let localAvatar = avatars.first,
-              !localAvatar.isExpired
+            !localAvatar.isExpired
         else {
             try await refreshAvatar(avatars: avatars, ctx: ctx)
             return
         }
-        
+
         let remoteAvatar = try await AvatarAPI.shared.fetchMe().user.avatar
         guard let remoteAvatar else {
             try await refreshAvatar(avatars: avatars, ctx: ctx)
             return
         }
-        
+
         guard remoteAvatar.key != localAvatar.key else {
             return
         }
-        
+
         try await refreshAvatar(avatars: avatars, ctx: ctx)
     }
-    
+
     private func refreshAvatar(avatars: [S3Item], ctx: ModelContext) async throws {
         let resp = try await AvatarAPI.shared.fetchMe()
 
@@ -52,7 +52,7 @@ class AvatarVM: ObservableObject {
 
         try ctx.save()
     }
-    
+
     func propagateAvatarUpdate(
         _ item: IdentifiableImage,
         avatars: [S3Item],
@@ -61,7 +61,7 @@ class AvatarVM: ObservableObject {
         isUploadingAvatar = true
         defer { isUploadingAvatar = false }
         uploadError = nil
-        
+
         do {
             try await AvatarAPI.shared.uploadAvatar(
                 imageData: item.imageData,

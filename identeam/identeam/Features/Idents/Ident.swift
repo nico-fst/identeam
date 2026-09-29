@@ -16,7 +16,7 @@ final class Ident {
     var userText: String
     var image: S3Item
     var comments: [Comment]
-    
+
     init(
         remoteID: Int = 0,
         time: Date,
@@ -30,7 +30,7 @@ final class Ident {
         self.image = image
         self.comments = comments
     }
-    
+
     convenience init(dto: IdentDTO) {
         self.init(
             remoteID: dto.id,
@@ -52,7 +52,7 @@ extension Ident {
             comments: [.templateSiuu, .templateWow]
         )
     }
-    
+
     static var templateOtherGym: Ident {
         Ident(
             remoteID: 2,
@@ -62,7 +62,7 @@ extension Ident {
             comments: [.templateWow, .templateGood]
         )
     }
-    
+
     static var templateEvenOtherGym: Ident {
         Ident(
             remoteID: 3,
@@ -72,7 +72,7 @@ extension Ident {
             comments: [.templateWow, .templateSiuu]
         )
     }
-    
+
     static var templatePiano: Ident {
         Ident(
             remoteID: 4,

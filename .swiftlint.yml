@@ -1,0 +1,15 @@
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+  - todo # allow // TODO
+  - function_body_length
+  - force_try # allow try!
+  - function_parameter_count # allow more f parameters
+  - multiple_closures_with_trailing_closure # allow anonymous closures, e.g. .sheet(item:onDismiss:) {...} instead of .sheet(item:onDismiss:content:)
+
+identifier_name:
+  excluded: # allow as variable names:
+    - vm
+    - id
+    - x
+    - y

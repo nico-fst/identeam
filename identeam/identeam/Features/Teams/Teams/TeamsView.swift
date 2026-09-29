@@ -59,26 +59,26 @@ struct TeamsView: View {
                 }
             }
             .sheet(isPresented: $teamsVM.showingJoinSheet) {
-                JoinTeamSheet
+                joinTeamSheet
             }
             .sheet(isPresented: $teamsVM.showingCreateSheet) {
-                CreateTeamSheet
+                createTeamSheet
             }
         }
     }
 
-    var JoinTeamSheet: some View {
+    var joinTeamSheet: some View {
         NavigationStack {
             VStack {
                 Text("Enter Team Slug")
                     .font(.headline)
-                
+
                 TextField(
                     "e.g. 'die-kanten'",
                     text: $teamsVM.joinSlugInput
                 )
                 .textFieldStyle(.roundedBorder)
-                
+
                 Text(teamsVM.joinError).foregroundColor(.red)
             }
             .padding(25)
@@ -115,18 +115,25 @@ struct TeamsView: View {
         }
         .presentationDetents([.medium])
     }
-    
-    var CreateTeamSheet: some View {
+
+    var createTeamSheet: some View {
         NavigationStack {
             VStack(spacing: 25) {
-                Text("The Notification Template has to contain {{name}} for the user (e.g.: 'OMG {{name}} ist mies am Gym hitten 🔥).")
-                
+                Text(
+                    """
+                    The Notification Template has to contain {{name}} for the user (e.g.: 'OMG \
+                    {{name}} ist mies am Gym hitten 🔥).
+                    """
+                )
+
                 List {
                     TextField("Unique Name", text: $teamsVM.createNameInput)
                     TextField("Details", text: $teamsVM.createDetailsInput)
-                    TextField("Notification Template (optional)", text: $teamsVM.createNotificationTemplate)
+                    TextField(
+                        "Notification Template (optional)",
+                        text: $teamsVM.createNotificationTemplate)
                 }
-                
+
                 Text(teamsVM.createError).foregroundStyle(.red)
             }
             .padding(25)
@@ -140,7 +147,7 @@ struct TeamsView: View {
                         Image(systemName: "xmark")
                     }
                 }
-                
+
                 // Right: Check => Create
                 ToolbarItem(placement: .confirmationAction) {
                     Button {

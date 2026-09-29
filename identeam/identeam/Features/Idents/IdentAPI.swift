@@ -2,17 +2,19 @@ import Foundation
 
 class IdentAPI {
     static let shared = IdentAPI()
-    
-    func createIdent(slug: String, text: String, date: Date = Date(), allowWithoutTarget: Bool = false) async throws -> IdentDTO {
+
+    func createIdent(
+        slug: String, text: String, date: Date = Date(), allowWithoutTarget: Bool = false
+    ) async throws -> IdentDTO {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "/teams/\(slug)/idents/create"
         )
-        
+
         let formatter = ISO8601DateFormatter()
         let payload: [String: Any] = [
             "time": formatter.string(from: date),
             "userText": text,
-            "allowWithoutTarget": allowWithoutTarget
+            "allowWithoutTarget": allowWithoutTarget,
         ]
 
         let response: BackendResponse<IdentDTO> =
@@ -27,16 +29,20 @@ class IdentAPI {
             throw TeamError.backend(response.message)
         }
     }
-    
-    private func getIdentImageUploadURL(slug: String, identID: String, contentType: String, sizeBytes: Int) async throws -> PresignedDTO {
-        let url = AppConfig.apiBaseURL.appendingPathComponent("/teams/\(slug)/idents/\(identID)/image/get_upload_url")
+
+    private func getIdentImageUploadURL(
+        slug: String, identID: String, contentType: String, sizeBytes: Int
+    ) async throws -> PresignedDTO {
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "/teams/\(slug)/idents/\(identID)/image/get_upload_url")
         let payload: [String: Any] = [
             "contentType": contentType,
-            "sizeBytes": sizeBytes
+            "sizeBytes": sizeBytes,
         ]
-        
-        let response: BackendResponse<PresignedDTO> = try await API.shared.postToBackend(url: url, payload: payload)
-        
+
+        let response: BackendResponse<PresignedDTO> = try await API.shared.postToBackend(
+            url: url, payload: payload)
+
         switch response.statusCode {
         case 200:
             return response.data!
@@ -45,14 +51,18 @@ class IdentAPI {
         }
     }
 
-    private func commitIdentImageUpload(key: String, slug: String, identID: String) async throws -> CommitS3DTO {
-        let url = AppConfig.apiBaseURL.appendingPathComponent("/teams/\(slug)/idents/\(identID)/image/commit")
+    private func commitIdentImageUpload(key: String, slug: String, identID: String) async throws
+        -> CommitS3DTO
+    {
+        let url = AppConfig.apiBaseURL.appendingPathComponent(
+            "/teams/\(slug)/idents/\(identID)/image/commit")
         let payload: [String: Any] = [
             "key": key
         ]
-        
-        let response: BackendResponse<CommitS3DTO> = try await API.shared.postToBackend(url: url, payload: payload)
-        
+
+        let response: BackendResponse<CommitS3DTO> = try await API.shared.postToBackend(
+            url: url, payload: payload)
+
         switch response.statusCode {
         case 200:
             return response.data!
@@ -60,8 +70,10 @@ class IdentAPI {
             throw APIError.backend(response.message)
         }
     }
-    
-    func storeIdentImage(slug: String, identID: String, imageData: Data, contentType: String) async throws {
+
+    func storeIdentImage(slug: String, identID: String, imageData: Data, contentType: String)
+        async throws
+    {
         try await S3UploadAPI.upload(
             imageData: imageData,
             contentType: contentType,

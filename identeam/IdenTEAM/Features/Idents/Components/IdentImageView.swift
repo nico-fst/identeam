@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct IdentImageView: View {
     let image: RemoteImageReference

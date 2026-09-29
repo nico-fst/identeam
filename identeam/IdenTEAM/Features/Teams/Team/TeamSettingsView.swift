@@ -35,8 +35,15 @@ struct TeamSettingsView: View {
                 Text("Notifications")
             } footer: {
                 VStack {
-                    Text("IdenTEAM tries to schedule notifications intelligently based on your past idents.")
-                    Text("This is the default time to schedule notifications on days when IdenTEAM still learns about your Ident behaviour.")
+                    Text(
+                        "IdenTEAM tries to schedule notifications intelligently based on your past idents."
+                    )
+                    Text(
+                        """
+                        This is the default time to schedule notifications on days when \
+                        IdenTEAM still learns about your Ident behaviour.
+                        """
+                    )
                 }
             }
 

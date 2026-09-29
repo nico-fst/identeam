@@ -1,7 +1,7 @@
-import SwiftUI
-import SwiftData
-import PhotosUI
 import Kingfisher
+import PhotosUI
+import SwiftData
+import SwiftUI
 
 struct AvatarPicker: View {
     @State private var avatarImage: IdentifiableImage?
@@ -11,10 +11,10 @@ struct AvatarPicker: View {
 
     @Environment(\.modelContext) private var ctx
 
-    @Query(filter: #Predicate<S3Item> {
-        $0.kindRaw == "ownAvatar"
-    }) private var avatars: [S3Item]
-
+    @Query(
+        filter: #Predicate<S3Item> {
+            $0.kindRaw == "ownAvatar"
+        }) private var avatars: [S3Item]
 
     @AppStorage("nickname") private var nickname: String?
     @AppStorage("username") private var username: String?
@@ -25,7 +25,7 @@ struct AvatarPicker: View {
         }
         .sheet(item: $avatarImage) { avatar in
             NavigationStack {
-                VStack() {
+                VStack {
                     Text("Upload new Avatar")
                         .font(.largeTitle)
 
@@ -52,7 +52,7 @@ struct AvatarPicker: View {
                     // left: X
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
-                           avatarImage  = nil
+                            avatarImage = nil
                         } label: {
                             Image(systemName: "xmark")
                         }
@@ -85,7 +85,7 @@ struct AvatarPicker: View {
                 }
             }
         }
-        .onAppear() {
+        .onAppear {
             Task {
                 try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)
             }
@@ -93,13 +93,16 @@ struct AvatarPicker: View {
         .onChange(of: selectedItem) { _, newItem in
             Task {
                 guard let newItem,
-                      let data = try? await newItem.loadTransferable(type: Data.self),
-                      let image = UIImage(data: data)
+                    let data = try? await newItem.loadTransferable(type: Data.self),
+                    let image = UIImage(data: data)
                 else { return }
 
                 // crop & convert to jpeg
                 let croppedImage = image.centerSquareCropped()
-                guard let jpegData = croppedImage.normalizedJPEGData(compressionQuality: 0.85) else { return }
+                guard let jpegData = croppedImage.normalizedJPEGData(compressionQuality: 0.85)
+                else {
+                    return
+                }
 
                 avatarImage = IdentifiableImage(image: croppedImage, imageData: jpegData)
             }
@@ -115,7 +118,6 @@ struct AvatarPicker: View {
                     downloadURL: avatar.url,
                     cacheKey: avatar.key
                 )
-
 
                 KFImage(source: .network(resource))
                     .placeholder {

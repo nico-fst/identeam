@@ -67,8 +67,7 @@ class AuthAPI {
 
     /// Let backend validate the sessionToken in UserDefaults send as Bearer
     /// - Returns: if backend accepts sessionToken
-    func letBackendValidateSessionToken() async throws -> BackendResponse<Empty>
-    {
+    func letBackendValidateSessionToken() async throws -> BackendResponse<Empty> {
         let url = AppConfig.apiBaseURL.appendingPathComponent(
             "auth/apple/check_session"
         )
@@ -82,20 +81,20 @@ class AuthAPI {
 
         return response
     }
-    
+
     func sendPasswordFlowToBackend(
-            authMode: AuthMode,
-            email: String, password: String
+        authMode: AuthMode,
+        email: String, password: String
     ) async throws -> AuthResponse {
         let endpoint = authMode == .signup ? "auth/password/signup" : "auth/password/login"
         let url = AppConfig.apiBaseURL.appendingPathComponent(endpoint)
         print(url.absoluteString)
-        
+
         let payload: [String: Any] = [
             "email": email,
             "password": password,
         ]
-        
+
         do {
             let response: BackendResponse<AuthResponse> =
                 try await API.shared.postToBackend(
@@ -103,18 +102,17 @@ class AuthAPI {
                     payload: payload
                 )
 
-            if response.statusCode == 404 { // user does not exist => signup instead
+            if response.statusCode == 404 {  // user does not exist => signup instead
                 throw AuthError.userNotFound
             }
-            
+
             guard let data = response.data else {
                 throw AuthError.backend(response.message)
             }
-            
+
             return data
         } catch {
             throw error
         }
     }
 }
-

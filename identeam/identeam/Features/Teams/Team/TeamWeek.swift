@@ -56,12 +56,12 @@ extension TeamWeek {
             identSum: 3,
             members: [
                 .templateGretaKanten,
-                .templateNicoKanten
+                .templateNicoKanten,
             ],
             teamStreak: 2
         )
     }
-    
+
     static var templateBadKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
@@ -70,12 +70,12 @@ extension TeamWeek {
             identSum: 1,
             members: [
                 .templateGretaKanten,
-                .templateNicoKanten
+                .templateNicoKanten,
             ],
             teamStreak: 0
         )
     }
-    
+
     static var templateGoodkanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
@@ -84,7 +84,7 @@ extension TeamWeek {
             identSum: 7,
             members: [
                 .templateGretaKanten,
-                .templateNicoKanten
+                .templateNicoKanten,
             ],
             teamStreak: 9
         )

@@ -24,3 +24,15 @@ repos:
         entry: bash -c 'cd backend && go test ./...'
         language: system
         pass_filenames: false
+
+      - id: swift-format
+        name: swift-format
+        entry: swift-format format --in-place
+        language: system
+        types: [swift]
+
+      - id: swiftlint
+        name: SwiftLint
+        entry: swiftlint lint --strict
+        language: system
+        types: [swift]

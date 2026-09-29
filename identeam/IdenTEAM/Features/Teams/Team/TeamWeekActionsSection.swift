@@ -8,7 +8,7 @@ struct TeamWeekActionsSection: View {
 
     var body: some View {
         Section("Actions") {
-            Button() {
+            Button {
                 Task {
                     await teamVM.tryRemindingTeam(slug: slug, vm: vm)
                 }
@@ -22,7 +22,7 @@ struct TeamWeekActionsSection: View {
             .opacity(teamVM.remindButtonDisabled ? 0.3 : 1)
 
             if hasLoadedFreshTeamWeek {
-                Button() {
+                Button {
                     teamVM.showSettingTarget = true
                 } label: {
                     Label(

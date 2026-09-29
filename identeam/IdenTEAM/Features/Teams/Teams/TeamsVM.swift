@@ -19,21 +19,21 @@ class TeamsVM: ObservableObject {
     @Published var showingJoinSheet: Bool = false
     @Published var joinSlugInput: String = ""
     @Published var joinError: String = ""
-    
+
     @Published var showingCreateSheet: Bool = false
     @Published var createNameInput: String = ""
     @Published var createDetailsInput: String = ""
     @Published var createNotificationTemplate: String = ""
     @Published var createError: String = ""
-    
-    @Published var isFetching: Bool = false // used for creating, joining
-    
+
+    @Published var isFetching: Bool = false  // used for creating, joining
+
     func reloadTeams(ctx modelContext: ModelContext) async {
         do {
             //  delete old teams
             let oldTeams = try modelContext.fetch(FetchDescriptor<Team>())
             for team in oldTeams { modelContext.delete(team) }
-            
+
             // save new teams
             let newTeams: [Team] = try await TeamAPI.shared.fetchMyTeams()
             for team in newTeams { modelContext.insert(team) }
@@ -41,10 +41,14 @@ class TeamsVM: ObservableObject {
             print("ERROR replacing cached Teams with fetched ones: ", error)
         }
     }
-    
+
     @MainActor
     @discardableResult
-    func reloadTeamWeek(slug: String, weekStart date: Date, vm: AppVM, ctx modelContext: ModelContext) async -> TeamWeek? {
+    func reloadTeamWeek(
+        slug: String, weekStart date: Date, vm: AppVM, ctx modelContext: ModelContext
+    )
+        async -> TeamWeek?
+    {
         let weekStart = AppCalendar.startOfWeek(containing: date)
         do {
             let descriptor = FetchDescriptor<TeamWeek>(
@@ -52,13 +56,16 @@ class TeamsVM: ObservableObject {
                     teamWeek.slug == slug && teamWeek.weekStart == weekStart
                 }
             )
-            
+
             let fetchedWeek = try await fetchTeamWeek(slug, weekStart)
             try Task.checkCancellation()
             guard fetchedWeek.slug == slug, fetchedWeek.weekStart == weekStart else {
-                throw DecodingError.dataCorrupted(.init(
-                    codingPath: [], debugDescription: "Team week does not match the requested slug and weekStart"
-                ))
+                throw DecodingError.dataCorrupted(
+                    .init(
+                        codingPath: [],
+                        debugDescription:
+                            "Team week does not match the requested slug and weekStart"
+                    ))
             }
 
             // Fetch after the await so overlapping reloads update the same object.
@@ -83,7 +90,7 @@ class TeamsVM: ObservableObject {
             return nil
         }
     }
-    
+
     func clearTeams(ctx modelContext: ModelContext) async {
         do {
             //  delete old teams
@@ -93,73 +100,72 @@ class TeamsVM: ObservableObject {
             print("ERROR deleting all teams: ", error)
         }
     }
-    
+
     // allow only letters and "-"
     private func isValidSlug(slug: String) -> Bool {
         let pattern = "^[A-Za-z-]+$"
         let regex = try! NSRegularExpression(pattern: pattern)
         let range = NSRange(location: 0, length: slug.utf16.count)
-        
+
         return regex.firstMatch(in: slug, range: range) != nil
     }
-    
+
     func tryJoiningTeam(vm: AppVM) async {
         isFetching = true
         defer { isFetching = false }
-        
+
         guard !joinSlugInput.isEmpty else {
             joinError = "No Join Slug, no Team..."
             return
         }
         guard isValidSlug(slug: joinSlugInput) else {
             joinError =
-            "Only A-Z, a-z, and - without spaces as Slug are allowed."
+                "Only A-Z, a-z, and - without spaces as Slug are allowed."
             return
         }
-        
+
         do {
             try await Task.sleep(nanoseconds: 500_000_000)  // debugging ProgressView() in ToolbarItem
             let resp = try await TeamAPI.shared.joinTeam(
                 slug: joinSlugInput
             )
-            
+
             vm.toastMessage =
-            "Yay, you joined '\(resp.team.name)'"
+                "Yay, you joined '\(resp.team.name)'"
             showingJoinSheet = false
         } catch {
             joinError = error.localizedDescription
         }
     }
-    
-    func tryLeavingTeam(ctx: ModelContext, vm: AppVM, slug: String) async
-    {
+
+    func tryLeavingTeam(ctx: ModelContext, vm: AppVM, slug: String) async {
         isFetching = true
         defer { isFetching = false }
-        
+
         guard !slug.isEmpty else {
             vm.showAlert("Error leaving Team", "No Team specified")
             return
         }
-        
+
         do {
             let resp = try await TeamAPI.shared.leaveTeam(slug: slug)
             await reloadTeams(ctx: ctx)
             vm.toastMessage =
-            "You just left '\(resp.team.name)' (heartbreaking)"
+                "You just left '\(resp.team.name)' (heartbreaking)"
         } catch {
             vm.showAlert("Error leaving Team", error.localizedDescription)
         }
     }
-    
+
     func tryCreatingTeam(ctx: ModelContext, vm: AppVM) async throws {
         isFetching = true
         defer { isFetching = false }
-        
+
         guard !createNameInput.isEmpty, !createDetailsInput.isEmpty else {
             createError = "Name  and Details must be specified"
             return
         }
-        
+
         do {
             let resp = try await TeamAPI.shared.createTeam(
                 name: createNameInput,

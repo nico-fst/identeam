@@ -1,10 +1,10 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct TargetPicker: View {
     let slug: String
     @StateObject private var targetPickerVM: TargetPickerVM
-    let onChange: (Bool) -> Void // == new value set
+    let onChange: (Bool) -> Void  // == new value set
 
     init(
         slug: String,
@@ -13,10 +13,11 @@ struct TargetPicker: View {
         onChange: @escaping (Bool) -> Void
     ) {
         self.slug = slug
-        _targetPickerVM = StateObject(wrappedValue: TargetPickerVM(
-            referenceDate: referenceDate,
-            initialSelectedDays: initialSelectedDays
-        ))
+        _targetPickerVM = StateObject(
+            wrappedValue: TargetPickerVM(
+                referenceDate: referenceDate,
+                initialSelectedDays: initialSelectedDays
+            ))
         self.onChange = onChange
     }
 
@@ -113,7 +114,7 @@ struct TargetPicker: View {
             // left: X
             ToolbarItem(placement: .topBarLeading) {
                 Button {
-                   onChange(false)
+                    onChange(false)
                 } label: {
                     Image(systemName: "xmark")
                 }
@@ -143,7 +144,9 @@ struct TargetPicker: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(targetPickerVM.isSettingTarget || targetPickerVM.isLoading || !targetPickerVM.hasLoaded)
+                .disabled(
+                    targetPickerVM.isSettingTarget || targetPickerVM.isLoading
+                        || !targetPickerVM.hasLoaded)
             }
         }
         .environment(\.timeZone, cal.timeZone)

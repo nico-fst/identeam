@@ -1,19 +1,19 @@
-import SwiftUI
 import AVFoundation
 import AVKit
 import Photos
 import SwiftData
+import SwiftUI
 
 struct IdentingView: View {
     @EnvironmentObject private var vm: AppVM
     @EnvironmentObject private var cameraVM: CameraVM
     @EnvironmentObject private var identingVM: IdentingVM
     @EnvironmentObject private var teamsVM: TeamsVM
-    
+
     @Environment(\.modelContext) private var modelContext
-    
+
     var forceCameraPreview: Bool = false
-    
+
     private var flashIcon: String {
         switch cameraVM.flashMode {
         case .off:
@@ -26,12 +26,10 @@ struct IdentingView: View {
             return "bolt.slash.fill"
         }
     }
-    
+
     var body: some View {
         ZStack {
-            if cameraVM.authorizationStatus == .authorized ||
-                forceCameraPreview
-            {
+            if cameraVM.authorizationStatus == .authorized || forceCameraPreview {
                 CameraPreView(session: cameraVM.session, cameraVM: cameraVM)
                     .ignoresSafeArea()
                     .overlay {
@@ -49,7 +47,7 @@ struct IdentingView: View {
                             .compositingGroup()
                             .overlay {
                                 Image("FlashOutline")
-                                    .renderingMode(.template) // renders all pixels as foreground color
+                                    .renderingMode(.template)  // renders all pixels as foreground color
                                     .resizable()
                                     .scaledToFit()
                                     .scaleEffect(1.5)
@@ -57,15 +55,15 @@ struct IdentingView: View {
                             }
                             .allowsHitTesting(false)
                     }
-                
+
                 // camera controls
                 VStack {
                     TeamWheel(textColor: .white, selectedTeamSlug: $identingVM.selectedTeamSlug)
                         .frame(width: 300, height: 110)
-                .disabled(identingVM.isUploadingImage)
-                    
-                    Spacer() // at bottom of screen
-                    
+                        .disabled(identingVM.isUploadingImage)
+
+                    Spacer()  // at bottom of screen
+
                     // toggleFlash - capturePhoto - switchCamera
                     HStack(spacing: 15) {
                         Button {
@@ -76,7 +74,7 @@ struct IdentingView: View {
                                 .frame(width: 70, height: 70)
                                 .foregroundStyle(.white)
                         }
-                        
+
                         Button {
                             cameraVM.capturePhoto()
                         } label: {
@@ -96,7 +94,7 @@ struct IdentingView: View {
                                 }
                         }
                         .disabled(cameraVM.isCapturingPhoto)
-                        
+
                         Button {
                             cameraVM.switchCamera()
                         } label: {
@@ -135,7 +133,7 @@ struct IdentingView: View {
                         .opacity(0.3)
                     Text("Camera Access Required")
                         .opacity(0.3)
-                    
+
                     if cameraVM.authorizationStatus == .denied {
                         Text("Please enable camera in settings:")
                         Button("Open Settings") {
@@ -159,26 +157,28 @@ struct IdentingPhotoPreview: View {
     let item: IdentifiableImage
     let onDismiss: () -> Void
     let onUpload: () async -> Void
-    
+
     @State private var savedImagetoCameraRoll = false
-    
+
     @EnvironmentObject private var identingVM: IdentingVM
     @EnvironmentObject private var vm: AppVM
-    
+
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
-        ZStack() {
+        ZStack {
             VStack {
-                TeamWheel(textColor: colorScheme == .dark ? .white : .black,
-                          selectedTeamSlug: $identingVM.selectedTeamSlug)
+                TeamWheel(
+                    textColor: colorScheme == .dark ? .white : .black,
+                    selectedTeamSlug: $identingVM.selectedTeamSlug
+                )
                 .frame(width: 300, height: 110)
                 .disabled(identingVM.isUploadingImage)
-                
+
                 Image(uiImage: item.image)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: .infinity) // frame crucial for 3Deffect
+                    .frame(maxWidth: .infinity)  // frame crucial for 3Deffect
                     .clipped()
                     .mask(
                         Image("Flash")
@@ -187,35 +187,37 @@ struct IdentingPhotoPreview: View {
                     )
                     .overlay {
                         Image("FlashOutline")
-                            .renderingMode(.template) // renders all pixels as foreground color
+                            .renderingMode(.template)  // renders all pixels as foreground color
                             .resizable()
                             .scaledToFit()
                             .foregroundStyle(.accent)
                     }
-                    .modifier(Floating3DEffect(
-                        isActive: true,
-                        animationFactor: 1,
-                        showShadow: true
-                    ))
+                    .modifier(
+                        Floating3DEffect(
+                            isActive: true,
+                            animationFactor: 1,
+                            showShadow: true
+                        )
+                    )
                     .padding(.bottom, 75)
             }
-            
+
             VStack {
                 Spacer()
-                
+
                 TextField(
                     "Tell your members about what's going on...",
                     text: $identingVM.createIdentUserText,
                     axis: .vertical
                 )
-                .padding() // simulating List{TextField} style
+                .padding()  // simulating List{TextField} style
                 .background {
                     RoundedRectangle(cornerRadius: 50)
                         .fill(.gray.opacity(0.15))
                 }
                 .lineLimit(1...2)
                 .disabled(identingVM.isUploadingImage)
-                
+
                 Text(identingVM.uploadError ?? "")
                     .foregroundStyle(.red)
             }
@@ -234,7 +236,7 @@ struct IdentingPhotoPreview: View {
                 }
                 .disabled(identingVM.isUploadingImage)
             }
-            
+
             // right: Save; Upload
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
@@ -248,7 +250,7 @@ struct IdentingPhotoPreview: View {
                     }
                 }
                 .disabled(identingVM.isUploadingImage || savedImagetoCameraRoll)
-                
+
                 Button {
                     Task {
                         await onUpload()
@@ -273,7 +275,9 @@ struct IdentingPhotoPreview: View {
                 identingVM.resolveMissingTargetWarning(continueUpload: false)
             }
         } message: {
-            Text("Remember to set your weekly target by Monday. You can still upload this Ident without a target.")
+            Text(
+                "Remember to set your weekly target by Monday. You can still upload this Ident without a target."
+            )
         }
         .onDisappear {
             identingVM.resolveMissingTargetWarning(continueUpload: false)
@@ -288,15 +292,15 @@ struct IdentingPhotoPreview: View {
             }
         }
     }
-    
+
     private func savePhotoToCameraRoll() {
         PHPhotoLibrary.requestAuthorization { status in
             guard status == .authorized || status == .limited else { return }
-            
+
             PHPhotoLibrary.shared().performChanges {
                 let options = PHAssetResourceCreationOptions()
                 let creationRequest = PHAssetCreationRequest.forAsset()
-                
+
                 creationRequest.addResource(with: .photo, data: item.imageData, options: options)
             }
         }
@@ -325,7 +329,7 @@ struct IdentingPhotoPreview: View {
         UIColor.red.setFill()
         context.fill(CGRect(origin: .zero, size: CGSize(width: 300, height: 300)))
     }
-    
+
     IdentingPhotoPreview(
         item: IdentifiableImage(
             image: image,

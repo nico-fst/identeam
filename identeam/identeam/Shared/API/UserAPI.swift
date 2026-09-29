@@ -53,6 +53,6 @@ class UserAPI {
             )
         }
     }
-    
-//    func getAvatarUploadURL(image: IdentifiableImage) async throws -> 
+
+    //    func getAvatarUploadURL(image: IdentifiableImage) async throws ->
 }

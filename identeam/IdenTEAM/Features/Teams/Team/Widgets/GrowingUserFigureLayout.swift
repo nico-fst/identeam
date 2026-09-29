@@ -15,7 +15,8 @@ struct GrowingUserFigureMetrics {
 
 extension View {
     func relativeFigureHeight(targetCount: Int, maximumTargetCount: Int) -> some View {
-        let fraction = maximumTargetCount > 0
+        let fraction =
+            maximumTargetCount > 0
             ? CGFloat(targetCount) / CGFloat(maximumTargetCount)
             : 1
 

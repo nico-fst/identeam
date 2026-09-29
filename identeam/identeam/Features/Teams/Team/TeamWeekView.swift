@@ -32,47 +32,47 @@ struct TeamWeekView: View {
     }
 
     var body: some View {
-        Group { // .refreshable doesn't work on plain View
+        Group {  // .refreshable doesn't work on plain View
             if let team {
-                    // << This week >>
-                    HStack {
-                        Button {
-                            teamVM.changeWeek(by: -7)
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .padding(5)
-                        }
-
-                        Spacer()
-                        
-                        Button {
-                            teamVM.referenceDate = Date()
-                        } label: {
-                            Text(TargetPlanning.weekName(for: teamVM.referenceDate))
-                                .font(.title3)
-                                .padding(5)
-                        }
-                        .buttonStyle(.glass)
-
-                        Spacer()
-
-                        Button {
-                            teamVM.changeWeek(by: 7)
-                        } label: {
-                            Image(systemName: "chevron.right")
-                                .padding(5)
-                        }
+                // << This week >>
+                HStack {
+                    Button {
+                        teamVM.changeWeek(by: -7)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .padding(5)
                     }
-                    .padding()
-                    .disabled(!hasLoadedFreshTeamWeek)
-                    .buttonStyle(.glassProminent)
-                
+
+                    Spacer()
+
+                    Button {
+                        teamVM.referenceDate = Date()
+                    } label: {
+                        Text(TargetPlanning.weekName(for: teamVM.referenceDate))
+                            .font(.title3)
+                            .padding(5)
+                    }
+                    .buttonStyle(.glass)
+
+                    Spacer()
+
+                    Button {
+                        teamVM.changeWeek(by: 7)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .padding(5)
+                    }
+                }
+                .padding()
+                .disabled(!hasLoadedFreshTeamWeek)
+                .buttonStyle(.glassProminent)
+
                 List {
                     if hasLoadedFreshTeamWeek, let teamWeek {
                         CurrentWeekWidget(teamWeek: teamWeek) { ident in
                             teamVM.selectedIdent = ident
                         }
-                        
+
                         CurrentProgressWidget(week: teamWeek)
                     } else {
                         Section("TeamWeek") {
@@ -80,7 +80,8 @@ struct TeamWeekView: View {
                         }
                     }
 
-                    TeamWeekActionsSection(slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
+                    TeamWeekActionsSection(
+                        slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
 
                     Section("Chat") {
                         Text("Coming soon :)")
@@ -138,9 +139,9 @@ struct TeamWeekView: View {
                 }
                 .sheet(isPresented: $showTeamInfo) {
                     TeamInfoView(team: team)
-                    .navigationTransition(
-                        .zoom(sourceID: "info-button", in: transitions)
-                    )
+                        .navigationTransition(
+                            .zoom(sourceID: "info-button", in: transitions)
+                        )
                 }
                 .sheet(
                     item: $teamVM.selectedIdent,
@@ -182,13 +183,15 @@ struct TeamWeekView: View {
 
     @MainActor
     private func reloadWeek() async {
-        if await teamsVM.reloadTeamWeek(slug: slug, weekStart: teamVM.weekStart, vm: vm, ctx: ctx) != nil {
+        if await teamsVM.reloadTeamWeek(slug: slug, weekStart: teamVM.weekStart, vm: vm, ctx: ctx)
+            != nil
+        {
             if !Task.isCancelled { hasLoadedFreshTeamWeek = true }
         }
     }
 }
 
-private struct TeamView_PreviewContainer: View {
+private struct TeamViewPreviewContainer: View {
     let container: ModelContainer
     @StateObject private var teamVM: TeamWeekVM
 
@@ -215,7 +218,8 @@ private struct TeamView_PreviewContainer: View {
         let teamVM = TeamWeekVM()
 
         if openIdent {
-            teamVM.selectedIdent = teamWeek.members
+            teamVM.selectedIdent =
+                teamWeek.members
                 .flatMap(\.idents)
                 .first
         }
@@ -234,9 +238,9 @@ private struct TeamView_PreviewContainer: View {
 }
 
 #Preview("Default") {
-    TeamView_PreviewContainer()
+    TeamViewPreviewContainer()
 }
 
 #Preview("Ident Open") {
-    TeamView_PreviewContainer(openIdent: true)
+    TeamViewPreviewContainer(openIdent: true)
 }
