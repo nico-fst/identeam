@@ -41,7 +41,7 @@ struct IdentDetailView: View {
                         .font(.caption)
                         .opacity(0.5)
 
-                    Text(member.user.nickname).bold() + Text("  \(ident.userText)")
+                    Text("\(Text(member.user.nickname).bold())  \(ident.userText)")
                 }
             }
 
@@ -55,7 +55,7 @@ struct IdentDetailView: View {
                             .font(.caption)
                             .opacity(0.5)
 
-                        Text(comment.user.nickname).bold() + Text("  \(comment.text)")
+                        Text("\(Text(comment.user.nickname).bold())  \(comment.text)")
                     }
                     .contextMenu {
                         // copy

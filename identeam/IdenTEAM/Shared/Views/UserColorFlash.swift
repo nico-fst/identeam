@@ -19,10 +19,11 @@ struct UserColorFlash: View {
             }
         }
         .task(id: avatar.key) {
-            userColor = await getUserColor()
+            userColor = await Self.getUserColor(image: avatar)
         }
     }
-    private func getCachedImage(for item: RemoteImageReference) async -> UIImage? {
+
+    private static func getCachedImage(for item: RemoteImageReference) async -> UIImage? {
         await withCheckedContinuation { continuation in
             ImageCache.default.retrieveImage(
                 forKey: item.key
@@ -37,8 +38,8 @@ struct UserColorFlash: View {
         }
     }
 
-    private func getUserColor() async -> Color {
-        guard let avatar = await getCachedImage(for: avatar)
+    static func getUserColor(image: RemoteImageReference) async -> Color {
+        guard let avatar = await getCachedImage(for: image)
         else {
             return .accent
         }

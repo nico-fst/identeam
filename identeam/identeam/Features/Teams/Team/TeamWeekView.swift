@@ -34,9 +34,11 @@ struct TeamWeekView: View {
             if let team {
                 List {
                     if hasLoadedFreshTeamWeek, let teamWeek {
-                        TeamWeekGrid(teamWeek: teamWeek) { ident in
+                        CurrentWeekWidget(teamWeek: teamWeek) { ident in
                             teamVM.selectedIdent = ident
                         }
+                        
+                        CurrentProgressWidget(week: teamWeek)
                     } else {
                         Section("TeamWeek") {
                             Text("No Info...").opacity(0.25)

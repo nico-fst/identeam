@@ -1,15 +1,17 @@
 import SwiftUI
 
-struct TeamWeekGrid: View {
+struct CurrentWeekWidget: View {
     let teamWeek: TeamWeek
     let onSelectIdent: (Ident) -> Void
+    
     @State private var showSettings = false
+    
     @AppStorage private var showIdentImages: Bool
 
     init(teamWeek: TeamWeek, onSelectIdent: @escaping (Ident) -> Void) {
         self.teamWeek = teamWeek
         self.onSelectIdent = onSelectIdent
-        _showIdentImages = AppStorage(wrappedValue: false, "week.\(teamWeek.slug).weekgrid.showIdentImages")
+        _showIdentImages = AppStorage(wrappedValue: true, "week.\(teamWeek.slug).weekgrid.showIdentImages")
     }
 
     var body: some View {
@@ -51,7 +53,7 @@ struct TeamWeekGrid: View {
             .background {
                 if isHeader {
                     if isToday {
-                        Circle().fill(Color("AccentColor").opacity(0.12))
+                        Circle().fill(.accent.opacity(0.25))
                             .scaleEffect(0.8)
                     } else {
                         Circle().fill(Color.secondary.opacity(0.12))
@@ -94,11 +96,17 @@ struct TeamWeekGrid: View {
             $0.user.username.lowercased() < $1.user.username.lowercased()
         }
         let dates = AppCalendar.datesInWeek(containing: referenceDate)
+        
         return LazyVGrid(columns: columns, spacing: 0) {
             // header
             Group {
                 cell() {
-                    Text("")
+                    HStack(spacing: 2) {
+                        Text(String(teamWeek.teamStreak))
+                        Image(systemName: "flame.fill")
+                    }
+                    .foregroundStyle(.orange)
+                    .bold()
                 }
                 ForEach(dates, id: \.self) { date in
                     cell(
@@ -109,28 +117,30 @@ struct TeamWeekGrid: View {
                     }
                 }
             }
-            .padding(.bottom, 10)
 
             // row per member
             ForEach(members, id: \.id) { member in
                 cell() {
                     VStack(spacing: 2) {
-                        UserAvatarView(image: RemoteImageReference(item: member.user.avatar))
-                            .padding(1)
+                        FilledUserAvatar(
+                            image: RemoteImageReference(item: member.user.avatar),
+                            progress: member.targetDays.count > 0
+                                ? Double(member.idents.count) / Double(member.targetDays.count)
+                                : 0
+                        )
                         Text("\(member.idents.count) / \(member.targetDays.count)")
                             .font(.caption)
+                            .bold()
                             .foregroundStyle(.secondary)
                     }
                     .padding(5)
                     .frame(maxWidth: .infinity, minHeight: 60)
-                    .clipShape( // Squircle by .continuous
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    )
                     .background {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous) // squircle by .continuous
                             .fill(.secondary.opacity(0.12))
                     }
                 }
+                
                 ForEach(dates, id: \.self) { date in
                     dayCell(
                         MemberDay(date: date, idents: member.idents, time: \.time, targetDays: member.targetDays),
@@ -174,4 +184,15 @@ private nonisolated struct MemberDay<IdentValue>: Identifiable {
             calendar.isDate($0, inSameDayAs: date)
         }
     }
+}
+
+#Preview("List(CurrentWeekWidget)") {
+    List {
+        CurrentWeekWidget(
+            teamWeek: TeamWeek.templateKanten
+        ) { ident in
+            print("Selected ident:", ident.id)
+        }
+    }
+    .listStyle(.insetGrouped)
 }

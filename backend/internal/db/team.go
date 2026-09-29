@@ -144,8 +144,28 @@ func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart
 		return nil, err
 	}
 
-	resp := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
-	return &resp, nil
+	currentWeek := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
+
+	// determine streak length
+	pivotTimeStart := timeStart.AddDate(0, 0, -7)
+	for { // do while
+		targets, err := GetTeamsWeekTargets(ctx, app, teamSlug, pivotTimeStart)
+		if err != nil {
+			return nil, err
+		}
+
+		week := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets)
+
+		// stop if streak ends
+		if week.TeamStreak == 0 {
+			break
+		}
+
+		currentWeek.TeamStreak++
+		pivotTimeStart = pivotTimeStart.AddDate(0, 0, -7)
+	}
+
+	return &currentWeek, nil
 }
 
 func NotifyTeamMembers(ctx context.Context, app AppContext, slug string, alert models.Alert) ([]models.User, error) {

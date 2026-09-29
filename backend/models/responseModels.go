@@ -171,24 +171,26 @@ func (comments Comments) ToDTOs(ctx context.Context, r2Client *media.R2Client) [
 }
 
 type TeamWeekMemberResponse struct {
-	User        UserDTO    `json:"user"`
-	TargetDays  []string   `json:"targetDays"`
-	Idents      []IdentDTO `json:"idents"`
+	User       UserDTO    `json:"user"`
+	TargetDays []string   `json:"targetDays"`
+	Idents     []IdentDTO `json:"idents"`
 }
 
 type TeamWeekResponse struct {
-	Slug      string                   `json:"slug"`
-	TargetSum uint                     `json:"targetSum"`
-	IdentSum  uint                     `json:"identSum"`
-	Members   []TeamWeekMemberResponse `json:"members"`
+	Slug       string                   `json:"slug"`
+	TargetSum  uint                     `json:"targetSum"`
+	IdentSum   uint                     `json:"identSum"`
+	Members    []TeamWeekMemberResponse `json:"members"`
+	TeamStreak uint                     `json:"teamStreak"`
 }
 
 func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug string, targets []Target) TeamWeekResponse {
 	resp := TeamWeekResponse{
-		Slug:      teamSlug,
-		TargetSum: 0,
-		IdentSum:  0,
-		Members:   make([]TeamWeekMemberResponse, 0, len(targets)),
+		Slug:       teamSlug,
+		TargetSum:  0,
+		IdentSum:   0,
+		Members:    make([]TeamWeekMemberResponse, 0, len(targets)),
+		TeamStreak: 0,
 	}
 
 	if len(targets) > 0 {
@@ -201,10 +203,15 @@ func NewTeamWeekResponse(ctx context.Context, r2Client *media.R2Client, teamSlug
 
 		resp.IdentSum += uint(len(target.Idents))
 		resp.Members = append(resp.Members, TeamWeekMemberResponse{
-			User:        target.User.ToDTO(ctx, r2Client),
-			TargetDays:  targetDays,
-			Idents:      Idents(target.Idents).ToDTOs(ctx, r2Client),
+			User:       target.User.ToDTO(ctx, r2Client),
+			TargetDays: targetDays,
+			Idents:     Idents(target.Idents).ToDTOs(ctx, r2Client),
 		})
+	}
+
+	// Check for streak
+	if resp.TargetSum > 0 && resp.TargetSum <= resp.IdentSum {
+		resp.TeamStreak = 1
 	}
 
 	return resp
