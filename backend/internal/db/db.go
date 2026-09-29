@@ -64,7 +64,9 @@ func ConnectPostgres() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	AutoMigrateAllModels(db)
+	if err := AutoMigrateAllModels(db); err != nil {
+		return nil, fmt.Errorf("migrate database: %w", err)
+	}
 
 	return db, nil
 }
@@ -77,7 +79,9 @@ func ConnectSqlite() (*gorm.DB, error) {
 
 	// no ctx := context.Background() - comes from r.Context()
 
-	AutoMigrateAllModels(db)
+	if err := AutoMigrateAllModels(db); err != nil {
+		return nil, fmt.Errorf("migrate database: %w", err)
+	}
 
 	return db, nil
 }
@@ -88,12 +92,12 @@ func GormConfig() *gorm.Config {
 	}
 }
 
-func AutoMigrateAllModels(db *gorm.DB) {
+func AutoMigrateAllModels(db *gorm.DB) error {
 	renameLegacyUserNicknameColumn(db)
 	renameLegacyTargetsTable(db)
 	renameLegacyIdentTargetColumn(db)
 
-	db.AutoMigrate(
+	return db.AutoMigrate(
 		&models.User{},
 		&models.DeviceToken{},
 		&models.Team{},

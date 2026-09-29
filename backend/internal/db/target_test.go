@@ -325,48 +325,51 @@ func TestAutoMigrateAllModelsRenamesLegacyTargetsTableAndIdentColumn(t *testing.
 		t.Fatalf("open sqlite db: %v", err)
 	}
 
+	// GORM SQLite treats tabs in stored DDL as quote delimiters; use spaces.
 	if err := sqliteDB.Exec(`
-		CREATE TABLE user_weekly_targets (
-			id integer primary key autoincrement,
-			created_at datetime,
-			updated_at datetime,
-			deleted_at datetime,
-			time_start datetime NOT NULL,
-			user_id integer NOT NULL,
-			team_id integer NOT NULL,
-			target_count integer NOT NULL
-		)
-	`).Error; err != nil {
+        CREATE TABLE user_weekly_targets (
+            id integer primary key autoincrement,
+            created_at datetime,
+            updated_at datetime,
+            deleted_at datetime,
+            time_start datetime NOT NULL,
+            user_id integer NOT NULL,
+            team_id integer NOT NULL,
+            target_count integer NOT NULL
+        )
+    `).Error; err != nil {
 		t.Fatalf("create legacy targets table: %v", err)
 	}
 	if err := sqliteDB.Exec(`
-		CREATE TABLE idents (
-			id integer primary key autoincrement,
-			created_at datetime,
-			updated_at datetime,
-			deleted_at datetime,
-			time datetime,
-			user_text text,
-			image_s3_key text,
-			user_weekly_target_id integer
-		)
-	`).Error; err != nil {
+        CREATE TABLE idents (
+            id integer primary key autoincrement,
+            created_at datetime,
+            updated_at datetime,
+            deleted_at datetime,
+            time datetime,
+            user_text text,
+            image_s3_key text,
+            user_weekly_target_id integer
+        )
+    `).Error; err != nil {
 		t.Fatalf("create legacy idents table: %v", err)
 	}
 	if err := sqliteDB.Exec(`
-		INSERT INTO user_weekly_targets (time_start, user_id, team_id, target_count)
-		VALUES (?, ?, ?, ?)
-	`, time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC), 12, 34, 5).Error; err != nil {
+        INSERT INTO user_weekly_targets (time_start, user_id, team_id, target_count)
+        VALUES (?, ?, ?, ?)
+    `, time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC), 12, 34, 5).Error; err != nil {
 		t.Fatalf("insert legacy target: %v", err)
 	}
 	if err := sqliteDB.Exec(`
-		INSERT INTO idents (time, user_text, user_weekly_target_id)
-		VALUES (?, ?, ?)
-	`, time.Date(2026, 7, 8, 12, 0, 0, 0, time.UTC), "legacy ident", 1).Error; err != nil {
+        INSERT INTO idents (time, user_text, user_weekly_target_id)
+        VALUES (?, ?, ?)
+    `, time.Date(2026, 7, 8, 12, 0, 0, 0, time.UTC), "legacy ident", 1).Error; err != nil {
 		t.Fatalf("insert legacy ident: %v", err)
 	}
 
-	AutoMigrateAllModels(sqliteDB)
+	if err := AutoMigrateAllModels(sqliteDB); err != nil {
+		t.Fatal(err)
+	}
 
 	if sqliteDB.Migrator().HasTable("user_weekly_targets") {
 		t.Fatal("expected legacy user_weekly_targets table to be renamed")
@@ -432,7 +435,9 @@ func TestAutoMigrateAllModelsRenamesLegacyNicknameColumn(t *testing.T) {
 		t.Fatalf("insert legacy user: %v", err)
 	}
 
-	AutoMigrateAllModels(sqliteDB)
+	if err := AutoMigrateAllModels(sqliteDB); err != nil {
+		t.Fatal(err)
+	}
 
 	if sqliteDB.Migrator().HasColumn("users", "full_name") {
 		t.Fatal("expected legacy full_name column to be renamed")
@@ -455,7 +460,9 @@ func TestUnplannedIdentPreservesExistingTargetAndRollsBack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AutoMigrateAllModels(database)
+	if err := AutoMigrateAllModels(database); err != nil {
+		t.Fatal(err)
+	}
 	services := NewServices(database)
 	user := models.User{UserID: "unplanned", Email: "unplanned@example.com", Username: "unplanned"}
 	team := models.Team{Slug: "unplanned", Name: "Unplanned"}

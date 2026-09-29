@@ -32,7 +32,15 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	return nil
 }
 
-func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
+// WriteJSON writes a response and logs encoding or transport errors centrally.
+// A failed write must not trigger a second response after headers have been sent.
+func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) {
+	if err := writeJSON(w, status, data, headers...); err != nil {
+		log.Printf("write JSON response: %v", err)
+	}
+}
+
+func writeJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
 	out, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -57,7 +65,7 @@ func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Head
 	return nil
 }
 
-func ErrorJSON(w http.ResponseWriter, err error, status ...int) error {
+func ErrorJSON(w http.ResponseWriter, err error, status ...int) {
 	statusCode := http.StatusBadRequest
 
 	if len(status) > 0 {
@@ -70,5 +78,5 @@ func ErrorJSON(w http.ResponseWriter, err error, status ...int) error {
 		Data:    models.Empty{},
 	}
 
-	return WriteJSON(w, statusCode, payload)
+	WriteJSON(w, statusCode, payload)
 }

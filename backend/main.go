@@ -28,7 +28,7 @@ func main() {
 	log.Println("Loaded .env")
 
 	// setup DB
-	db := &gorm.DB{}
+	var db *gorm.DB
 	if strings.ToLower(os.Getenv("USE_INTERNAL_DB")) == "true" {
 		log.Println("Connecting identeam.sqlite3...")
 		db, err = dbpkg.ConnectSqlite()

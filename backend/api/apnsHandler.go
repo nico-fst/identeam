@@ -19,7 +19,7 @@ type NotifyTeamDTO struct {
 
 // SendNotification godoc
 // @Summary		Send APNs notification to one device
-// @Description	Sends a push notification via APNs to the specified device token.
+// @Description	Sends a push notification via APNs to the specified device token and returns an empty success payload.
 // @Tags			APNs
 // @Produce		json
 // @Param			deviceToken	path		string	true	"Device token"
@@ -50,9 +50,9 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// NotifyTeam godoc
+// RemindTeam godoc
 // @Summary		Send APNs notification to team
-// @Description	Sends a push notification to the members of the specified team and returns the notified members.
+// @Description	Sends a push notification to the members of the specified team and returns the notified members; an unknown team returns 400.
 // @Tags			APNs
 // @Produce		json
 // @Security		BearerAuth
@@ -60,7 +60,8 @@ func (app *App) SendNotification(w http.ResponseWriter, r *http.Request) {
 // @Success		200			{object}	util.JSONResponse{data=NotifyTeamDTO}
 // @Failure		401			{object}	util.JSONResponse
 // @Failure		500			{object}	util.JSONResponse
-// @Router			/notifications/apns/team/{slug}/notify [post]
+// @Failure        400 {object} util.JSONResponse
+// @Router			/teams/{slug}/remind [post]
 func (app *App) RemindTeam(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -97,7 +98,7 @@ func (app *App) RemindTeam(w http.ResponseWriter, r *http.Request) {
 
 // GetLocalNotificationsForWeek godoc
 // @Summary		Get local notification suggestions
-// @Description	Returns intelligent local notification suggestions for the authenticated user in the specified team for the week containing the required dateStart query parameter (YYYY-MM-DD, Europe/Berlin, normalized to Monday). An empty list is returned when there is not enough ident history; the client supplies its per-team default time.
+// @Description	Returns intelligent local notification suggestions for the authenticated user in the specified team for the week containing the required dateStart query parameter (YYYY-MM-DD, Europe/Berlin, normalized to Monday). An empty list is returned when there is not enough ident history; the client supplies its per-team default time. The response contains an array of notification suggestions.
 // @Tags			Notifications
 // @Produce		json
 // @Security		BearerAuth

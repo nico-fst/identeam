@@ -231,6 +231,9 @@ func NotifyTeamMembersAboutNewComment(ctx context.Context, app AppContext, comme
 	}
 
 	memberPtrs, err := GetTeamMembers(ctx, app, authorID, team.Slug)
+	if err != nil {
+		return nil, err
+	}
 	members := derefUsers(memberPtrs)
 
 	alert := models.Alert{

@@ -3,13 +3,7 @@ package media
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
-
-func avatarKeyString(userID string, version uint, ext string) string {
-	ext = strings.TrimPrefix(strings.ToLower(ext), ".")
-	return fmt.Sprintf("users/%s/profile/avatar_v%d.%s", userID, version, ext)
-}
 
 func NextAvatarKey(userID string, currentKey string, contentType string) (string, error) {
 	ext, err := contentTypeToExtension(contentType)
@@ -22,11 +16,6 @@ func NextAvatarKey(userID string, currentKey string, contentType string) (string
 	}
 
 	return nextKeyVersion(currentKey)
-}
-
-func identImageKeyString(slug string, identID string, version uint, ext string) string {
-	ext = strings.TrimPrefix(strings.ToLower(ext), ".")
-	return fmt.Sprintf("teams/%s/idents/%s/image_v%d.%s", slug, identID, version, ext)
 }
 
 func NextIdentImageKey(slug string, currentKey string, identID string, contentType string) (string, error) {

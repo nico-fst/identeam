@@ -15,7 +15,7 @@ type UpdateDeviceTokenPayload struct {
 
 // UpdateDeviceToken godoc
 // @Summary		Update device token
-// @Description	Updates the device token and platform for the authenticated user for push notifications.
+// @Description	Updates the device token and platform for the authenticated user for push notifications. Returns 500 if saving the token fails.
 // @Tags			Device
 // @Accept			json
 // @Produce		json
@@ -43,7 +43,7 @@ func (app *App) UpdateDeviceToken(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := db.UpdateUsersDeviceToken(r.Context(), app, user, newToken)
 	if err != nil {
-		util.ErrorJSON(w, errors.New("Error updating DeviceToken"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("error updating DeviceToken"), http.StatusInternalServerError)
 		return
 	}
 

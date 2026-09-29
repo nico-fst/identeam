@@ -188,22 +188,6 @@ func (r *R2Client) PresignPutObject(ctx context.Context, key string, contentType
 	})
 }
 
-func (r *R2Client) presignDeleteObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
-	return r.presignObject(ctx, PresignObjectInput{
-		Operation: PresignObjectDelete,
-		Key:       key,
-		ExpiresAt: expiresAt,
-	})
-}
-
-func (r *R2Client) presignHeadObject(ctx context.Context, key string, expiresAt time.Time) (string, error) {
-	return r.presignObject(ctx, PresignObjectInput{
-		Operation: PresignObjectHead,
-		Key:       key,
-		ExpiresAt: expiresAt,
-	})
-}
-
 func nextKeyVersion(currentKey string) (string, error) {
 	ext := path.Ext(currentKey)
 	if ext == "" {

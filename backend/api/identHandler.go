@@ -222,7 +222,7 @@ func (app *App) GetIdentImageUploadURL(w http.ResponseWriter, r *http.Request) {
 
 // CommitIdentImage godoc
 // @Summary		Commit ident image upload
-// @Description	Stores the uploaded image key on the authenticated user's ident after validating the object exists.
+// @Description	Stores the uploaded image key on the authenticated user's ident after validating the object exists and returns the committed key.
 // @Tags			Idents
 // @Accept			json
 // @Produce		json
@@ -280,8 +280,6 @@ func (app *App) CommitIdentImage(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Updated ident image",
-		Data: models.CommitS3Response{
-			Key: payload.Key,
-		},
+		Data:    models.CommitS3Response(payload),
 	})
 }

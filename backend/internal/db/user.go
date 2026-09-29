@@ -14,7 +14,7 @@ import (
 
 var (
 	ErrNicknameTooLong = errors.New("nickname is too long (max. 15 chars) >:(")
-	ErrUsernameTaken   = errors.New("This username is not available :O")
+	ErrUsernameTaken   = errors.New("this username is not available :O")
 )
 
 // Returns user if exists in DB, otherwise nil

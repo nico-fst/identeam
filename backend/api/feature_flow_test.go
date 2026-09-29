@@ -125,7 +125,11 @@ func doJSONRequest(t *testing.T, client *http.Client, method string, url string,
 
 func decodeEnvelope(t *testing.T, resp *http.Response) jsonResponseEnvelope {
 	t.Helper()
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Errorf("close response body: %v", err)
+		}
+	}()
 
 	var envelope jsonResponseEnvelope
 	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {

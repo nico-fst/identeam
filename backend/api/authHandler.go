@@ -34,7 +34,7 @@ type LoginPasswordPayload struct {
 
 // LoginPassword godoc
 // @Summary		Login with email and password
-// @Description	Authenticates a user with email/password and returns a session token.
+// @Description	Authenticates a user with email/password and returns a session token. Returns 404 when no account exists for the email.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
@@ -59,7 +59,7 @@ func (app *App) LoginPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.GetUserByMail(r.Context(), app, payload.Email)
+	_, err := db.GetUserByMail(r.Context(), app, payload.Email)
 	if err == gorm.ErrRecordNotFound {
 		log.Printf("User with mail %v tried logging in but has to signup first", payload.Email)
 		util.ErrorJSON(w, errors.New("no account found for this email - signup instead"), http.StatusNotFound)
@@ -180,7 +180,7 @@ type AuthApplePayload struct {
 // @Param			payload	body		AuthApplePayload	true	"SignIn Payload"
 // @Success		200		{object}	util.JSONResponse{data=AuthResponseData}	"Returns the created/retrieved user, a session token and a boolean if the user is new"
 // @Failure		400		{object}	util.JSONResponse					"Invalid JSON or missing authorizationCode"
-// @Failure		500		{object}	util.JSONResponse					"Server error during user creation or session token generation"
+// @Failure		500		{object}	util.JSONResponse					"Server key missing, user creation failure, or session token generation failure"
 // @Router			/auth/apple/native/callback [post]
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
@@ -203,7 +203,7 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	keyBytes, err := os.ReadFile("./siwa_key.p8")
 	if err != nil {
-		util.ErrorJSON(w, errors.New("Server key missing"), http.StatusInternalServerError)
+		util.ErrorJSON(w, errors.New("server key missing"), http.StatusInternalServerError)
 		return
 	}
 	keyString := string(keyBytes)

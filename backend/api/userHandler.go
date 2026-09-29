@@ -22,7 +22,7 @@ type UpdateUserPayload struct {
 
 // UpdateUser godoc
 // @Summary		Update user information
-// @Description	Updates the current user's nickname and username from the nested user payload.
+// @Description	Updates the current user's nickname and username from the nested user payload. Validation failures are returned as JSON errors.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
@@ -53,7 +53,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		case db.ErrUsernameTaken: // TODO not used since gorm triggers 'UNIQUE constraint failed' as general error before
 			util.ErrorJSON(w, db.ErrUsernameTaken, http.StatusConflict)
 		default:
-			util.ErrorJSON(w, errors.New("Error saving user (username not available)"), http.StatusBadRequest)
+			util.ErrorJSON(w, errors.New("error saving user (username not available)"), http.StatusBadRequest)
 		}
 		return
 	}
@@ -101,7 +101,7 @@ func (app *App) GetAvatarUploadURL(w http.ResponseWriter, r *http.Request) {
 
 // CommitAvatarPayload godoc
 // @Summary		Commit avatar upload
-// @Description	Stores the uploaded avatar key on the authenticated user after validating the object exists.
+// @Description	Stores the uploaded avatar key on the authenticated user after validating the object exists and returns the committed key.
 // @Tags			Users
 // @Accept			json
 // @Produce		json
@@ -138,9 +138,7 @@ func (app *App) CommitAvatarPayload(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, util.JSONResponse{
 		Error:   false,
 		Message: "Updated avatar",
-		Data: models.CommitS3Response{
-			Key: payload.Key,
-		},
+		Data:    models.CommitS3Response(payload),
 	})
 }
 
