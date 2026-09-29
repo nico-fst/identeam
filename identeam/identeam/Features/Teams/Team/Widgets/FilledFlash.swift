@@ -12,14 +12,17 @@ struct FilledFlash: View {
     var body: some View {
         ZStack {
             GeometryReader { geo in
+                let dynAmplitude = geo.size.height * 0.03
+                let dynFrequency = geo.size.width * 0.002
+
                 ZStack {
                     color.opacity(0.1)
 
                     WaveShape(
                         progress: progress,
                         phase: phase,
-                        amplitude: 5,
-                        frequency: 3
+                        amplitude: dynAmplitude,
+                        frequency: dynFrequency
                     )
                     .fill(
                         LinearGradient(
@@ -32,13 +35,13 @@ struct FilledFlash: View {
                     WaveShape(
                         progress: progress,
                         phase: phase + 1.2,
-                        amplitude: 6,
-                        frequency: 4
+                        amplitude: dynAmplitude + 1,
+                        frequency: dynFrequency + 1
                     )
                     .fill(color.opacity(0.25))
 
                     Text(text)
-                        .font(.system(size: geo.size.height * 0.1, weight: .bold))
+                        .font(.system(size: geo.size.height * 0.15, weight: .bold))
                         .shadow(color: .black.opacity(0.25), radius: 5)  // glow
                 }
             }

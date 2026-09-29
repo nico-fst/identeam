@@ -56,6 +56,30 @@ type getTeamWeekResponse struct {
 	Members   []teamWeekMemberResponse `json:"members"`
 }
 
+func requireWeekMember(t *testing.T, week getTeamWeekResponse, userID string) teamWeekMemberResponse {
+	t.Helper()
+	var matches []teamWeekMemberResponse
+	for _, member := range week.Members {
+		if member.User.UserID == userID {
+			matches = append(matches, member)
+		}
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected exactly one week member for user %q, got %d", userID, len(matches))
+	}
+	return matches[0]
+}
+
+func requireUnplannedWeekMember(t *testing.T, member teamWeekMemberResponse) {
+	t.Helper()
+	if member.TargetDays == nil || len(member.TargetDays) != 0 {
+		t.Fatalf("expected empty targetDays array, got %#v", member.TargetDays)
+	}
+	if member.Idents == nil || len(member.Idents) != 0 {
+		t.Fatalf("expected empty idents array, got %#v", member.Idents)
+	}
+}
+
 func newFeatureTestApp(t *testing.T) *api.App {
 	t.Helper()
 	t.Setenv("SESSION_TOKEN_SECRET", "feature-test-secret")
@@ -336,17 +360,19 @@ func TestFeatureFlow_TeamJoinTargetIdentAndWeekOverview(t *testing.T) {
 	if weekData.IdentSum != 1 {
 		t.Fatalf("expected ident sum 1, got %d", weekData.IdentSum)
 	}
-	if len(weekData.Members) != 1 {
-		t.Fatalf("expected one member with target activity, got %d", len(weekData.Members))
+	if len(weekData.Members) != 2 {
+		t.Fatalf("expected both team members, got %d", len(weekData.Members))
 	}
-	if len(weekData.Members[0].TargetDays) != 3 {
-		t.Fatalf("expected derived target count 3, got %d", len(weekData.Members[0].TargetDays))
+	activeMember := requireWeekMember(t, weekData, owner.User.UserID)
+	requireUnplannedWeekMember(t, requireWeekMember(t, weekData, member.User.UserID))
+	if len(activeMember.TargetDays) != 3 {
+		t.Fatalf("expected derived target count 3, got %d", len(activeMember.TargetDays))
 	}
-	if !reflect.DeepEqual(weekData.Members[0].TargetDays, []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")}) {
-		t.Fatalf("unexpected week target days: %#v", weekData.Members[0].TargetDays)
+	if !reflect.DeepEqual(activeMember.TargetDays, []string{futureTargetWeek().AddDate(0, 0, 0).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 2).Format("2006-01-02"), futureTargetWeek().AddDate(0, 0, 4).Format("2006-01-02")}) {
+		t.Fatalf("unexpected week target days: %#v", activeMember.TargetDays)
 	}
-	if len(weekData.Members[0].Idents) != 1 {
-		t.Fatalf("expected one ident for active member, got %d", len(weekData.Members[0].Idents))
+	if len(activeMember.Idents) != 1 {
+		t.Fatalf("expected one ident for active member, got %d", len(activeMember.Idents))
 	}
 }
 
@@ -589,11 +615,16 @@ func TestFeatureFlow_DeleteCommentRequiresCommentAuthorAndMatchingIdent(t *testi
 	}
 	weekEnvelope := decodeEnvelope(t, weekResp)
 	weekData := decodeData[getTeamWeekResponse](t, weekEnvelope)
-	if len(weekData.Members) != 1 || len(weekData.Members[0].Idents) != 1 {
-		t.Fatalf("expected one member with one ident, got %#v", weekData.Members)
+	if len(weekData.Members) != 2 {
+		t.Fatalf("expected both team members, got %#v", weekData.Members)
 	}
-	if len(weekData.Members[0].Idents[0].Comments) != 0 {
-		t.Fatalf("expected deleted comment to be absent, got %#v", weekData.Members[0].Idents[0].Comments)
+	activeMember := requireWeekMember(t, weekData, owner.User.UserID)
+	requireUnplannedWeekMember(t, requireWeekMember(t, weekData, member.User.UserID))
+	if len(activeMember.Idents) != 1 {
+		t.Fatalf("expected one ident for active member, got %#v", activeMember.Idents)
+	}
+	if len(activeMember.Idents[0].Comments) != 0 {
+		t.Fatalf("expected deleted comment to be absent, got %#v", activeMember.Idents[0].Comments)
 	}
 }
 
@@ -820,8 +851,12 @@ func TestFeatureFlow_EmptyTeamWeeksHaveDistinctIdentity(t *testing.T) {
 			t.Fatalf("status = %d", resp.StatusCode)
 		}
 		week := decodeData[getTeamWeekResponse](t, decodeEnvelope(t, resp))
-		if week.Slug != team.Slug || week.WeekStart.In(util.AppLocation()).Format("2006-01-02") != tc.want || len(week.Members) != 0 {
+		if week.Slug != team.Slug || week.WeekStart.In(util.AppLocation()).Format("2006-01-02") != tc.want || len(week.Members) != 1 {
 			t.Fatalf("unexpected empty week: %#v", week)
 		}
+		if week.TargetSum != 0 || week.IdentSum != 0 {
+			t.Fatalf("expected zero totals for empty week, got %d/%d", week.TargetSum, week.IdentSum)
+		}
+		requireUnplannedWeekMember(t, requireWeekMember(t, week, owner.User.UserID))
 	}
 }

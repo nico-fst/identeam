@@ -13,11 +13,11 @@ struct GrowingUserFigure: View {
             ? 0
             : CGFloat(member.idents.count) / CGFloat(member.targetDays.count)
 
-        GrowingUserFigureLayout {
+        GrowingUserFigureLayout(hasTorso: !member.targetDays.isEmpty) {
             head
         } torso: {
-            GeometryReader { geometry in
-                let metrics = GrowingUserFigureMetrics(size: geometry.size)
+            GeometryReader { geo in
+                let metrics = GrowingUserFigureMetrics(size: geo.size)
                 let outline = RoundedRectangle(cornerRadius: metrics.cornerRadius)
 
                 ZStack {
@@ -58,6 +58,7 @@ struct GrowingUserFigure: View {
                 }
             }
         }
+        .opacity(member.targetDays.isEmpty ? 0.1 : 1)
         .onAppear {
             withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
                 phase = .pi * 2
@@ -77,8 +78,8 @@ struct GrowingUserFigure: View {
             cacheKey: member.user.avatar.key
         )
 
-        GeometryReader { geometry in
-            let metrics = GrowingUserFigureMetrics(size: geometry.size)
+        GeometryReader { geo in
+            let metrics = GrowingUserFigureMetrics(size: geo.size)
 
             KFImage(source: .network(resource))
                 .placeholder {
@@ -86,7 +87,7 @@ struct GrowingUserFigure: View {
                 }
                 .resizable()
                 .scaledToFill()
-                .frame(width: geometry.size.width, height: geometry.size.height)
+                .frame(width: geo.size.width, height: geo.size.height)
                 .clipShape(Circle())
                 .overlay {
                     Circle()

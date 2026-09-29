@@ -55,4 +55,12 @@ extension TeamMember {
             ]
         )
     }
+
+    static var templateNicoKantenEmpty: TeamMember {
+        TeamMember(
+            user: .templateNico,
+            targetDays: [],
+            idents: []
+        )
+    }
 }

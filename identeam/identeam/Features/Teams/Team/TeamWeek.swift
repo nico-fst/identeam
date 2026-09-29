@@ -48,12 +48,14 @@ struct TeamWeekDTO: Decodable {
 }
 
 extension TeamWeek {
-    static var templateKanten: TeamWeek {
+    static var templateStreakKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
-            weekStart: Date(),
-            targetSum: 6,
-            identSum: 3,
+            weekStart: AppCalendar.startOfWeek(
+                containing: Date()
+            ),
+            targetSum: 4,
+            identSum: 4,
             members: [
                 .templateGretaKanten,
                 .templateNicoKanten,
@@ -62,10 +64,41 @@ extension TeamWeek {
         )
     }
 
+    static var templateGoodkanten: TeamWeek {
+        TeamWeek(
+            slug: "die-kanten",
+            weekStart: AppCalendar.startOfWeek(
+                containing: AppCalendar.calendar.date(byAdding: .day, value: -7, to: Date())!
+            ),
+            targetSum: 6,
+            identSum: 7,
+            members: [
+                .templateGretaKanten,
+                .templateNicoKanten,
+            ],
+            teamStreak: 1
+        )
+    }
+
+    static var templateFrozenKanten: TeamWeek {
+        TeamWeek(
+            slug: "die-kanten",
+            weekStart: AppCalendar.startOfWeek(
+                containing: AppCalendar.calendar.date(byAdding: .day, value: -14, to: Date())!
+            ),
+            targetSum: 0,
+            identSum: 0,
+            members: [],
+            teamStreak: 0
+        )
+    }
+
     static var templateBadKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
-            weekStart: AppCalendar.calendar.date(byAdding: .day, value: -7, to: Date())!,
+            weekStart: AppCalendar.startOfWeek(
+                containing: AppCalendar.calendar.date(byAdding: .day, value: -21, to: Date())!
+            ),
             targetSum: 6,
             identSum: 1,
             members: [
@@ -76,17 +109,20 @@ extension TeamWeek {
         )
     }
 
-    static var templateGoodkanten: TeamWeek {
+    static var templateKanten: TeamWeek {
         TeamWeek(
             slug: "die-kanten",
-            weekStart: AppCalendar.calendar.date(byAdding: .day, value: -7, to: Date())!,
+            weekStart: AppCalendar.startOfWeek(
+                containing: AppCalendar.calendar.date(byAdding: .day, value: -28, to: Date())!
+            ),
             targetSum: 6,
-            identSum: 7,
+            identSum: 3,
             members: [
                 .templateGretaKanten,
                 .templateNicoKanten,
+                .templateNicoKantenEmpty,
             ],
-            teamStreak: 9
+            teamStreak: 0
         )
     }
 }

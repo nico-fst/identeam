@@ -7,12 +7,15 @@ struct CurrentWeekWidget: View {
     @State private var showSettings = false
 
     @AppStorage private var showIdentImages: Bool
+    @AppStorage private var showMembersWithoutTarget: Bool
 
     init(teamWeek: TeamWeek, onSelectIdent: @escaping (Ident) -> Void) {
         self.teamWeek = teamWeek
         self.onSelectIdent = onSelectIdent
         _showIdentImages = AppStorage(
             wrappedValue: true, "week.\(teamWeek.slug).weekgrid.showIdentImages")
+        _showMembersWithoutTarget = AppStorage(
+            wrappedValue: true, "week.\(teamWeek.slug).weekgrid.showMembersWithoutTarget")
     }
 
     var body: some View {
@@ -20,15 +23,13 @@ struct CurrentWeekWidget: View {
             grid
         } header: {
             HStack {
-                Text("Current Week")
+                Text("Week Overview")
                 Button {
                     showSettings = true
                 } label: {
                     Image(systemName: "gearshape")
                 }
             }
-        } footer: {
-            //            Text("Your team collected \(teamWeek.identSum) / \(teamWeek.targetSum) Idents in total")
         }
         .sheet(isPresented: $showSettings) {
             settings
@@ -71,18 +72,22 @@ struct CurrentWeekWidget: View {
                 Button {
                     onSelectIdent(ident)
                 } label: {
-                    VStack(spacing: 4) {
-                        IdentThumbnailView(
-                            image: RemoteImageReference(item: ident.image),
-                            avatar: RemoteImageReference(item: member.user.avatar),
-                            showImage: showIdentImages
-                        )
-                        .frame(height: 55)
-                    }
+                    IdentThumbnailView(
+                        image: RemoteImageReference(item: ident.image),
+                        avatar: RemoteImageReference(item: member.user.avatar),
+                        showImage: showIdentImages
+                    )
+                    .frame(height: 60)  // TODO still smaller than UserColorFlash
                 }
                 .buttonStyle(.plain)
             } else if day.isTargetDay {
-                Image(systemName: "calendar.badge.clock")
+                ZStack {
+                    UserColorFlash(avatar: RemoteImageReference(item: member.user.avatar))
+                    Image(systemName: "calendar.badge.clock")
+                        .scaleEffect(0.6)
+                }
+                .opacity(0.25)
+                .frame(height: 60)
             } else {
                 Text("—")
                     .foregroundStyle(.tertiary)
@@ -93,8 +98,13 @@ struct CurrentWeekWidget: View {
 
     private var grid: some View {
         let referenceDate = Date()
-        let members = teamWeek.members.sorted {
+        var members = teamWeek.members.sorted {
             $0.user.username.lowercased() < $1.user.username.lowercased()
+        }
+        if !showMembersWithoutTarget {
+            members =
+                members
+                .filter { !$0.targetDays.isEmpty }
         }
         let dates = AppCalendar.datesInWeek(containing: teamWeek.weekStart)
 

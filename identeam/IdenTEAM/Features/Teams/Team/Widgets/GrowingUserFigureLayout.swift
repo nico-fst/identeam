@@ -8,7 +8,7 @@ struct GrowingUserFigureMetrics {
     var lineWidth: CGFloat { 2 * scale }
     var cornerRadius: CGFloat { 24 * scale }
     var shadowRadius: CGFloat { 6 * scale }
-    var fontSize: CGFloat { 17 * scale }
+    var fontSize: CGFloat { 25 * scale }
     // Frequency already counts waves across the available width in WaveShape.
     var waveAmplitude: CGFloat { min(3 * scale, max(0, size.height) / 12) }
 }
@@ -21,8 +21,13 @@ extension View {
             : 1
 
         return GeometryReader { geometry in
+            let height =
+                targetCount == 0
+                ? max(0, min(60, geometry.size.width)) * 0.8
+                : geometry.size.height * fraction
+
             self
-                .frame(height: geometry.size.height * fraction)
+                .frame(height: height)
                 .clipped()
                 .frame(maxHeight: .infinity, alignment: .bottom)
         }
@@ -30,21 +35,30 @@ extension View {
 }
 
 struct GrowingUserFigureLayout<Head: View, Torso: View>: View {
+    var hasTorso = true
     @ViewBuilder let head: Head
     @ViewBuilder let torso: Torso
 
     var body: some View {
         // The parent supplies the height; the figure has no intrinsic height.
         GeometryReader { geometry in
-            let figureWidth = min(60, geometry.size.width)
+            let figureWidth = max(0, min(60, geometry.size.width))
             let diameter = figureWidth * 0.8
             let spacing = min(diameter * 20 / 90, geometry.size.height * 0.05)
 
             VStack(spacing: spacing) {
                 head
-                    .frame(width: diameter, height: diameter)
-                torso
-                    .frame(width: figureWidth, height: geometry.size.height - diameter - spacing)
+                    .frame(
+                        width: diameter,
+                        height: diameter
+                    )
+                if hasTorso {
+                    torso
+                        .frame(
+                            width: figureWidth,
+                            height: max(0, geometry.size.height - diameter - spacing)
+                        )
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

@@ -5,6 +5,8 @@ struct TeamSettingsView: View {
     let teamName: String
     let userID: String
 
+    @State private var showMembersWithoutTarget: Bool
+
     @Environment(\.dismiss) private var dismiss
 
     @State private var defaultTime: Date
@@ -20,6 +22,11 @@ struct TeamSettingsView: View {
                 userID: userID,
                 slug: slug
             )
+        )
+        _showMembersWithoutTarget = State(
+            initialValue: UserDefaults.standard.object(
+                forKey: "week.\(slug).weekgrid.showMembersWithoutTarget"
+            ) as? Bool ?? true
         )
     }
 
@@ -45,6 +52,13 @@ struct TeamSettingsView: View {
                         """
                     )
                 }
+            }
+
+            Section {
+                Toggle("Show members without target", isOn: $showMembersWithoutTarget)
+            } footer: {
+                Text(
+                    "Controls wether members without target should be hidden or displayed anyways.")
             }
 
             if !errorMessage.isEmpty {
@@ -94,6 +108,11 @@ struct TeamSettingsView: View {
             defaultTime,
             userID: userID,
             slug: slug
+        )
+
+        UserDefaults.standard.set(
+            showMembersWithoutTarget,
+            forKey: "week.\(slug).weekgrid.showMembersWithoutTarget"
         )
 
         do {

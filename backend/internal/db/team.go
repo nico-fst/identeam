@@ -145,7 +145,32 @@ func GetTeamWeek(ctx context.Context, app AppContext, teamSlug string, timeStart
 		return nil, err
 	}
 
+	team, err := GetTeamBySlug(ctx, app, teamSlug)
+	if err != nil {
+		return nil, err
+	}
+
 	currentWeek := models.NewTeamWeekResponse(ctx, app.R2(), teamSlug, targets, timeStart)
+
+	// add users without target
+	usersWithTarget := make(map[uint]bool, len(targets))
+	for _, target := range targets {
+		usersWithTarget[target.UserID] = true
+	}
+	for _, user := range team.Users {
+		if usersWithTarget[user.ID] {
+			continue
+		}
+
+		currentWeek.Members = append(
+			currentWeek.Members,
+			models.TeamWeekMemberResponse{
+				User:       user.ToDTO(ctx, app.R2()),
+				TargetDays: []string{},
+				Idents:     []models.IdentDTO{},
+			},
+		)
+	}
 
 	// determine streak length
 	pivotTimeStart := timeStart.AddDate(0, 0, -7)

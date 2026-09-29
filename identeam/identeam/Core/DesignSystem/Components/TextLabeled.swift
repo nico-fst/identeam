@@ -15,7 +15,13 @@ struct TextLabeled: View {
                 .font(.caption)
                 .foregroundColor(.gray)
             Text(value)
-                .textSelection(.enabled)
+                .contextMenu {  // manual since iOS27 changed .textSelection behavior
+                    Button {
+                        UIPasteboard.general.string = value
+                    } label: {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                }
                 .lineLimit(1)
         }
     }

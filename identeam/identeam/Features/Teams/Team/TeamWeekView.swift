@@ -12,8 +12,15 @@ struct TeamWeekView: View {
 
     @EnvironmentObject var vm: AppVM
     @EnvironmentObject var teamsVM: TeamsVM
-    @StateObject var teamVM = TeamWeekVM()
     @Environment(\.modelContext) private var ctx
+
+    @StateObject var teamVM: TeamWeekVM
+
+    // allows injecting for Preview
+    init(slug: String, teamVM: TeamWeekVM = TeamWeekVM()) {
+        self.slug = slug
+        _teamVM = StateObject(wrappedValue: teamVM)
+    }
 
     @Namespace private var transitions
 
@@ -27,55 +34,68 @@ struct TeamWeekView: View {
     @Query private var teamWeeks: [TeamWeek]
     private var teamWeek: TeamWeek? {
         teamWeeks.first {
-            $0.slug == slug && $0.weekStart == teamVM.weekStart
+            $0.slug == slug
+                && AppCalendar.startOfWeek(containing: $0.weekStart)
+                    == AppCalendar.startOfWeek(containing: teamVM.weekStart)
         }
+    }
+
+    private var lastWeeks: [TeamWeek] {
+        Array(
+            teamWeeks
+                .filter {
+                    $0.slug == slug && $0.weekStart <= teamVM.weekStart
+                }
+                .sorted { $0.weekStart > $1.weekStart }
+                .prefix(4)
+        )
     }
 
     var body: some View {
         Group {  // .refreshable doesn't work on plain View
             if let team {
-                // << This week >>
-                HStack {
-                    Button {
-                        teamVM.changeWeek(by: -7)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .padding(5)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        teamVM.referenceDate = Date()
-                    } label: {
-                        Text(TargetPlanning.weekName(for: teamVM.referenceDate))
-                            .font(.title3)
-                            .padding(5)
-                    }
-                    .buttonStyle(.glass)
-
-                    Spacer()
-
-                    Button {
-                        teamVM.changeWeek(by: 7)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .padding(5)
-                    }
-                }
-                .padding()
-                .disabled(!hasLoadedFreshTeamWeek)
-                .buttonStyle(.glassProminent)
-
                 List {
+                    // << This week >>
+                    HStack {
+                        Button {
+                            teamVM.changeWeek(by: -7)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .padding(5)
+                        }
+                        .buttonStyle(.glassProminent)
+
+                        Spacer()
+
+                        Button {
+                            teamVM.referenceDate = Date()
+                        } label: {
+                            Text(TargetPlanning.weekName(for: teamVM.referenceDate))
+                                .font(.title3)
+                                .padding(5)
+                        }
+                        .buttonStyle(.glass)
+
+                        Spacer()
+
+                        Button {
+                            teamVM.changeWeek(by: 7)
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .padding(5)
+                        }
+                        .buttonStyle(.glassProminent)
+                    }
+                    .disabled(!hasLoadedFreshTeamWeek)
+
                     if hasLoadedFreshTeamWeek, let teamWeek {
                         CurrentWeekWidget(teamWeek: teamWeek) { ident in
                             teamVM.selectedIdent = ident
                         }
-
                         CurrentProgressWidget(week: teamWeek)
+                        LastWeeksCompletionWidget(lastWeeks: lastWeeks)
                     } else {
-                        Section("TeamWeek") {
+                        Section {
                             ProgressView()
                         }
                     }
@@ -87,13 +107,19 @@ struct TeamWeekView: View {
                         Text("Coming soon :)")
                             .foregroundStyle(.primary.opacity(0.3))
                     }
-                    .navigationTitle(team.name)
                 }
                 .refreshable {
                     await reloadWeek()
                 }
                 .listStyle(InsetGroupedListStyle())
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Text(team.name)
+                            .font(.headline)
+                            .fixedSize(horizontal: true, vertical: false)  // so text doesn't get cropped
+                    }
+                    .sharedBackgroundVisibility(.hidden)  // so text is not surrounded by glass
+
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             showTeamSettings = true
@@ -214,6 +240,10 @@ private struct TeamViewPreviewContainer: View {
 
         container.mainContext.insert(team)
         container.mainContext.insert(teamWeek)
+        container.mainContext.insert(TeamWeek.templateStreakKanten)
+        container.mainContext.insert(TeamWeek.templateBadKanten)
+        container.mainContext.insert(TeamWeek.templateGoodkanten)
+        container.mainContext.insert(TeamWeek.templateFrozenKanten)
 
         let teamVM = TeamWeekVM()
 
@@ -229,11 +259,13 @@ private struct TeamViewPreviewContainer: View {
     }
 
     var body: some View {
-        TeamWeekView(slug: "die-kanten")
-            .environmentObject(AppVM())
-            .environmentObject(TeamsVM())
-            .environmentObject(teamVM)
-            .modelContainer(container)
+        TeamWeekView(
+            slug: "die-kanten",
+            teamVM: teamVM
+        )
+        .environmentObject(AppVM())
+        .environmentObject(TeamsVM())
+        .modelContainer(container)
     }
 }
 

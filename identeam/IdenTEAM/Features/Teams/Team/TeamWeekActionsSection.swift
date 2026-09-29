@@ -18,22 +18,18 @@ struct TeamWeekActionsSection: View {
                     systemImage: teamVM.remindButtonDisabled ? "bell.fill" : "bell"
                 )
             }
-            .disabled(teamVM.remindButtonDisabled)
+            .disabled(teamVM.remindButtonDisabled || !hasLoadedFreshTeamWeek)
             .opacity(teamVM.remindButtonDisabled ? 0.3 : 1)
 
-            if hasLoadedFreshTeamWeek {
-                Button {
-                    teamVM.showSettingTarget = true
-                } label: {
-                    Label(
-                        "Plan Targets",
-                        systemImage: "target"
-                    )
-                }
-            } else {
-                ProgressView()
+            Button {
+                teamVM.showSettingTarget = true
+            } label: {
+                Label(
+                    "Plan Targets",
+                    systemImage: "target"
+                )
             }
+            .disabled(!hasLoadedFreshTeamWeek)
         }
-
     }
 }

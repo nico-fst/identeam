@@ -16,6 +16,24 @@ nonisolated enum AppCalendar {
         return formatter.string(from: date)
     }
 
+    static func daySlashMonth(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .day(.twoDigits)
+                .month(.twoDigits)
+        )
+    }
+
+    static func shortDateAndTime(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .day(.twoDigits)
+                .month(.twoDigits)
+                .hour(.twoDigits(amPM: .omitted))
+                .minute(.twoDigits)
+        )
+    }
+
     static func weekdayString(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -65,7 +83,8 @@ nonisolated enum AppCalendar {
             to: day
         )!
     }
-    static func datesInWeek(containing date: Date) -> [Date] {
+
+    static func datesInWeek(containing date: Date = Date()) -> [Date] {
         let start = startOfWeek(containing: date)
         return (0..<7).compactMap {
             calendar.date(byAdding: .day, value: $0, to: start)

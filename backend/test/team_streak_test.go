@@ -136,7 +136,7 @@ func newStreakFixture(t *testing.T, currentWeek time.Time, weeks [][]streakMembe
 			t.Errorf("close sqlite: %v", err)
 		}
 	})
-	if err := database.AutoMigrate(&models.User{}, &models.Team{}, &models.Target{},
+	if err := database.AutoMigrate(&models.User{}, &models.DeviceToken{}, &models.Team{}, &models.Target{},
 		&models.TargetDay{}, &models.Ident{}, &models.Comment{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}

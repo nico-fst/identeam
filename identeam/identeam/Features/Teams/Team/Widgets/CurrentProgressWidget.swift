@@ -3,6 +3,14 @@ import SwiftUI
 struct CurrentProgressWidget: View {
     let week: TeamWeek
 
+    @AppStorage private var showMembersWithoutTarget: Bool
+
+    init(week: TeamWeek) {
+        self.week = week
+        _showMembersWithoutTarget = AppStorage(
+            wrappedValue: true, "week.\(week.slug).weekgrid.showMembersWithoutTarget")
+    }
+
     var body: some View {
         Section {
             GeometryReader { geometry in
@@ -19,7 +27,7 @@ struct CurrentProgressWidget: View {
             }
             .frame(height: 150)
         } header: {
-            Text("Current Progress")
+            Text("Progress Overview")
         }
     }
 
@@ -39,10 +47,8 @@ struct CurrentProgressWidget: View {
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            VStack {
-                Spacer()
-                streakBadge
-            }
+            streakBadge
+                .offset(x: 25, y: 55)
         }
     }
 
@@ -57,25 +63,29 @@ struct CurrentProgressWidget: View {
                 Image(systemName: "snowflake")
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(
+            week.teamStreak > 0
+                ? .orange.opacity(0.9)
+                : .white
+        )
         .padding(.horizontal, 9)
         .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(
-                    week.teamStreak > 0
-                        ? .orange.opacity(0.9)
-                        : .blue.opacity(0.9)
-                )
-        )
-        .scaleEffect(0.75)
     }
 
     private var memberFigures: some View {
         let maximumTargetCount = week.members.map { $0.targetDays.count }.max() ?? 0
 
-        return HStack(spacing: 0) {
-            ForEach(week.members, id: \.self) { member in
+        var members = week.members.sorted {
+            $0.user.username.lowercased() < $1.user.username.lowercased()
+        }
+        if !showMembersWithoutTarget {
+            members =
+                members
+                .filter { $0.targetDays.count > 0 }
+        }
+
+        return HStack(spacing: 4) {
+            ForEach(members, id: \.self) { member in
                 GrowingUserFigure(member: member)
                     .relativeFigureHeight(
                         targetCount: member.targetDays.count,
@@ -84,12 +94,11 @@ struct CurrentProgressWidget: View {
             }
         }
     }
-
 }
 
 #Preview("List(CurrentProgressWidget)") {
     List {
-        CurrentProgressWidget(week: .templateKanten)
+        CurrentProgressWidget(week: .templateStreakKanten)
     }
     .listStyle(.insetGrouped)
 }

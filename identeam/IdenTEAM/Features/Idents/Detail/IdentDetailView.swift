@@ -12,16 +12,6 @@ struct IdentDetailView: View {
     @EnvironmentObject private var teamVM: TeamWeekVM
     @Environment(\.modelContext) private var ctx
 
-    private func formattedDateStringShort(for date: Date) -> String {
-        date.formatted(
-            .dateTime
-                .day(.twoDigits)
-                .month(.twoDigits)
-                .hour(.twoDigits(amPM: .omitted))
-                .minute(.twoDigits)
-        )
-    }
-
     var body: some View {
         List {
             Section {
@@ -39,7 +29,7 @@ struct IdentDetailView: View {
                     Spacer()
                 }
                 VStack(alignment: .leading) {
-                    Text(formattedDateStringShort(for: ident.time))
+                    Text(AppCalendar.shortDateAndTime(for: ident.time))
                         .font(.caption)
                         .opacity(0.5)
 
@@ -55,7 +45,7 @@ struct IdentDetailView: View {
                     })
                 ) { comment in
                     VStack(alignment: .leading) {
-                        Text(formattedDateStringShort(for: comment.time))
+                        Text(AppCalendar.shortDateAndTime(for: comment.time))
                             .font(.caption)
                             .opacity(0.5)
 
