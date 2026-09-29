@@ -3,7 +3,7 @@ import SwiftData
 
 struct TargetPicker: View {
     let slug: String
-    @StateObject private var targetPickerVM: TargetPickerViewModel
+    @StateObject private var targetPickerVM: TargetPickerVM
     let onChange: (Bool) -> Void // == new value set
 
     init(
@@ -13,14 +13,14 @@ struct TargetPicker: View {
         onChange: @escaping (Bool) -> Void
     ) {
         self.slug = slug
-        _targetPickerVM = StateObject(wrappedValue: TargetPickerViewModel(
+        _targetPickerVM = StateObject(wrappedValue: TargetPickerVM(
             referenceDate: referenceDate,
             initialSelectedDays: initialSelectedDays
         ))
         self.onChange = onChange
     }
 
-    @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var vm: AppVM
     @AppStorage("userID") private var userID: String = ""
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
@@ -161,5 +161,5 @@ struct TargetPicker: View {
         slug: "die-kanten",
         onChange: { _ in }
     )
-    .environmentObject(AppViewModel())
+    .environmentObject(AppVM())
 }

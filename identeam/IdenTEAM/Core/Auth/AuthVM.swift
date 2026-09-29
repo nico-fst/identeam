@@ -17,7 +17,7 @@ enum AuthMode: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
 }
 
-class AuthViewModel: ObservableObject {
+class AuthVM: ObservableObject {
     @Published var authState: AuthState = .unknown
     @Published var authError: String? = nil
     @Published var isAuthing: Bool = false
@@ -89,7 +89,7 @@ class AuthViewModel: ObservableObject {
     }
 
     /// Sets authState according to backend's response to sessionToken
-    func trySiwaLogin(vm: AppViewModel) async {
+    func trySiwaLogin(vm: AppVM) async {
         guard let token = sessionToken, !token.isEmpty else {
             logout()
             return
@@ -110,7 +110,7 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func tryPasswordLoginOrSignup(authMode: AuthMode, vm: AppViewModel) async throws {
+    func tryPasswordLoginOrSignup(authMode: AuthMode, vm: AppVM) async throws {
         isAuthing = true
         defer { isAuthing = false }
         

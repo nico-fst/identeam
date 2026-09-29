@@ -6,7 +6,7 @@ import AVFoundation
 // Wrapper from UIKit -> SwiftUI (so that this UIKIt-View is usable in SwiftUI)
 struct CameraPreView: UIViewRepresentable {
     let session: AVCaptureSession
-    let cameraVM: CameraViewModel
+    let cameraVM: CameraVM
     
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero) // empty view
@@ -55,7 +55,7 @@ struct CameraPreView: UIViewRepresentable {
     class Coordinator {
         var previewLayer: AVCaptureVideoPreviewLayer?
         var lastZoomFactor: CGFloat = 1.0
-        var cameraVM: CameraViewModel?
+        var cameraVM: CameraVM?
         
         @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {
             guard let cameraVM = cameraVM else { return }

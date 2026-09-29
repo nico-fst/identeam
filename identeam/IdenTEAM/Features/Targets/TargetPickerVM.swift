@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 
 @MainActor
-final class TargetPickerViewModel: ObservableObject {
+final class TargetPickerVM: ObservableObject {
     @Published var referenceDate: Date
     @Published var selectedDays: Set<Date>
     @Published var isLoading = true
@@ -45,7 +45,7 @@ final class TargetPickerViewModel: ObservableObject {
 
     func trySettingTarget(
         slug: String,
-        vm: AppViewModel,
+        vm: AppVM,
         ctx: ModelContext,
         userID: String,
     ) async -> Bool {

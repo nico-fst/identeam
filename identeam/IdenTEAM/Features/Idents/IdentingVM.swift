@@ -3,7 +3,7 @@ import Combine
 import SwiftData
 
 @MainActor
-class IdentingViewModel: ObservableObject {
+class IdentingVM: ObservableObject {
     private let now: () -> Date
 
     init(now: @escaping () -> Date = { Date() }) {
@@ -36,9 +36,9 @@ class IdentingViewModel: ObservableObject {
     
     func tryCreatingIdentWithImage(
         image: IdentifiableImage,
-        vm: AppViewModel,
+        vm: AppVM,
         ctx: ModelContext,
-        teamsVM: TeamsViewModel
+        teamsVM: TeamsVM
     ) async -> Bool {
         guard !isUploadingImage else { return false }
         guard let slug = selectedTeamSlug else {

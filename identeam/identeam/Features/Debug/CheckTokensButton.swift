@@ -4,8 +4,8 @@ struct CheckTokensButton: View {
     // TODO switch to Keychain storage
     @AppStorage("sessionToken") private var sessionToken: String = ""
 
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var vm: AppVM
 
     var body: some View {
         Button("Check Tokens") {

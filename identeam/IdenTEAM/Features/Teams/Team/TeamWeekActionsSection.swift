@@ -3,8 +3,8 @@ import SwiftUI
 struct TeamWeekActionsSection: View {
     let slug: String
     let hasLoadedFreshTeamWeek: Bool
-    @EnvironmentObject private var vm: AppViewModel
-    @EnvironmentObject private var teamVM: TeamWeekViewModel
+    @EnvironmentObject private var vm: AppVM
+    @EnvironmentObject private var teamVM: TeamWeekVM
 
     var body: some View {
         Section("Actions") {

@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 
 @MainActor
-class AvatarViewModel: ObservableObject {
+class AvatarVM: ObservableObject {
     @Published var isUploadingAvatar = false
     @Published var uploadError: String?
 

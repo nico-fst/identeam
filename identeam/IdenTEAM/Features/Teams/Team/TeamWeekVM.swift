@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-class TeamWeekViewModel: ObservableObject {
+class TeamWeekVM: ObservableObject {
     @Published var createIdentUserText: String = ""
     @Published var showSettingTarget = false
     
@@ -31,7 +31,7 @@ class TeamWeekViewModel: ObservableObject {
         referenceDate = AppCalendar.calendar.date(byAdding: .day, value: days, to: referenceDate)!
     }
     
-    func tryRemindingTeam(slug: String, vm: AppViewModel) async {
+    func tryRemindingTeam(slug: String, vm: AppVM) async {
         do {
             try await TeamAPI.shared.remindTeam(slug: slug)
             
@@ -64,9 +64,9 @@ class TeamWeekViewModel: ObservableObject {
     // Legacy, unused (before photos)
     func tryCreatingIdent(
         slug: String,
-        vm: AppViewModel,
+        vm: AppVM,
         ctx: ModelContext,
-        teamsVM: TeamsViewModel
+        teamsVM: TeamsVM
     ) async {
         let trimmedUserText = createIdentUserText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedUserText.isEmpty else {
@@ -88,9 +88,9 @@ class TeamWeekViewModel: ObservableObject {
     
     func tryCommenting(
         slug: String,
-        vm: AppViewModel,
+        vm: AppVM,
         ctx: ModelContext,
-        teamsVM: TeamsViewModel
+        teamsVM: TeamsVM
     ) async {
         let trimmedCommentText = commentInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedCommentText.isEmpty else {
@@ -128,9 +128,9 @@ class TeamWeekViewModel: ObservableObject {
     func tryDeletingComment(
         commentID: Int,
         slug: String,
-        vm: AppViewModel,
+        vm: AppVM,
         ctx: ModelContext,
-        teamsVM: TeamsViewModel
+        teamsVM: TeamsVM
     ) async {
         guard let selectedIdent else {
             commentError = "ERROR: No Ident selected"

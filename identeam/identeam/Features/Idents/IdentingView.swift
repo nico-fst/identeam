@@ -5,10 +5,10 @@ import Photos
 import SwiftData
 
 struct IdentingView: View {
-    @EnvironmentObject private var vm: AppViewModel
-    @EnvironmentObject private var cameraVM: CameraViewModel
-    @EnvironmentObject private var identingVM: IdentingViewModel
-    @EnvironmentObject private var teamsVM: TeamsViewModel
+    @EnvironmentObject private var vm: AppVM
+    @EnvironmentObject private var cameraVM: CameraVM
+    @EnvironmentObject private var identingVM: IdentingVM
+    @EnvironmentObject private var teamsVM: TeamsVM
     
     @Environment(\.modelContext) private var modelContext
     
@@ -162,8 +162,8 @@ struct IdentingPhotoPreview: View {
     
     @State private var savedImagetoCameraRoll = false
     
-    @EnvironmentObject private var identingVM: IdentingViewModel
-    @EnvironmentObject private var vm: AppViewModel
+    @EnvironmentObject private var identingVM: IdentingVM
+    @EnvironmentObject private var vm: AppVM
     
     @Environment(\.colorScheme) private var colorScheme
     
@@ -305,18 +305,18 @@ struct IdentingPhotoPreview: View {
 
 #Preview("IdentingView - Camera") {
     IdentingView(forceCameraPreview: true)
-        .environmentObject(AppViewModel())
-        .environmentObject(CameraViewModel())
-        .environmentObject(TeamsViewModel())
-        .environmentObject(IdentingViewModel())
+        .environmentObject(AppVM())
+        .environmentObject(CameraVM())
+        .environmentObject(TeamsVM())
+        .environmentObject(IdentingVM())
 }
 
 #Preview("IdentingView - No Camera") {
     IdentingView(forceCameraPreview: false)
-        .environmentObject(AppViewModel())
-        .environmentObject(CameraViewModel())
-        .environmentObject(TeamsViewModel())
-        .environmentObject(IdentingViewModel())
+        .environmentObject(AppVM())
+        .environmentObject(CameraVM())
+        .environmentObject(TeamsVM())
+        .environmentObject(IdentingVM())
 }
 
 #Preview("IdentingPhotoPreview") {
@@ -334,6 +334,6 @@ struct IdentingPhotoPreview: View {
         onDismiss: {},
         onUpload: {}
     )
-    .environmentObject(IdentingViewModel())
-    .environmentObject(AppViewModel())
+    .environmentObject(IdentingVM())
+    .environmentObject(AppVM())
 }

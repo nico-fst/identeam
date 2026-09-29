@@ -3,10 +3,10 @@ import SwiftData
 import SwiftUI
 
 struct DebugInfoView: View {
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var vm: AppViewModel
-    @EnvironmentObject var avatarVM: AvatarViewModel
-    @EnvironmentObject var navVM: NavigationViewModel
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var vm: AppVM
+    @EnvironmentObject var avatarVM: AvatarVM
+    @EnvironmentObject var navVM: NavigationVM
     
     @Environment(\.modelContext) private var ctx
 
@@ -86,9 +86,9 @@ struct DebugInfoView: View {
 
 #Preview {
     DebugInfoView()
-        .environmentObject(AuthViewModel())
-        .environmentObject(AppViewModel())
-        .environmentObject(AvatarViewModel())
-        .environmentObject(TeamWeekViewModel())
-        .environmentObject(NavigationViewModel())
+        .environmentObject(AuthVM())
+        .environmentObject(AppVM())
+        .environmentObject(AvatarVM())
+        .environmentObject(TeamWeekVM())
+        .environmentObject(NavigationVM())
 }

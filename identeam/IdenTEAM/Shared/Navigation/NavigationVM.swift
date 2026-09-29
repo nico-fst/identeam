@@ -12,7 +12,7 @@ enum AppTab: Hashable {
     case create
 }
 
-class NavigationViewModel: ObservableObject {
+class NavigationVM: ObservableObject {
     @Published var teamPath: [Route] = []
     @Published var selectedTab: AppTab = .teams
     

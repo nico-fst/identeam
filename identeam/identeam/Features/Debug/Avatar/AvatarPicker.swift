@@ -7,7 +7,7 @@ struct AvatarPicker: View {
     @State private var avatarImage: IdentifiableImage?
     @State private var selectedItem: PhotosPickerItem?
 
-    @EnvironmentObject private var avatarVM: AvatarViewModel
+    @EnvironmentObject private var avatarVM: AvatarVM
 
     @Environment(\.modelContext) private var ctx
 
@@ -148,5 +148,5 @@ struct AvatarPicker: View {
 
 #Preview {
     AvatarPicker()
-        .environmentObject(AvatarViewModel())
+        .environmentObject(AvatarVM())
 }

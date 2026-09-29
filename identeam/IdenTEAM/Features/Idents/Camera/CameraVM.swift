@@ -12,7 +12,7 @@ struct IdentifiableImage: Identifiable {
     let imageData: Data
 }
 
-class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
+class CameraVM: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
     // SwiftUI vars
     @Published var isCapturingPhoto = false
     @Published var capturedImage: IdentifiableImage?

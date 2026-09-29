@@ -2,10 +2,10 @@ import SwiftData
 import SwiftUI
 
 struct TeamsView: View {
-    @EnvironmentObject var teamsVM: TeamsViewModel
-    @EnvironmentObject var vm: AppViewModel
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var navVM: NavigationViewModel
+    @EnvironmentObject var teamsVM: TeamsVM
+    @EnvironmentObject var vm: AppVM
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var navVM: NavigationVM
     @Environment(\.modelContext) private var modelContext
 
     @Query private var teams: [Team]
@@ -170,30 +170,30 @@ struct TeamsView: View {
 
 #Preview("Teams List") {
     TeamsView()
-        .environmentObject(AppViewModel())
-        .environmentObject(TeamsViewModel())
-        .environmentObject(AuthViewModel())
-        .environmentObject(NavigationViewModel())
+        .environmentObject(AppVM())
+        .environmentObject(TeamsVM())
+        .environmentObject(AuthVM())
+        .environmentObject(NavigationVM())
 }
 
 #Preview("Join Team Sheet") {
-    let teamsVM = TeamsViewModel()
+    let teamsVM = TeamsVM()
     teamsVM.showingJoinSheet = true
 
     return TeamsView()
-        .environmentObject(AppViewModel())
+        .environmentObject(AppVM())
         .environmentObject(teamsVM)
-        .environmentObject(AuthViewModel())
-        .environmentObject(NavigationViewModel())
+        .environmentObject(AuthVM())
+        .environmentObject(NavigationVM())
 }
 
 #Preview("Create Team Sheet") {
-    let teamsVM = TeamsViewModel()
+    let teamsVM = TeamsVM()
     teamsVM.showingCreateSheet = true
 
     return TeamsView()
-        .environmentObject(AppViewModel())
+        .environmentObject(AppVM())
         .environmentObject(teamsVM)
-        .environmentObject(AuthViewModel())
-        .environmentObject(NavigationViewModel())
+        .environmentObject(AuthVM())
+        .environmentObject(NavigationVM())
 }

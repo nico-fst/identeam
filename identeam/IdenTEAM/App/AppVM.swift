@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-class AppViewModel: ObservableObject {
+class AppVM: ObservableObject {
     @Published var toastMessage: String?
     @Published var alert: AlertData?
 

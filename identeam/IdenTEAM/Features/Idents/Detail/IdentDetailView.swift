@@ -7,9 +7,9 @@ struct IdentDetailView: View {
     let slug: String
 
     @AppStorage("userID") private var userID = ""
-    @EnvironmentObject private var vm: AppViewModel
-    @EnvironmentObject private var teamsVM: TeamsViewModel
-    @EnvironmentObject private var teamVM: TeamWeekViewModel
+    @EnvironmentObject private var vm: AppVM
+    @EnvironmentObject private var teamsVM: TeamsVM
+    @EnvironmentObject private var teamVM: TeamWeekVM
     @Environment(\.modelContext) private var ctx
 
     private func formattedDateStringShort(for date: Date) -> String {

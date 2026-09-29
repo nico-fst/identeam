@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-class TeamsViewModel: ObservableObject {
+class TeamsVM: ObservableObject {
     typealias TeamWeekFetcher = (_ slug: String, _ date: Date) async throws -> TeamWeek
 
     private let fetchTeamWeek: TeamWeekFetcher
@@ -44,7 +44,7 @@ class TeamsViewModel: ObservableObject {
     
     @MainActor
     @discardableResult
-    func reloadTeamWeek(slug: String, weekStart date: Date, vm: AppViewModel, ctx modelContext: ModelContext) async -> TeamWeek? {
+    func reloadTeamWeek(slug: String, weekStart date: Date, vm: AppVM, ctx modelContext: ModelContext) async -> TeamWeek? {
         let weekStart = AppCalendar.startOfWeek(containing: date)
         do {
             let descriptor = FetchDescriptor<TeamWeek>(
@@ -103,7 +103,7 @@ class TeamsViewModel: ObservableObject {
         return regex.firstMatch(in: slug, range: range) != nil
     }
     
-    func tryJoiningTeam(vm: AppViewModel) async {
+    func tryJoiningTeam(vm: AppVM) async {
         isFetching = true
         defer { isFetching = false }
         
@@ -131,7 +131,7 @@ class TeamsViewModel: ObservableObject {
         }
     }
     
-    func tryLeavingTeam(ctx: ModelContext, vm: AppViewModel, slug: String) async
+    func tryLeavingTeam(ctx: ModelContext, vm: AppVM, slug: String) async
     {
         isFetching = true
         defer { isFetching = false }
@@ -151,7 +151,7 @@ class TeamsViewModel: ObservableObject {
         }
     }
     
-    func tryCreatingTeam(ctx: ModelContext, vm: AppViewModel) async throws {
+    func tryCreatingTeam(ctx: ModelContext, vm: AppVM) async throws {
         isFetching = true
         defer { isFetching = false }
         

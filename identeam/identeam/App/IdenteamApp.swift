@@ -5,14 +5,14 @@ import SwiftUI
 struct IdenteamApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    @StateObject private var vm = AppViewModel()
-    @StateObject private var authVM = AuthViewModel()
-    @StateObject private var teamsVM = TeamsViewModel()
-    // TeamWeekViewModel defined in TeamWeekView
-    @StateObject private var navVM = NavigationViewModel()
-    @StateObject private var cameraVM = CameraViewModel()
-    @StateObject private var avatarVM = AvatarViewModel()
-    @StateObject private var identingVM = IdentingViewModel()
+    @StateObject private var vm = AppVM()
+    @StateObject private var authVM = AuthVM()
+    @StateObject private var teamsVM = TeamsVM()
+    // TeamWeekVM defined in TeamWeekView
+    @StateObject private var navVM = NavigationVM()
+    @StateObject private var cameraVM = CameraVM()
+    @StateObject private var avatarVM = AvatarVM()
+    @StateObject private var identingVM = IdentingVM()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema(localCacheModelTypes)

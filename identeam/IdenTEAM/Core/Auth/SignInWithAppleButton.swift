@@ -2,8 +2,8 @@ import AuthenticationServices
 import SwiftUI
 
 struct SignInWithAppleButtonComponent: View {
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var vm: AppVM
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -87,5 +87,5 @@ struct SignInWithAppleButtonComponent: View {
 
 #Preview {
     SignInWithAppleButtonComponent()
-        .environmentObject(AuthViewModel())
+        .environmentObject(AuthVM())
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct AuthSheetView: View {
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var vm: AppViewModel
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var vm: AppVM
     
 
     var body: some View {
@@ -93,6 +93,6 @@ struct AuthSheetView: View {
 
 #Preview {
     AuthSheetView()
-        .environmentObject(AuthViewModel())
-        .environmentObject(AppViewModel())
+        .environmentObject(AuthVM())
+        .environmentObject(AppVM())
 }

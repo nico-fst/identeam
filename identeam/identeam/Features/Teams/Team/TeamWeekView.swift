@@ -10,9 +10,9 @@ struct TeamWeekView: View {
 
     @AppStorage("userID") private var userID: String = ""
 
-    @EnvironmentObject var vm: AppViewModel
-    @EnvironmentObject var teamsVM: TeamsViewModel
-    @StateObject var teamVM = TeamWeekViewModel()
+    @EnvironmentObject var vm: AppVM
+    @EnvironmentObject var teamsVM: TeamsVM
+    @StateObject var teamVM = TeamWeekVM()
     @Environment(\.modelContext) private var ctx
 
     @Namespace private var transitions
@@ -164,10 +164,7 @@ struct TeamWeekView: View {
                     .presentationDetents([.large])
                 }
             } else {
-                ContentUnavailableView(
-                    "Team not found",
-                    systemImage: "person.2.slash"
-                )
+                Color.clear
             }
         }
         .task(id: "\(slug)|\(AppCalendar.dateString(teamVM.weekStart))") {
@@ -193,7 +190,7 @@ struct TeamWeekView: View {
 
 private struct TeamView_PreviewContainer: View {
     let container: ModelContainer
-    @StateObject private var teamVM: TeamWeekViewModel
+    @StateObject private var teamVM: TeamWeekVM
 
     init(openIdent: Bool = false) {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -215,7 +212,7 @@ private struct TeamView_PreviewContainer: View {
         container.mainContext.insert(team)
         container.mainContext.insert(teamWeek)
 
-        let teamVM = TeamWeekViewModel()
+        let teamVM = TeamWeekVM()
 
         if openIdent {
             teamVM.selectedIdent = teamWeek.members
@@ -229,8 +226,8 @@ private struct TeamView_PreviewContainer: View {
 
     var body: some View {
         TeamWeekView(slug: "die-kanten")
-            .environmentObject(AppViewModel())
-            .environmentObject(TeamsViewModel())
+            .environmentObject(AppVM())
+            .environmentObject(TeamsVM())
             .environmentObject(teamVM)
             .modelContainer(container)
     }

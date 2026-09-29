@@ -2,10 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @EnvironmentObject var authVM: AuthViewModel
-    @EnvironmentObject var teamsVM: TeamsViewModel
-    @EnvironmentObject var vm: AppViewModel
-    @EnvironmentObject var navVM: NavigationViewModel
+    @EnvironmentObject var authVM: AuthVM
+    @EnvironmentObject var teamsVM: TeamsVM
+    @EnvironmentObject var vm: AppVM
+    @EnvironmentObject var navVM: NavigationVM
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -64,9 +64,9 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         return ContentView()
-            .environmentObject(AppViewModel())
-            .environmentObject(AuthViewModel())
-            .environmentObject(TeamsViewModel())
-            .environmentObject(NavigationViewModel())
+            .environmentObject(AppVM())
+            .environmentObject(AuthVM())
+            .environmentObject(TeamsVM())
+            .environmentObject(NavigationVM())
     }
 }

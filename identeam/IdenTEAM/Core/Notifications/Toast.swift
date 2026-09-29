@@ -60,8 +60,8 @@ struct ToastView: View {
 
     ToastContainer(toastMessage: $toastMessage) {
         ContentView()
-            .environmentObject(AppViewModel())
-            .environmentObject(AuthViewModel())
-            .environmentObject(TeamsViewModel())
+            .environmentObject(AppVM())
+            .environmentObject(AuthVM())
+            .environmentObject(TeamsVM())
     }
 }
