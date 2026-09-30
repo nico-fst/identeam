@@ -53,23 +53,16 @@ struct CurrentProgressWidget: View {
     }
 
     private var streakBadge: some View {
-        HStack(spacing: 2) {
-            Text(String(week.teamStreak))
-                .bold()
-
-            if week.teamStreak > 0 {
-                Image(systemName: "flame.fill")
-            } else {
-                Image(systemName: "snowflake")
-            }
-        }
-        .foregroundStyle(
-            week.teamStreak > 0
-                ? .orange.opacity(0.9)
-                : .white
-        )
-        .padding(.horizontal, 9)
-        .padding(.vertical, 6)
+        TeamStreakLabel(week: week)
+            .labelStyle(CompactStreakLabelStyle())
+            .bold()
+            .foregroundStyle(
+                week.teamStreak > 0
+                    ? .orange.opacity(0.9)
+                    : .white
+            )
+            .padding(.horizontal, 9)
+            .padding(.vertical, 6)
     }
 
     private var memberFigures: some View {

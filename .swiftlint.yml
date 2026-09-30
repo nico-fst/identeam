@@ -8,9 +8,7 @@ disabled_rules:
   - multiple_closures_with_trailing_closure # allow anonymous closures, e.g. .sheet(item:onDismiss:) {...} instead of .sheet(item:onDismiss:content:)
 
 identifier_name:
-  excluded: # allow as variable names:
-    - vm
+  min_length: 1 # allow e.g. x
+  excluded:
+    - vm # allow variable name
     - id
-    - x
-    - y
-    - i

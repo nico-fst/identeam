@@ -84,10 +84,33 @@ nonisolated enum AppCalendar {
         )!
     }
 
+    static func startOfMonth(
+        containing date: Date,
+        calendar: Calendar = AppCalendar.calendar
+    ) -> Date {
+        calendar.date(
+            from: calendar.dateComponents([.year, .month], from: date)
+        )!
+    }
+
     static func datesInWeek(containing date: Date = Date()) -> [Date] {
         let start = startOfWeek(containing: date)
         return (0..<7).compactMap {
             calendar.date(byAdding: .day, value: $0, to: start)
         }
+    }
+
+    static func weekStartsInMonth(containing date: Date) -> [Date] {
+        let monthStart = startOfMonth(containing: date)
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart)!
+        var weekStart = startOfWeek(containing: monthStart)
+        var weeks: [Date] = []
+
+        while weekStart < nextMonth {
+            weeks.append(weekStart)
+            weekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStart)!
+        }
+
+        return weeks
     }
 }

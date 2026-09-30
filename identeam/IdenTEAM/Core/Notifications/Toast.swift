@@ -48,7 +48,7 @@ struct ToastView: View {
         .padding(.horizontal, 20)
         .background(
             RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .fill(Color("AccentColor"))
+                .fill(.accent)
         )
         .padding(.horizontal, 16)
         .shadow(radius: 4)

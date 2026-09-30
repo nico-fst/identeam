@@ -112,21 +112,14 @@ struct CurrentWeekWidget: View {
             // header
             Group {
                 cell {
-                    HStack(spacing: 2) {
-                        Text(String(teamWeek.teamStreak))
-
-                        if teamWeek.teamStreak > 0 {
-                            Image(systemName: "flame.fill")
-                        } else {
-                            Image(systemName: "snowflake")
-                        }
-                    }
-                    .foregroundStyle(
-                        teamWeek.teamStreak > 0
-                            ? .orange
-                            : .blue
-                    )
-                    .bold()
+                    TeamStreakLabel(week: teamWeek)
+                        .labelStyle(CompactStreakLabelStyle())
+                        .foregroundStyle(
+                            teamWeek.teamStreak > 0
+                                ? .orange
+                                : .blue
+                        )
+                        .bold()
                 }
                 ForEach(dates, id: \.self) { date in
                     cell(

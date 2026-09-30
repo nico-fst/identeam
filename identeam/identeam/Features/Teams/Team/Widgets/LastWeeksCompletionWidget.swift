@@ -74,17 +74,23 @@ struct LastWeeksCompletionWidget: View {
                         .frame(height: 80)
                         .aspectRatio(0.5, contentMode: .fit)
 
+                        let streakLabel = TeamStreakLabel(
+                            week: week,
+                            context: .completion(isLatestWeek: week == lastWeeksSorted.last)
+                        )
                         if completed(week) {
-                            HStack(spacing: 3) {
-                                Text(String(week.teamStreak))
-                                    .bold()
-                                Image(systemName: "flame.fill")
-                            }
-                            .font(.system(size: 13))
-                            .foregroundStyle(.orange)
+                            streakLabel
+                                .labelStyle(CompactStreakLabelStyle())
+                                .bold()
+                                .font(.system(size: 13))
+                                .foregroundStyle(.orange)
                         } else {
-                            Image(systemName: "snowflake")
-                                .foregroundStyle(.blue)
+                            if week == lastWeeksSorted.last {
+                                streakLabel.labelStyle(.iconOnly)
+                            } else {
+                                streakLabel.labelStyle(.iconOnly)
+                                    .foregroundStyle(.blue)
+                            }
                         }
                     }
                 }
