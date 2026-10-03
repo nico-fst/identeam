@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 class TeamsVM: ObservableObject {
     typealias TeamWeekFetcher = (_ slug: String, _ date: Date) async throws -> TeamWeek
@@ -82,6 +83,7 @@ class TeamsVM: ObservableObject {
                 result = fetchedWeek
             }
             try modelContext.save()
+            WidgetCenter.shared.reloadTimelines(ofKind: "widgets")  // trigger widget reload
             return result
         } catch is CancellationError {
             return nil

@@ -14,15 +14,7 @@ struct IdenteamApp: App {
     @StateObject private var avatarVM = AvatarVM()
     @StateObject private var identingVM = IdentingVM()
 
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema(localCacheModelTypes)
-        let configuration = ModelConfiguration(schema: schema)
-        do {
-            return try makeLocalCacheContainer(schema: schema, configuration: configuration)
-        } catch {
-            fatalError("ERROR creating local cache: \(error)")
-        }
-    }()
+    var sharedModelContainer = SharedModelConfig.makeContainer(for: .app)
 
     var body: some Scene {
         LaunchScreen {

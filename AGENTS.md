@@ -4,6 +4,7 @@
 All non-trivial code changes must be verified by tests.
 
 ## Workflow
+- Whenever creating or editing a `.swift` file, remove the entire Xcode-generated header comment block (filename, project name, `// Created, Created by ...`, and surrounding `//` lines). Do not add these headers to new Swift files.
 - After every code change, run the relevant tests.
 - If no tests exist, create appropriate tests before considering the change complete.
 - Update existing tests if behavior changes.
