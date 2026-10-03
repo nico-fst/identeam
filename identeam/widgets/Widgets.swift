@@ -1,10 +1,3 @@
-//
-//  Widgets.swift
-//  Widgets
-//
-//  Created by Nico Stern on 30.09.26.
-//
-
 import SwiftData
 import SwiftUI
 import WidgetKit
@@ -40,8 +33,9 @@ struct Widgets: Widget {
     }()
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(
+        AppIntentConfiguration(
             kind: kind,
+            intent: ConfigurationAppIntent.self,
             provider: Provider()
         ) { entry in
             WidgetsEntryView(entry: entry)

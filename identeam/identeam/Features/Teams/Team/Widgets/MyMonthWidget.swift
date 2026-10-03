@@ -1,10 +1,3 @@
-//
-//  MyMonthWidget.swift
-//  identeam
-//
-//  Created by Nico Stern on 30.09.26.
-//
-
 import SwiftUI
 
 struct MyMonthWidget: View {

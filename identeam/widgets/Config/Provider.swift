@@ -1,38 +1,39 @@
-//
-//  Provider.swift
-//  identeam
-//
-//  Created by Nico Stern on 30.09.26.
-//
-
 import SwiftData
 import System
 import WidgetKit
 
-struct Provider: TimelineProvider {
+struct Provider: AppIntentTimelineProvider {
     // dummy data, e.g. in gallery
     func placeholder(in context: Context) -> WeekEntry {
         WeekEntry(date: Date(), week: .templateKanten)
     }
 
     // fast preview, e.g. in gallery preview
-    func getSnapshot(in context: Context, completion: @escaping (WeekEntry) -> Void) {
-        let week = loadWeek() ?? .templateKanten  // TODO "not found"
-        completion(WeekEntry(date: Date(), week: week))
+    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> WeekEntry
+    {
+        let week = loadWeek(slug: TeamWeek.templateKanten.slug) ?? .templateKanten  // TODO "not found"
+
+        return WeekEntry(date: Date(), week: week)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let week = loadWeek() ?? .templateKanten  // TODO "not found"
-        var entry = WeekEntry(date: Date(), week: week)
+    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<
+        WeekEntry
+    > {
+        let week = loadWeek(slug: configuration.team?.id) ?? .templateKanten  // TODO "not found"
+        let entry = WeekEntry(date: Date(), week: week)
 
-        completion(Timeline(entries: [entry], policy: .never))
+        return Timeline(
+            entries: [entry],
+            policy: .never
+        )
     }
 
-    private func loadWeek() -> TeamWeek? {
+    private func loadWeek(slug: String?) -> TeamWeek? {
+        guard let slug else { return nil }
+
         let container = SharedModelConfig.makeContainer(for: .widget)
         let context = ModelContext(container)
 
-        let slug = "die-kanten"
         let currentWeekStart = AppCalendar.startOfWeek(containing: Date())
         let descriptor = FetchDescriptor<TeamWeek>(
             predicate: #Predicate {

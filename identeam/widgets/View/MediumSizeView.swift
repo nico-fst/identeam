@@ -1,10 +1,3 @@
-//
-//  MediumSizeView.swift
-//  identeam
-//
-//  Created by Nico Stern on 03.10.26.
-//
-
 import SwiftData
 import SwiftUI
 import WidgetKit

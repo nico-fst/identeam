@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		97218C0F307140BD008836CD /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 97218C0E307140BD008836CD /* Config.xcconfig */; };
+		97218C11307142C2008836CD /* versioning.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97218C10307142C2008836CD /* versioning.sh */; };
 		978D61352FAED82300C46DF4 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 978D61342FAED82300C46DF4 /* Kingfisher */; };
 		97D89288306D81310020F89A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97D89287306D81310020F89A /* WidgetKit.framework */; };
 		97D8928A306D81310020F89A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97D89289306D81310020F89A /* SwiftUI.framework */; };
@@ -38,6 +40,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		97218C0E307140BD008836CD /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		97218C10307142C2008836CD /* versioning.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = versioning.sh; sourceTree = "<group>"; };
 		97B62F4B2ED36C170076D0C0 /* identeam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = identeam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97D89285306D81310020F89A /* Widgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Widgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		97D89287306D81310020F89A /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -56,6 +60,7 @@
 		9743DDD1306D8A0A009BADD2 /* Exceptions for "widgets" folder in "identeam" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Config/AppIntent.swift,
 				Model/WeekEntry.swift,
 			);
 			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
@@ -130,6 +135,8 @@
 		97B62F422ED36C170076D0C0 = {
 			isa = PBXGroup;
 			children = (
+				97218C0E307140BD008836CD /* Config.xcconfig */,
+				97218C10307142C2008836CD /* versioning.sh */,
 				97D8929D306D827B0020F89A /* Widgets.entitlements */,
 				97B62F4D2ED36C170076D0C0 /* identeam */,
 				97D8928B306D81310020F89A /* widgets */,
@@ -259,6 +266,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97218C0F307140BD008836CD /* Config.xcconfig in Resources */,
+				97218C11307142C2008836CD /* versioning.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,6 +301,7 @@
 /* Begin XCBuildConfiguration section */
 		97B62F562ED36C190076D0C0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 97218C0E307140BD008836CD /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -356,6 +366,7 @@
 		};
 		97B62F572ED36C190076D0C0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 97218C0E307140BD008836CD /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -421,7 +432,6 @@
 				CODE_SIGN_ENTITLEMENTS = identeam/identeam.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -443,7 +453,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -468,7 +477,6 @@
 				CODE_SIGN_ENTITLEMENTS = identeam/identeam.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -490,7 +498,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -513,7 +520,6 @@
 				CODE_SIGN_ENTITLEMENTS = Widgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = widgets/Info.plist;
@@ -525,7 +531,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeam.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -547,7 +552,6 @@
 				CODE_SIGN_ENTITLEMENTS = Widgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y8K762KJBC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = widgets/Info.plist;
@@ -559,7 +563,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeam.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
