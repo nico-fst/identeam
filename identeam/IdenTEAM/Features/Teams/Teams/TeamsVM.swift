@@ -83,7 +83,7 @@ class TeamsVM: ObservableObject {
                 result = fetchedWeek
             }
             try modelContext.save()
-            WidgetCenter.shared.reloadTimelines(ofKind: "widgets")  // trigger widget reload
+            WidgetCenter.shared.reloadAllTimelines()
             return result
         } catch is CancellationError {
             return nil

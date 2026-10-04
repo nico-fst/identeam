@@ -24,6 +24,15 @@ nonisolated enum AppCalendar {
         )
     }
 
+    static func dayDotMonth(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .day(.twoDigits)
+                .month(.twoDigits)
+                .locale(Locale(identifier: "de_DE"))
+        )
+    }
+
     static func shortDateAndTime(for date: Date) -> String {
         date.formatted(
             .dateTime

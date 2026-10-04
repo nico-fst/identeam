@@ -244,7 +244,9 @@ extension TeamWeekView {
                     teamVM.selectedIdent = ident
                 }
                 CurrentProgressWidget(week: teamWeek)
-                LastWeeksCompletionWidget(lastWeeks: lastWeeks)
+                Section("Completion of last weeks") {
+                    LastWeeksCompletionView(lastWeeks: lastWeeks, animated: true)
+                }
             case .personal:
                 if monthWeeks.count
                     == AppCalendar.weekStartsInMonth(containing: month).count

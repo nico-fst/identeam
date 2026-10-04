@@ -60,8 +60,7 @@
 		9743DDD1306D8A0A009BADD2 /* Exceptions for "widgets" folder in "identeam" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Config/AppIntent.swift,
-				Model/WeekEntry.swift,
+				Shared/Configuration/AppIntent.swift,
 			);
 			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
 		};
@@ -81,7 +80,11 @@
 				Features/Idents/Ident.swift,
 				Features/Teams/Team/TeamMember.swift,
 				Features/Teams/Team/TeamWeek.swift,
+				Features/Teams/Team/Widgets/FilledFlash.swift,
+				Features/Teams/Team/Widgets/LastWeeksCompletionView.swift,
+				Features/Teams/Team/Widgets/TeamStreakLabel.swift,
 				Features/Teams/Teams/Team.swift,
+				Resources/SharedAssets.xcassets,
 				Shared/Models/DTOs.swift,
 				Shared/Models/S3Item.swift,
 				Shared/Models/User.swift,
