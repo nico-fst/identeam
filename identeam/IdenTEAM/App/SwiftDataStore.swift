@@ -5,6 +5,12 @@ import SwiftData
 struct SharedModelConfig {
     static let appGroup = "group.de.nicostern.identeam"
 
+    // workaround to get @AppStorage("userID") into widget
+    static var widgetUserID: String? {
+        get { UserDefaults(suiteName: appGroup)?.string(forKey: "userID") }
+        set { UserDefaults(suiteName: appGroup)?.set(newValue, forKey: "userID") }
+    }
+
     static let schema = Schema(localCacheModelTypes)
     static let config = ModelConfiguration(
         "IdenTEAM", schema: schema, groupContainer: .identifier(appGroup))

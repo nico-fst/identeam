@@ -79,10 +79,10 @@ struct TeamWeekView: View {
                     }
                     .pickerStyle(.segmented)
 
-                    overviewContent
-
                     TeamWeekActionsSection(
                         slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
+
+                    overviewContent
 
                     Section("Chat") {
                         Text("Coming soon :)")
@@ -251,12 +251,14 @@ extension TeamWeekView {
                 if monthWeeks.count
                     == AppCalendar.weekStartsInMonth(containing: month).count
                 {
-                    MyMonthWidget(
-                        month: month,
-                        personalWeeks: monthWeeks.compactMap {
-                            PersonalWeek(teamWeek: $0, userID: userID)
-                        }
-                    )
+                    Section("Month Overview") {
+                        LastMonthView(
+                            month: month,
+                            personalWeeks: monthWeeks.compactMap {
+                                PersonalWeek(teamWeek: $0, userID: userID)
+                            }
+                        )
+                    }
                 } else {
                     Section {
                         if isLoadingMonth {

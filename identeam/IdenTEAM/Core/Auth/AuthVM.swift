@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 enum AuthState: String {
     case unknown = "Unknown Auth State"
@@ -40,6 +41,8 @@ class AuthVM: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     init() {
         migrateLegacyNicknameStorage()
+        SharedModelConfig.widgetUserID = userID
+        WidgetCenter.shared.reloadAllTimelines()
 
         NotificationCenter.default.publisher(for: .didReceiveUnauthorized)
             .receive(on: DispatchQueue.main)
@@ -145,6 +148,8 @@ class AuthVM: ObservableObject {
     @MainActor
     func logout(ctx: ModelContext? = nil) {
         userID = nil
+        SharedModelConfig.widgetUserID = nil
+        WidgetCenter.shared.reloadAllTimelines()
         email = nil
         nickname = nil
         username = nil
@@ -217,6 +222,8 @@ class AuthVM: ObservableObject {
         }
 
         self.userID = userID
+        SharedModelConfig.widgetUserID = userID
+        WidgetCenter.shared.reloadAllTimelines()
         self.email = email
         self.nickname = nickname
         self.username = username
