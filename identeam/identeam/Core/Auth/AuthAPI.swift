@@ -62,7 +62,18 @@ class AuthAPI {
                 payload: payload
             )
 
-        return response.data!
+        guard (200...299).contains(response.statusCode), !response.error else {
+            throw AuthError.backend(
+                response.message.isEmpty
+                    ? "Apple sign-in failed (HTTP \(response.statusCode))"
+                    : response.message
+            )
+        }
+        guard let data = response.data else {
+            throw AuthError.unexpectedAnswer
+        }
+
+        return data
     }
 
     /// Let backend validate the sessionToken in UserDefaults send as Bearer

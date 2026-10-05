@@ -61,25 +61,29 @@ struct SignInWithAppleButtonComponent: View {
                 avatar: PresignedDTO(key: "nil", presignedURL: "none", expiresAt: Date()),  // not used but required
             )
 
-            Task {
-                let response = try await AuthAPI.shared
-                    .sendAuthFlowToBackend(
-                        identityToken: identityToken,
-                        authorizationCode: authorizationCode,
-                        user: user
+            Task { @MainActor in
+                do {
+                    let response = try await AuthAPI.shared
+                        .sendAuthFlowToBackend(
+                            identityToken: identityToken,
+                            authorizationCode: authorizationCode,
+                            user: user
+                        )
+
+                    // not tryLogin() since in async and variables not stable yet
+                    authVM.completeLogin(
+                        sessionToken: response.sessionToken,
+                        userID: response.user.userID,
+                        email: response.user.email,
+                        nickname: response.user.nickname,
+                        username: response.user.username,
+                        created: response.created
                     )
 
-                // not tryLogin() since in async and variables not stable yet
-                authVM.completeLogin(
-                    sessionToken: response.sessionToken,
-                    userID: response.user.userID,
-                    email: response.user.email,
-                    nickname: response.user.nickname,
-                    username: response.user.username,
-                    created: response.created
-                )
-
-                try await TokenAPI.shared.sendDeviceTokenToBackend()
+                    try await TokenAPI.shared.sendDeviceTokenToBackend()
+                } catch {
+                    vm.showAlert("SIWA Error", error.localizedDescription)
+                }
             }
         }
     }
