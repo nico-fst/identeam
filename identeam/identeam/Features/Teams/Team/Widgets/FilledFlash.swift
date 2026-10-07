@@ -10,11 +10,12 @@ struct FilledFlash: View {
     @State private var glowing = false
 
     var body: some View {
-        ZStack {
-            GeometryReader { geo in
-                let dynAmplitude = geo.size.height * 0.03
-                let dynFrequency = geo.size.width * 0.002
+        GeometryReader { geo in
+            let dynAmplitude = geo.size.height * 0.03
+            let dynFrequency = geo.size.width * 0.002
+            let dynLineWidth = max(1, min(geo.size.width, geo.size.height) * 0.015)
 
+            ZStack {
                 ZStack {
                     color.opacity(0.1)
 
@@ -44,36 +45,33 @@ struct FilledFlash: View {
                         .font(.system(size: geo.size.height * 0.15, weight: .bold))
                         .shadow(color: .black.opacity(0.25), radius: 5)  // glow
                 }
-            }
-            .mask {
-                Image("Flash")
-                    .resizable()
-                    .scaledToFill()
-            }
-            .overlay {
-                if progress > 0.95 {
-                    // pulse outline
-                    Image("FlashOutline")
-                        .renderingMode(.template)
+                .mask {
+                    Image("Flash")
                         .resizable()
                         .scaledToFill()
-                        .scaleEffect(glowing ? 1.1 : 1.0)
-                        .foregroundStyle(color.opacity(0.75))
-                        .blur(radius: 7)
-                        .animation(
-                            .easeInOut(duration: 1.2)
-                                .repeatForever(autoreverses: true),
-                            value: glowing
-                        )
                 }
-            }
+                .overlay {
+                    if progress > 0.95 {
+                        // pulse outline
+                        FlashShape()
+                            .strokeBorder(color.opacity(0.75), lineWidth: dynLineWidth)
+                            .aspectRatio(1, contentMode: .fill)
+                            .scaleEffect(glowing ? 1.1 : 1.0)
+                            .blur(radius: 7)
+                            .animation(
+                                .easeInOut(duration: 1.2)
+                                    .repeatForever(autoreverses: true),
+                                value: glowing
+                            )
+                    }
+                }
 
-            Image("FlashOutline")
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFill()
-                .foregroundStyle(color)
+                FlashShape()
+                    .strokeBorder(color, lineWidth: dynLineWidth)
+                    .aspectRatio(1, contentMode: .fill)
+            }
         }
+        .aspectRatio(1, contentMode: .fill)
         .onAppear {
             if animated {
                 withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
@@ -124,12 +122,17 @@ struct WaveShape: Shape {
 }
 
 #Preview("50%") {
-    FilledFlash(
-        progress: 0.5,
-        color: .accent,
-        text: "3 / 5",
-        animated: true
-    )
+    HStack {
+        ForEach([CGFloat(10), 50, 150], id: \.self) { height in
+            FilledFlash(
+                progress: 0.5,
+                color: .accent,
+                text: "3 / 5",
+                animated: true
+            )
+            .frame(height: height)
+        }
+    }
 }
 
 #Preview("100%") {

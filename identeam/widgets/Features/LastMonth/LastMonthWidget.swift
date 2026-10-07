@@ -24,34 +24,55 @@ struct LastMonthWidgetView: View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
                 currentWeekSummary
-                    .frame(width: geometry.size.width * 1 / 3)
+                    .frame(width: geometry.size.width * 1 / 2)
 
                 let rowCount = AppCalendar.weekStartsInMonth(containing: entry.date).count
                 let calendarHeight = geometry.size.height - 24 - CGFloat(rowCount - 1) * 4
-                LastMonthView(
-                    month: entry.date, personalWeeks: entry.personalWeeks,
-                    referenceDate: entry.date,
-                    dayHeight: max(1, min(24, calendarHeight / CGFloat(rowCount))),
-                    rowSpacing: 4
-                )
-                .font(.system(size: 12))
-                .padding(.horizontal, 8)
+
+                VStack(spacing: 0) {
+                    Text(entry.teamName)
+                        .font(.footnote)
+                        .bold()
+                        .foregroundStyle(.accent.opacity(0.75))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Spacer()
+
+                    LastMonthView(
+                        month: entry.date, personalWeeks: entry.personalWeeks,
+                        referenceDate: entry.date,
+                        dayHeight: max(1, min(24, calendarHeight / CGFloat(rowCount))),
+                        rowSpacing: 4
+                    )
+                    .font(.system(size: 10))
+
+                    Spacer()
+                }
+                .padding(.horizontal)
                 .padding(.vertical, 12)
-                .frame(width: geometry.size.width * 2 / 3, height: geometry.size.height)
+                .frame(
+                    width: geometry.size.width * 1 / 2,
+                    height: geometry.size.height
+                )
             }
             .frame(height: geometry.size.height)
         }
     }
 
     private var currentWeekSummary: some View {
-        VStack(spacing: 8) {
-            Text(entry.teamName)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+        let week = entry.currentWeek
+        let completed = week.map { $0.targetSum > 0 && $0.identSum >= $0.targetSum } ?? false
 
-            let week = entry.currentWeek
-            let completed = week.map { $0.targetSum > 0 && $0.identSum >= $0.targetSum } ?? false
+        return VStack(spacing: 8) {
+            Spacer()
+            TeamStreakLabel(week: week)
+                .labelStyle(CompactStreakLabelStyle())
+                .bold()
+                .foregroundStyle(completed ? .orange : .blue)
+        }
+        .padding(10)
+        .background {
             FilledFlash(
                 progress: week.map {
                     $0.targetSum > 0 ? Double($0.identSum) / Double($0.targetSum) : 0
@@ -60,15 +81,14 @@ struct LastMonthWidgetView: View {
                 text: week.map { "\($0.identSum) / \($0.targetSum)" } ?? "",
                 animated: false
             )
-            .frame(height: 80)
-            .aspectRatio(0.5, contentMode: .fit)
-
-            TeamStreakLabel(week: week)
-                .labelStyle(CompactStreakLabelStyle())
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(.orange)
+            .frame(width: 250, height: 250)
+            .shadow(
+                color: completed ? .accent.opacity(0.5) : .red.opacity(0.5),
+                radius: 20,
+                x: 0,
+                y: 5
+            )
         }
-        .padding(.horizontal, 4)
     }
 }
 
@@ -76,8 +96,21 @@ struct LastMonthWidgetView: View {
     LastMonthWidget()
 } timeline: {
     LastMonthEntry(
-        date: PersonalWeek.templateMonth, teamName: "Die Kanten",
-        personalWeeks: PersonalWeek.templateWeeks, currentWeek: .templateStreakKanten
+        date: PersonalWeek.templateMonth,
+        teamName: "Die Kanten",
+        personalWeeks: PersonalWeek.templateWeeks,
+        currentWeek: .templateStreakKanten
     )
-    LastMonthEntry(date: Date(), teamName: "Choose a team", personalWeeks: [], currentWeek: nil)
+    LastMonthEntry(
+        date: PersonalWeek.templateMonth,
+        teamName: "Other team",
+        personalWeeks: PersonalWeek.templateWeeks,
+        currentWeek: .templateKanten
+    )
+    LastMonthEntry(
+        date: PersonalWeek.templateMonth,
+        teamName: "Very long team name really long",
+        personalWeeks: PersonalWeek.templateWeeks,
+        currentWeek: .templateBadKanten
+    )
 }

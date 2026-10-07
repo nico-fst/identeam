@@ -81,6 +81,7 @@
 				Features/Teams/Team/TeamMember.swift,
 				Features/Teams/Team/TeamWeek.swift,
 				Features/Teams/Team/Widgets/FilledFlash.swift,
+				Features/Teams/Team/Widgets/FlashShape.swift,
 				Features/Teams/Team/Widgets/LastWeeksCompletionView.swift,
 				Features/Teams/Team/Widgets/LastMonthView.swift,
 				Features/Teams/Team/Widgets/PersonalWeek.swift,

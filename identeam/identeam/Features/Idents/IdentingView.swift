@@ -46,12 +46,9 @@ struct IdentingView: View {
                             }
                             .compositingGroup()
                             .overlay {
-                                Image("FlashOutline")
-                                    .renderingMode(.template)  // renders all pixels as foreground color
-                                    .resizable()
-                                    .scaledToFit()
+                                FlashShape()
+                                    .strokeBorder(.accent, lineWidth: 1)
                                     .scaleEffect(1.5)
-                                    .foregroundStyle(.accent)
                             }
                             .allowsHitTesting(false)
                     }
@@ -186,11 +183,8 @@ struct IdentingPhotoPreview: View {
                             .scaledToFit()
                     )
                     .overlay {
-                        Image("FlashOutline")
-                            .renderingMode(.template)  // renders all pixels as foreground color
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundStyle(.accent)
+                        FlashShape()
+                            .strokeBorder(.accent, lineWidth: 1)
                     }
                     .modifier(
                         Floating3DEffect(

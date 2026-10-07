@@ -14,42 +14,42 @@ struct LastMonthView: View {
 
     var body: some View {
         VStack(spacing: rowSpacing) {
-            ForEach(calendarWeeks, id: \.self) { week in
+            ForEach(AppCalendar.weekStartsInMonth(containing: month), id: \.self) { weekStart in
+                let week = calendarDays(in: weekStart)
                 let weekReachedGoal = personalWeeks.contains {
                     $0.goalReached
-                        && AppCalendar.calendar.isDate($0.weekStart, inSameDayAs: week[0])
+                        && AppCalendar.calendar.isDate($0.weekStart, inSameDayAs: weekStart)
                 }
 
                 HStack(spacing: 2) {
-                    ForEach(week, id: \.self) { date in
+                    ForEach(week.indices, id: \.self) { index in
                         ZStack {
-                            if isIdent(on: date) {
-                                Image("Flash")
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundStyle(.accent)
-                            } else if isTarget(on: date) {
-                                Image(isMissedTarget(on: date) ? "Flash" : "FlashOutline")
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundStyle(
-                                        isMissedTarget(on: date) ? .red.opacity(0.5) : .accent)
-                            } else {
-                                Text(String(AppCalendar.calendar.component(.day, from: date)))
-                                    .monospacedDigit()
-                                    .opacity(
-                                        AppCalendar.calendar.isDate(
-                                            date, equalTo: month, toGranularity: .month)
-                                            ? 1 : 0.2
-                                    )
-                                    .foregroundStyle(.primary)
-                            }
+                            Color.clear
+                            if let date = week[index] {
+                                if isIdent(on: date) {
+                                    Image("Flash")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundStyle(.accent)
+                                } else if isTarget(on: date) {
+                                    if isMissedTarget(on: date) {
+                                        FlashShape()
+                                            .strokeBorder(.red, lineWidth: 1)
+                                    } else {
+                                        FlashShape()
+                                            .strokeBorder(.accent, lineWidth: 1)
+                                    }
+                                } else {
+                                    Text(String(AppCalendar.calendar.component(.day, from: date)))
+                                        .monospacedDigit()
+                                        .foregroundStyle(.primary)
+                                }
 
-                            if AppCalendar.calendar.isDate(date, inSameDayAs: referenceDate) {
-                                Circle()
-                                    .stroke(.accent.opacity(0.5), lineWidth: 2)
+                                if AppCalendar.calendar.isDate(date, inSameDayAs: referenceDate) {
+                                    Circle()
+                                        .stroke(.accent.opacity(0.75), lineWidth: 1)
+                                }
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -58,9 +58,14 @@ struct LastMonthView: View {
                 }
                 .background {
                     if weekReachedGoal {
-                        RoundedRectangle(cornerRadius: dayHeight / 2, style: .continuous)
-                            .fill(.accent.opacity(0.15))
-                            .padding(.vertical, -2)
+                        GeometryReader { geometry in
+                            RoundedRectangle(cornerRadius: dayHeight / 2, style: .continuous)
+                                .fill(.accent.opacity(0.15))
+                                .padding(
+                                    backgroundInsets(in: weekStart, rowWidth: geometry.size.width)
+                                )
+                                .padding(.vertical, -2)
+                        }
                     }
                 }
             }
@@ -87,9 +92,25 @@ struct LastMonthView: View {
         }
     }
 
-    var calendarWeeks: [[Date]] {
-        AppCalendar.weekStartsInMonth(containing: month)
-            .map { AppCalendar.datesInWeek(containing: $0) }
+    func calendarDays(in weekStart: Date) -> [Date?] {
+        AppCalendar.datesInWeek(containing: weekStart).map { date in
+            AppCalendar.calendar.isDate(date, equalTo: month, toGranularity: .month)
+                ? date : nil
+        }
+    }
+
+    func backgroundInsets(in weekStart: Date, rowWidth: CGFloat) -> EdgeInsets {
+        let days = calendarDays(in: weekStart)
+        let leadingDays = days.prefix { $0 == nil }.count
+        let trailingDays = days.reversed().prefix { $0 == nil }.count
+        // Seven equal day cells with the same two-point spacing as the row.
+        let dayStride = (rowWidth - 6 * 2) / 7 + 2
+        return EdgeInsets(
+            top: 0,
+            leading: CGFloat(leadingDays) * dayStride,
+            bottom: 0,
+            trailing: CGFloat(trailingDays) * dayStride
+        )
     }
 }
 
