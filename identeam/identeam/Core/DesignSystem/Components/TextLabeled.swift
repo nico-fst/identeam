@@ -12,8 +12,8 @@ struct TextLabeled: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(label)
-                .font(.caption)
-                .foregroundColor(.gray)
+                .font(.nunito(.caption))
+                .foregroundColor(IgniteColor.muted)
             Text(value)
                 .contextMenu {  // manual since iOS27 changed .textSelection behavior
                     Button {

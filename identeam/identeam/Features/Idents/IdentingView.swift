@@ -35,7 +35,7 @@ struct IdentingView: View {
                     .overlay {
                         // outside of flash - darkened
                         Rectangle()
-                            .fill(.black.opacity(0.5))
+                            .fill(IgniteColor.cameraShade.opacity(0.5))
                             .ignoresSafeArea()
                             .overlay {
                                 Image("Flash")
@@ -55,9 +55,12 @@ struct IdentingView: View {
 
                 // camera controls
                 VStack {
-                    TeamWheel(textColor: .white, selectedTeamSlug: $identingVM.selectedTeamSlug)
-                        .frame(width: 300, height: 110)
-                        .disabled(identingVM.isUploadingImage)
+                    TeamWheel(
+                        textColor: IgniteColor.cameraText,
+                        selectedTeamSlug: $identingVM.selectedTeamSlug
+                    )
+                    .frame(width: 300, height: 110)
+                    .disabled(identingVM.isUploadingImage)
 
                     Spacer()  // at bottom of screen
 
@@ -67,25 +70,25 @@ struct IdentingView: View {
                             cameraVM.toggleFlash()
                         } label: {
                             Image(systemName: flashIcon)
-                                .font(.largeTitle)
+                                .font(.nunito(.largeTitle))
                                 .frame(width: 70, height: 70)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(IgniteColor.cameraText)
                         }
 
                         Button {
                             cameraVM.capturePhoto()
                         } label: {
                             Circle()
-                                .strokeBorder(.white, lineWidth: 3)
+                                .strokeBorder(IgniteColor.cameraText, lineWidth: 3)
                                 .opacity(0.8)
                                 .frame(width: 70, height: 70)
                                 .overlay {
                                     if cameraVM.isCapturingPhoto {
                                         ProgressView()
-                                            .tint(.white)
+                                            .tint(IgniteColor.cameraText)
                                     } else {
                                         Circle()
-                                            .fill(.white)
+                                            .fill(IgniteColor.cameraText)
                                             .frame(width: 60, height: 60)
                                     }
                                 }
@@ -96,9 +99,9 @@ struct IdentingView: View {
                             cameraVM.switchCamera()
                         } label: {
                             Image(systemName: "arrow.triangle.2.circlepath.camera")
-                                .font(.largeTitle)
+                                .font(.nunito(.largeTitle))
                                 .frame(width: 70, height: 70)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(IgniteColor.cameraText)
                         }
                     }
                     .padding(.bottom, 30)
@@ -126,7 +129,7 @@ struct IdentingView: View {
             } else {
                 VStack {
                     Image(systemName: "camera.fill")
-                        .font(.largeTitle)
+                        .font(.nunito(.largeTitle))
                         .opacity(0.3)
                     Text("Camera Access Required")
                         .opacity(0.3)
@@ -139,6 +142,8 @@ struct IdentingView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
+                        .tint(.accent)
+                        .foregroundStyle(IgniteColor.onAccent)
                     }
                 }
                 .padding()
@@ -166,7 +171,7 @@ struct IdentingPhotoPreview: View {
         ZStack {
             VStack {
                 TeamWheel(
-                    textColor: colorScheme == .dark ? .white : .black,
+                    textColor: IgniteColor.text,
                     selectedTeamSlug: $identingVM.selectedTeamSlug
                 )
                 .frame(width: 300, height: 110)
@@ -207,17 +212,18 @@ struct IdentingPhotoPreview: View {
                 .padding()  // simulating List{TextField} style
                 .background {
                     RoundedRectangle(cornerRadius: 50)
-                        .fill(.gray.opacity(0.15))
+                        .fill(IgniteColor.surface)
                 }
                 .lineLimit(1...2)
                 .disabled(identingVM.isUploadingImage)
 
                 Text(identingVM.uploadError ?? "")
-                    .foregroundStyle(.red)
+                    .foregroundStyle(IgniteColor.error)
             }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .igniteColors()
         .navigationTitle("New Ident")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -254,9 +260,12 @@ struct IdentingPhotoPreview: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
+                            .foregroundStyle(IgniteColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.accent)
+                .foregroundStyle(IgniteColor.onAccent)
                 .disabled(identingVM.isUploadingImage)
             }
         }

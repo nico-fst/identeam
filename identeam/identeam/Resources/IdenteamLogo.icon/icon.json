@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+    "automatic-gradient" : "srgb:1.00000,0.41961,0.17255,1.00000"
   },
   "groups" : [
     {
@@ -11,7 +11,7 @@
           "blend-mode" : "normal",
           "fill" : "none",
           "glass" : true,
-          "hidden" : false,
+          "hidden" : true,
           "image-name" : "identeam_logo_foreground.png",
           "name" : "identeam_logo_subject",
           "opacity" : 1,
@@ -20,6 +20,32 @@
             "translation-in-points" : [
               0,
               -4
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : "automatic"
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.81042,0.43791,0.26909,1.00000",
+                  "display-p3:0.38364,0.19872,0.11500,1.00000"
+                ]
+              }
+            }
+          ],
+          "image-name" : "flash.svg",
+          "name" : "flash",
+          "position" : {
+            "scale" : 3.5,
+            "translation-in-points" : [
+              3.355871533769175,
+              -23
             ]
           }
         }
@@ -33,18 +59,24 @@
         }
       ],
       "position" : {
-        "scale" : 1.03,
+        "scale" : 1,
         "translation-in-points" : [
           0,
           22
         ]
       },
+      "refractivity" : {
+        "depth" : 1,
+        "enabled" : false,
+        "strength" : -0.9109375
+      },
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 1
       },
+      "specular" : true,
       "translucency" : {
-        "enabled" : false,
+        "enabled" : true,
         "value" : 0.75
       }
     },
@@ -57,8 +89,8 @@
             {
               "value" : {
                 "linear-gradient" : [
-                  "display-p3:0.30023,0.63428,0.62708,1.00000",
-                  "display-p3:0.21733,0.46291,0.45907,1.00000"
+                  "display-p3:0.88417,0.56777,0.37874,1.00000",
+                  "display-p3:0.72458,0.35405,0.19615,1.00000"
                 ],
                 "orientation" : {
                   "start" : {
@@ -75,7 +107,7 @@
             {
               "appearance" : "dark",
               "value" : {
-                "automatic-gradient" : "display-p3:0.16971,0.16971,0.16971,1.00000",
+                "automatic-gradient" : "srgb:0.12549,0.10196,0.09020,1.00000",
                 "orientation" : {
                   "start" : {
                     "x" : 0.5,
@@ -92,8 +124,8 @@
               "appearance" : "tinted",
               "value" : {
                 "linear-gradient" : [
-                  "display-p3:0.30023,0.63428,0.62708,1.00000",
-                  "display-p3:0.21733,0.46291,0.45907,1.00000"
+                  "srgb:1.00000,0.89804,0.80784,1.00000",
+                  "srgb:1.00000,0.41961,0.17255,1.00000"
                 ],
                 "orientation" : {
                   "start" : {

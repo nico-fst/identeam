@@ -17,15 +17,19 @@ struct AuthSheetView: View {
 
                     VStack(spacing: 5) {
                         List {
-                            TextField(
-                                "Email",
-                                text: $authVM.emailInput
-                            )
-                            SecureField(
-                                "Password",
-                                text: $authVM.passwordInput
-                            )
+                            Group {
+                                TextField(
+                                    "Email",
+                                    text: $authVM.emailInput
+                                )
+                                SecureField(
+                                    "Password",
+                                    text: $authVM.passwordInput
+                                )
+                            }
+                            .listRowBackground(IgniteColor.surface)
                         }
+                        .igniteListColors()
 
                         Button {
                             Task {
@@ -48,7 +52,9 @@ struct AuthSheetView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
-                        .glassEffect(.regular.interactive())
+                        .tint(.accent)
+                        .foregroundStyle(IgniteColor.onAccent)
+                        .glassEffect(.regular.tint(IgniteColor.selection).interactive())
                     }
                 }
                 .padding()
@@ -56,15 +62,19 @@ struct AuthSheetView: View {
                 // step 2 (only when signing up)
                 VStack {
                     List {
-                        TextField(
-                            "Nickname",
-                            text: $authVM.nicknameInput
-                        )
-                        TextField(
-                            "Username",
-                            text: $authVM.usernameInput
-                        )
+                        Group {
+                            TextField(
+                                "Nickname",
+                                text: $authVM.nicknameInput
+                            )
+                            TextField(
+                                "Username",
+                                text: $authVM.usernameInput
+                            )
+                        }
+                        .listRowBackground(IgniteColor.surface)
                     }
+                    .igniteListColors()
 
                     Button {
                         Task { await authVM.tryChangeUserDetails() }
@@ -77,15 +87,19 @@ struct AuthSheetView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .glassEffect(.regular.interactive())
+                    .tint(.accent)
+                    .foregroundStyle(IgniteColor.onAccent)
+                    .glassEffect(.regular.tint(IgniteColor.selection).interactive())
                 }
                 .padding()
             }
 
             Text(authVM.signupError ?? "")
-                .foregroundColor(.red)
+                .foregroundColor(IgniteColor.error)
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .igniteColors()
         .interactiveDismissDisabled()
         .presentationDetents([.medium])
     }

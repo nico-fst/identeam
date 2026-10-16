@@ -27,7 +27,7 @@ struct AvatarPicker: View {
             NavigationStack {
                 VStack {
                     Text("Upload new Avatar")
-                        .font(.largeTitle)
+                        .font(.nunito(.largeTitle))
 
                     Spacer()
 
@@ -40,7 +40,7 @@ struct AvatarPicker: View {
                     Spacer()
 
                     Text(avatarVM.uploadError ?? "")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(IgniteColor.error)
 
                     Spacer()
 
@@ -77,9 +77,12 @@ struct AvatarPicker: View {
                                 ProgressView()
                             } else {
                                 Image(systemName: "checkmark")
+                                    .foregroundStyle(IgniteColor.onAccent)
                             }
                         }
                         .buttonStyle(.borderedProminent)
+                        .tint(.accent)
+                        .foregroundStyle(IgniteColor.onAccent)
                         .disabled(avatarVM.isUploadingAvatar)
                     }
                 }
@@ -132,15 +135,15 @@ struct AvatarPicker: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 96, height: 96)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(IgniteColor.muted)
             }
 
             // always render nickname und username
             VStack(alignment: .leading) {
                 Text(nickname ?? "no nickname")
-                    .font(.largeTitle)
+                    .font(.nunito(.largeTitle))
                 Text("@\(username ?? "no username")")
-                    .font(.footnote)
+                    .font(.nunito(.footnote))
                     .opacity(0.6)
             }
         }

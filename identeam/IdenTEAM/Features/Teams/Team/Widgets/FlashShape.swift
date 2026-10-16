@@ -207,7 +207,7 @@ nonisolated struct FlashShape: InsettableShape {
     HStack {
         ForEach([1.0, 3.0, 6.0], id: \.self) { width in
             FlashShape()
-                .strokeBorder(.teal, lineWidth: width)
+                .strokeBorder(.accent, lineWidth: width)
                 .frame(width: 96, height: 96)
         }
     }

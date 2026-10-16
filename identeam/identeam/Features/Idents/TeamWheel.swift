@@ -15,9 +15,9 @@ struct TeamWheel: View {
                 }
             } else {
                 Text("Join a team first!").tag(String?.none)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(textColor)
                 Text("Then you may select one").tag(String?.none)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(textColor)
             }
         }
         .pickerStyle(.wheel)

@@ -12,7 +12,9 @@ struct LastWeeksCompletionWidget: Widget {
             provider: LastWeeksCompletionProvider()
         ) { entry in
             LastWeeksCompletionView(lastWeeks: entry.weeks, referenceDate: entry.date)
-                .containerBackground(.background, for: .widget)
+                .foregroundStyle(IgniteColor.text)
+                .tint(IgniteColor.link)
+                .containerBackground(IgniteColor.surface, for: .widget)
         }
         .configurationDisplayName("Completion of last weeks")
         .description("See your team's progress over the last four weeks.")

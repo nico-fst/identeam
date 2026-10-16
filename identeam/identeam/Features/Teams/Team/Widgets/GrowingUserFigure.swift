@@ -47,7 +47,8 @@ struct GrowingUserFigure: View {
                     .fill(userColor.opacity(0.25))
 
                     Text("\(member.idents.count) / \(member.targetDays.count)")
-                        .font(.system(size: metrics.fontSize, weight: .bold))
+                        .font(.custom("Nunito-Black", size: metrics.fontSize))
+                        .foregroundStyle(IgniteColor.onAccent)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                         .padding(.horizontal, metrics.lineWidth * 2)

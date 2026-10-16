@@ -16,11 +16,16 @@ struct IdenteamApp: App {
 
     var sharedModelContainer = SharedModelConfig.makeContainer(for: .app)
 
+    init() {
+        IgniteAppearance.configure()
+    }
+
     var body: some Scene {
         LaunchScreen {
             Image(.logoLong)
         } rootContent: {
             ContentView()
+                .igniteColors()
         }
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)

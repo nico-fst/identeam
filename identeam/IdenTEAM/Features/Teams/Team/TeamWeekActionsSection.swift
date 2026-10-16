@@ -7,7 +7,7 @@ struct TeamWeekActionsSection: View {
     @EnvironmentObject private var teamVM: TeamWeekVM
 
     var body: some View {
-        Section("Actions") {
+        Section {
             Button {
                 Task {
                     await teamVM.tryRemindingTeam(slug: slug, vm: vm)
@@ -30,6 +30,9 @@ struct TeamWeekActionsSection: View {
                 )
             }
             .disabled(!hasLoadedFreshTeamWeek)
+        } header: {
+            Text("Actions")
+                .font(.nunito(.headline))
         }
     }
 }

@@ -2,10 +2,9 @@ import AuthenticationServices
 import SwiftUI
 
 struct SignInWithAppleButtonComponent: View {
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var authVM: AuthVM
     @EnvironmentObject var vm: AppVM
-
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         SignInWithAppleButton(
@@ -22,9 +21,8 @@ struct SignInWithAppleButtonComponent: View {
                 }
             }
         )
-        .signInWithAppleButtonStyle(
-            colorScheme == .dark ? .white : .black
-        )
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        .id(colorScheme)
         .frame(height: 45)
         .frame(maxWidth: 375)
         .cornerRadius(.infinity)

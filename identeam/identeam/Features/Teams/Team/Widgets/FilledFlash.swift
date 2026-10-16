@@ -42,7 +42,11 @@ struct FilledFlash: View {
                     .fill(color.opacity(0.25))
 
                     Text(text)
-                        .font(.system(size: geo.size.height * 0.15, weight: .bold))
+                        .font(.custom("Nunito-Black", size: geo.size.height * 0.15))
+                        .foregroundStyle(
+                            color == IgniteColor.success
+                                ? IgniteColor.onSuccess : IgniteColor.onAccent
+                        )
                         .shadow(color: .black.opacity(0.25), radius: 5)  // glow
                 }
                 .mask {

@@ -13,29 +13,33 @@ struct TeamsView: View {
     var body: some View {
         NavigationStack(path: $navVM.teamPath) {
             List {
-                ForEach(teams) { team in
-                    NavigationLink(value: Route.team(slug: team.slug)) {
-                        Text(team.name)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            Task {
-                                await teamsVM.tryLeavingTeam(
-                                    ctx: modelContext,
-                                    vm: vm,
-                                    slug: team.slug
-                                )
+                Group {
+                    ForEach(teams) { team in
+                        NavigationLink(value: Route.team(slug: team.slug)) {
+                            Text(team.name)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                Task {
+                                    await teamsVM.tryLeavingTeam(
+                                        ctx: modelContext,
+                                        vm: vm,
+                                        slug: team.slug
+                                    )
+                                }
+                            } label: {
+                                Text("Leave")
                             }
-                        } label: {
-                            Text("Leave")
                         }
                     }
-                }
 
-                Button("Join existing Team") {
-                    teamsVM.showingJoinSheet.toggle()
+                    Button("Join existing Team") {
+                        teamsVM.showingJoinSheet.toggle()
+                    }
                 }
+                .listRowBackground(IgniteColor.surface)
             }
+            .igniteListColors()
             .refreshable {
                 await teamsVM.reloadTeams(ctx: modelContext)
             }
@@ -43,6 +47,7 @@ struct TeamsView: View {
                 await teamsVM.reloadTeams(ctx: modelContext)
             }
             .navigationTitle("Teams")
+            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .team(let slug):
@@ -71,7 +76,7 @@ struct TeamsView: View {
         NavigationStack {
             VStack {
                 Text("Enter Team Slug")
-                    .font(.headline)
+                    .font(.nunito(.headline))
 
                 TextField(
                     "e.g. 'die-kanten'",
@@ -79,7 +84,7 @@ struct TeamsView: View {
                 )
                 .textFieldStyle(.roundedBorder)
 
-                Text(teamsVM.joinError).foregroundColor(.red)
+                Text(teamsVM.joinError).foregroundColor(IgniteColor.error)
             }
             .padding(25)
             .navigationTitle("Join Team")
@@ -110,6 +115,8 @@ struct TeamsView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(.accent)
+                    .foregroundStyle(IgniteColor.onAccent)
                 }
             }
         }
@@ -127,14 +134,18 @@ struct TeamsView: View {
                 )
 
                 List {
-                    TextField("Unique Name", text: $teamsVM.createNameInput)
-                    TextField("Details", text: $teamsVM.createDetailsInput)
-                    TextField(
-                        "Notification Template (optional)",
-                        text: $teamsVM.createNotificationTemplate)
+                    Group {
+                        TextField("Unique Name", text: $teamsVM.createNameInput)
+                        TextField("Details", text: $teamsVM.createDetailsInput)
+                        TextField(
+                            "Notification Template (optional)",
+                            text: $teamsVM.createNotificationTemplate)
+                    }
+                    .listRowBackground(IgniteColor.surface)
                 }
+                .igniteListColors()
 
-                Text(teamsVM.createError).foregroundStyle(.red)
+                Text(teamsVM.createError).foregroundStyle(IgniteColor.error)
             }
             .padding(25)
             .navigationTitle("New Team")
@@ -168,6 +179,8 @@ struct TeamsView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(.accent)
+                    .foregroundStyle(IgniteColor.onAccent)
                 }
             }
         }

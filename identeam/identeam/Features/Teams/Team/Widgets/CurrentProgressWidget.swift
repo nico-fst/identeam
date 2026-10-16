@@ -28,6 +28,7 @@ struct CurrentProgressWidget: View {
             .frame(height: 150)
         } header: {
             Text("Progress Overview")
+                .font(.nunito(.headline))
         }
     }
 
@@ -58,8 +59,8 @@ struct CurrentProgressWidget: View {
             .bold()
             .foregroundStyle(
                 week.teamStreak > 0
-                    ? .orange.opacity(0.9)
-                    : .white
+                    ? IgniteColor.streak.opacity(0.9)
+                    : IgniteColor.team
             )
             .padding(.horizontal, 9)
             .padding(.vertical, 6)
@@ -91,7 +92,11 @@ struct CurrentProgressWidget: View {
 
 #Preview("List(CurrentProgressWidget)") {
     List {
-        CurrentProgressWidget(week: .templateStreakKanten)
+        Group {
+            CurrentProgressWidget(week: .templateStreakKanten)
+        }
+        .listRowBackground(IgniteColor.surface)
     }
+    .igniteListColors()
     .listStyle(.insetGrouped)
 }

@@ -32,42 +32,47 @@ struct TeamSettingsView: View {
 
     var body: some View {
         List {
-            Section {
-                DatePicker(
-                    "Default time",
-                    selection: $defaultTime,
-                    displayedComponents: .hourAndMinute
-                )
-            } header: {
-                Text("Notifications")
-            } footer: {
-                VStack {
-                    Text(
-                        "IdenTEAM tries to schedule notifications intelligently based on your past idents."
-                    )
-                    Text(
-                        """
-                        This is the default time to schedule notifications on days when \
-                        IdenTEAM still learns about your Ident behaviour.
-                        """
-                    )
-                }
-            }
-
-            Section {
-                Toggle("Show members without target", isOn: $showMembersWithoutTarget)
-            } footer: {
-                Text(
-                    "Controls wether members without target should be hidden or displayed anyways.")
-            }
-
-            if !errorMessage.isEmpty {
+            Group {
                 Section {
-                    Text(errorMessage)
-                        .foregroundStyle(.red)
+                    DatePicker(
+                        "Default time",
+                        selection: $defaultTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    VStack {
+                        Text(
+                            "IdenTEAM tries to schedule notifications intelligently based on your past idents."
+                        )
+                        Text(
+                            """
+                            This is the default time to schedule notifications on days when \
+                            IdenTEAM still learns about your Ident behaviour.
+                            """
+                        )
+                    }
+                }
+
+                Section {
+                    Toggle("Show members without target", isOn: $showMembersWithoutTarget)
+                } footer: {
+                    Text(
+                        "Controls wether members without target should be hidden or displayed anyways."
+                    )
+                }
+
+                if !errorMessage.isEmpty {
+                    Section {
+                        Text(errorMessage)
+                            .foregroundStyle(IgniteColor.error)
+                    }
                 }
             }
+            .listRowBackground(IgniteColor.surface)
         }
+        .igniteListColors()
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -90,9 +95,12 @@ struct TeamSettingsView: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
+                            .foregroundStyle(IgniteColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.accent)
+                .foregroundStyle(IgniteColor.onAccent)
                 .disabled(isSaving)
             }
         }

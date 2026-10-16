@@ -25,48 +25,62 @@ struct DebugInfoView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Profile") {
-                    AvatarPicker()
-                }
+                Group {
+                    Section {
+                        AvatarPicker()
+                    } header: {
+                        Text("Profile")
+                            .font(.nunito(.headline))
+                    }
 
-                Section("Device Config") {
-                    TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
-                    TextLabeled("Device Token", deviceToken ?? "")
-                }
+                    Section {
+                        TextLabeled("Base URL", "\(AppConfig.apiBaseURL)")
+                        TextLabeled("Device Token", deviceToken ?? "")
+                    } header: {
+                        Text("Device Config")
+                            .font(.nunito(.headline))
+                    }
 
-                Section("Authentication ⋅ \(authVM.authState.rawValue)") {
-                    TextLabeled("Session Token", sessionToken ?? "")
-                    TextLabeled("UserID", userID ?? "")
-                    TextLabeled("Email", email ?? "")
-                    TextLabeled("Nickname", nickname ?? "")
-                    TextLabeled("Username", username ?? "")
-                }
+                    Section {
+                        TextLabeled("Session Token", sessionToken ?? "")
+                        TextLabeled("UserID", userID ?? "")
+                        TextLabeled("Email", email ?? "")
+                        TextLabeled("Nickname", nickname ?? "")
+                        TextLabeled("Username", username ?? "")
+                    } header: {
+                        Text("Authentication ⋅ \(authVM.authState.rawValue)")
+                            .font(.nunito(.headline))
+                    }
 
-                switch authVM.authState {
-                case .unknown:
-                    ProgressView("Checking Session...")
-                case .unauthenticated:
-                    Text("Please restart the app to log in again")
-                        .foregroundStyle(.red).bold()
-                case .enteringUserDetails:
-                    Text("Entering User Details...")
-                case .authenticated:
-                    CheckTokensButton()
-                    Button("Clear local cache") {
-                        navVM.popToRoot()
-                        do {
-                            try clearLocalCache(in: ctx)
-                            vm.toastMessage = "Local cache cleared"
-                        } catch {
-                            vm.showAlert("Error clearing local cache", error.localizedDescription)
+                    switch authVM.authState {
+                    case .unknown:
+                        ProgressView("Checking Session...")
+                    case .unauthenticated:
+                        Text("Please restart the app to log in again")
+                            .foregroundStyle(IgniteColor.error).bold()
+                    case .enteringUserDetails:
+                        Text("Entering User Details...")
+                    case .authenticated:
+                        CheckTokensButton()
+                        Button("Clear local cache") {
+                            navVM.popToRoot()
+                            do {
+                                try clearLocalCache(in: ctx)
+                                vm.toastMessage = "Local cache cleared"
+                            } catch {
+                                vm.showAlert(
+                                    "Error clearing local cache", error.localizedDescription)
+                            }
                         }
+                        Button("Logout") {
+                            authVM.logout(ctx: ctx)
+                        }
+                        .foregroundStyle(IgniteColor.error)
                     }
-                    Button("Logout") {
-                        authVM.logout(ctx: ctx)
-                    }
-                    .foregroundStyle(.red)
                 }
+                .listRowBackground(IgniteColor.surface)
             }
+            .igniteListColors()
             .refreshable {
                 Task {
                     try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)
@@ -78,6 +92,7 @@ struct DebugInfoView: View {
                 }
             }
             .navigationTitle("Hello \(nickname ?? "(no nickname)") 👋🏼")
+            .navigationBarTitleDisplayMode(.large)
             .task {
                 await authVM.trySiwaLogin(vm: vm)
             }

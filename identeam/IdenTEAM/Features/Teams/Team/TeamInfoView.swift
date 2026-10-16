@@ -6,9 +6,13 @@ struct TeamInfoView: View {
     var body: some View {
         NavigationStack {
             List {
-                TextLabeled("Slug", team.slug)
-                TextLabeled("Details", team.details)
+                Group {
+                    TextLabeled("Slug", team.slug)
+                    TextLabeled("Details", team.details)
+                }
+                .listRowBackground(IgniteColor.surface)
             }
+            .igniteListColors()
             .navigationTitle(team.name)
         }
     }

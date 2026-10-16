@@ -4,7 +4,7 @@ import SwiftUI
 struct TeamWeekView: View {
     let slug: String
 
-    enum Tab {
+    enum Tab: Hashable {
         case team
         case personal
     }
@@ -71,24 +71,33 @@ struct TeamWeekView: View {
         Group {  // .refreshable doesn't work on plain View
             if let team {
                 List {
-                    weekNavigation
+                    Group {
+                        weekNavigation
+                            .listRowSeparator(.hidden)
 
-                    Picker("View", selection: $selectedTab) {
-                        Text("Team").tag(Tab.team)
-                        Text("Personal").tag(Tab.personal)
+                        IgniteSegmentedPicker(
+                            "View", selection: $selectedTab, options: [.team, .personal]
+                        ) {
+                            $0 == .team ? "Team" : "Personal"
+                        }
+                        .listRowSeparator(.hidden)
+
+                        TeamWeekActionsSection(
+                            slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
+
+                        overviewContent
+
+                        Section {
+                            Text("Coming soon :)")
+                                .foregroundStyle(IgniteColor.text.opacity(0.3))
+                        } header: {
+                            Text("Chat")
+                                .font(.nunito(.headline))
+                        }
                     }
-                    .pickerStyle(.segmented)
-
-                    TeamWeekActionsSection(
-                        slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
-
-                    overviewContent
-
-                    Section("Chat") {
-                        Text("Coming soon :)")
-                            .foregroundStyle(.primary.opacity(0.3))
-                    }
+                    .listRowBackground(IgniteColor.surface)
                 }
+                .igniteListColors()
                 .refreshable {
                     await reloadWeek()
                 }
@@ -210,6 +219,8 @@ extension TeamWeekView {
                     .padding(5)
             }
             .buttonStyle(.glassProminent)
+            .tint(.accent)
+            .foregroundStyle(IgniteColor.onAccent)
 
             Spacer()
 
@@ -217,10 +228,10 @@ extension TeamWeekView {
                 teamVM.referenceDate = Date()
             } label: {
                 Text(TargetPlanning.weekName(for: teamVM.referenceDate))
-                    .font(.title3)
+                    .font(.nunito(.title3))
                     .padding(5)
             }
-            .buttonStyle(.glass)
+            .buttonStyle(.glass(.regular.tint(IgniteColor.selection)))
 
             Spacer()
 
@@ -231,6 +242,8 @@ extension TeamWeekView {
                     .padding(5)
             }
             .buttonStyle(.glassProminent)
+            .tint(.accent)
+            .foregroundStyle(IgniteColor.onAccent)
         }
         .disabled(!hasLoadedFreshTeamWeek)
     }
@@ -244,20 +257,26 @@ extension TeamWeekView {
                     teamVM.selectedIdent = ident
                 }
                 CurrentProgressWidget(week: teamWeek)
-                Section("Completion of last weeks") {
+                Section {
                     LastWeeksCompletionView(lastWeeks: lastWeeks, animated: true)
+                } header: {
+                    Text("Completion of last weeks")
+                        .font(.nunito(.headline))
                 }
             case .personal:
                 if monthWeeks.count
                     == AppCalendar.weekStartsInMonth(containing: month).count
                 {
-                    Section("Month Overview") {
+                    Section {
                         LastMonthView(
                             month: month,
                             personalWeeks: monthWeeks.compactMap {
                                 PersonalWeek(teamWeek: $0, userID: userID)
                             }
                         )
+                    } header: {
+                        Text("Month Overview")
+                            .font(.nunito(.headline))
                     }
                 } else {
                     Section {
@@ -265,7 +284,7 @@ extension TeamWeekView {
                             ProgressView()
                         } else {
                             Text("Month could not be loaded. Pull to refresh.")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(IgniteColor.muted)
                         }
                     }
                 }
@@ -284,14 +303,14 @@ extension TeamWeekView {
         ToolbarItem(placement: .topBarLeading) {
             VStack {
                 Text(team.name)
-                    .font(.headline)
+                    .font(.nunito(.headline))
                     .fixedSize(horizontal: true, vertical: false)  // so text doesn't get cropped
                 TeamStreakLabel(week: teamWeek)
                     .labelStyle(CompactStreakLabelStyle())
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.nunito(.footnote))
+                    .foregroundStyle(IgniteColor.streak)
             }
         }
         .sharedBackgroundVisibility(.hidden)  // so text is not surrounded by glass

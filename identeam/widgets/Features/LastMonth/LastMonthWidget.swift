@@ -9,7 +9,9 @@ struct LastMonthWidget: Widget {
             kind: kind, intent: ConfigurationAppIntent.self, provider: LastMonthProvider()
         ) { entry in
             LastMonthWidgetView(entry: entry)
-                .containerBackground(.background, for: .widget)
+                .foregroundStyle(IgniteColor.text)
+                .tint(IgniteColor.link)
+                .containerBackground(IgniteColor.surface, for: .widget)
         }
         .configurationDisplayName("Month Overview")
         .description("See your month and your team's current progress.")
@@ -33,7 +35,7 @@ struct LastMonthWidgetView: View {
                     Text(entry.teamName)
                         .font(.footnote)
                         .bold()
-                        .foregroundStyle(.accent.opacity(0.75))
+                        .foregroundStyle(IgniteColor.link)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -69,7 +71,7 @@ struct LastMonthWidgetView: View {
             TeamStreakLabel(week: week)
                 .labelStyle(CompactStreakLabelStyle())
                 .bold()
-                .foregroundStyle(completed ? .orange : .blue)
+                .foregroundStyle(completed ? IgniteColor.streak : IgniteColor.team)
         }
         .padding(10)
         .background {
@@ -77,13 +79,14 @@ struct LastMonthWidgetView: View {
                 progress: week.map {
                     $0.targetSum > 0 ? Double($0.identSum) / Double($0.targetSum) : 0
                 } ?? 0,
-                color: week == nil ? .primary.opacity(0.15) : (completed ? .accent : .red),
+                color: week == nil
+                    ? IgniteColor.muted.opacity(0.15) : (completed ? IgniteColor.success : .accent),
                 text: week.map { "\($0.identSum) / \($0.targetSum)" } ?? "",
                 animated: false
             )
             .frame(width: 250, height: 250)
             .shadow(
-                color: completed ? .accent.opacity(0.5) : .red.opacity(0.5),
+                color: completed ? IgniteColor.success.opacity(0.5) : Color.accent.opacity(0.5),
                 radius: 20,
                 x: 0,
                 y: 5

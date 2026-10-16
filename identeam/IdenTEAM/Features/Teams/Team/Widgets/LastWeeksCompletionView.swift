@@ -41,11 +41,11 @@ struct LastWeeksCompletionView: View {
             ForEach(0..<placeholderCount, id: \.self) { _ in
                 VStack {
                     Text(" ")
-                        .font(.footnote)
+                        .font(.nunito(.footnote))
 
                     FilledFlash(
                         progress: 0,
-                        color: .primary.opacity(0.15),
+                        color: IgniteColor.muted.opacity(0.15),
                         text: "",
                         animated: false
                     )
@@ -54,22 +54,22 @@ struct LastWeeksCompletionView: View {
 
                     Text("No data")
                         .frame(maxWidth: .infinity)
-                        .font(.footnote)
+                        .font(.nunito(.footnote))
                 }
-                .foregroundStyle(.primary.opacity(0.15))
+                .foregroundStyle(IgniteColor.text.opacity(0.15))
             }
 
             ForEach(Array(lastWeeksSorted.enumerated()), id: \.element) { i, week in
                 VStack {
                     Text(weekLabels[i])
-                        .font(.footnote)
+                        .font(.nunito(.footnote))
                         .opacity(0.5)
 
                     FilledFlash(
                         progress: week.targetSum > 0
                             ? Double(week.identSum) / Double(week.targetSum)
                             : 0,
-                        color: completed(week) ? .accent : .red,
+                        color: completed(week) ? IgniteColor.success : .accent,
                         text: "\(week.identSum) / \(week.targetSum)",
                         animated: animated
                             && AppCalendar.calendar.isDate(
@@ -90,13 +90,13 @@ struct LastWeeksCompletionView: View {
                             .labelStyle(CompactStreakLabelStyle())
                             .bold()
                             .font(.system(size: 13))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(IgniteColor.streak)
                     } else {
                         if week == lastWeeksSorted.last {
                             streakLabel.labelStyle(.iconOnly)
                         } else {
                             streakLabel.labelStyle(.iconOnly)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(IgniteColor.team)
                         }
                     }
                 }

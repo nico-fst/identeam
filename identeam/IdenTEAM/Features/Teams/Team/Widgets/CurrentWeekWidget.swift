@@ -24,6 +24,7 @@ struct CurrentWeekWidget: View {
         } header: {
             HStack {
                 Text("Week Overview")
+                    .font(.nunito(.headline))
                 Button {
                     showSettings = true
                 } label: {
@@ -50,7 +51,7 @@ struct CurrentWeekWidget: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         content()
-            .font(isHeader && isToday ? .headline : .body)
+            .font(isHeader && isToday ? .nunito(.headline) : .body)
             .frame(maxWidth: .infinity, minHeight: 50)
             .background {
                 if isHeader {
@@ -58,7 +59,7 @@ struct CurrentWeekWidget: View {
                         Circle().fill(.accent.opacity(0.25))
                             .scaleEffect(0.8)
                     } else {
-                        Circle().fill(Color.secondary.opacity(0.12))
+                        Circle().fill(IgniteColor.selection)
                             .scaleEffect(0.8)
                     }
                 }
@@ -90,7 +91,7 @@ struct CurrentWeekWidget: View {
                 .frame(height: 60)
             } else {
                 Text("—")
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(IgniteColor.muted)
                     .accessibilityLabel("Nothing planned")
             }
         }
@@ -116,8 +117,8 @@ struct CurrentWeekWidget: View {
                         .labelStyle(CompactStreakLabelStyle())
                         .foregroundStyle(
                             teamWeek.teamStreak > 0
-                                ? .orange
-                                : .blue
+                                ? IgniteColor.streak
+                                : IgniteColor.team
                         )
                         .bold()
                 }
@@ -142,15 +143,15 @@ struct CurrentWeekWidget: View {
                                 : 0
                         )
                         Text("\(member.idents.count) / \(member.targetDays.count)")
-                            .font(.caption)
+                            .font(.nunito(.caption))
                             .bold()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(IgniteColor.muted)
                     }
                     .padding(5)
                     .frame(maxWidth: .infinity, minHeight: 60)
                     .background {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)  // squircle by .continuous
-                            .fill(.secondary.opacity(0.12))
+                            .fill(IgniteColor.surface)
                     }
                 }
 
@@ -169,12 +170,16 @@ struct CurrentWeekWidget: View {
     private var settings: some View {
         NavigationStack {
             List {
-                Section {
-                    Toggle("Idents show images", isOn: $showIdentImages)
-                } footer: {
-                    Text("Controls wether ident are filled with user's image or just a color.")
+                Group {
+                    Section {
+                        Toggle("Idents show images", isOn: $showIdentImages)
+                    } footer: {
+                        Text("Controls wether ident are filled with user's image or just a color.")
+                    }
                 }
+                .listRowBackground(IgniteColor.surface)
             }
+            .igniteListColors()
             .padding()
             .navigationTitle("Grid Settings")
         }
@@ -204,11 +209,15 @@ private nonisolated struct MemberDay<IdentValue>: Identifiable {
 
 #Preview("List(CurrentWeekWidget)") {
     List {
-        CurrentWeekWidget(
-            teamWeek: TeamWeek.templateKanten
-        ) { ident in
-            print("Selected ident:", ident.id)
+        Group {
+            CurrentWeekWidget(
+                teamWeek: TeamWeek.templateKanten
+            ) { ident in
+                print("Selected ident:", ident.id)
+            }
         }
+        .listRowBackground(IgniteColor.surface)
     }
+    .igniteListColors()
     .listStyle(.insetGrouped)
 }

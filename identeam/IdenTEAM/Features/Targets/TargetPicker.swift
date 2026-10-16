@@ -35,79 +35,86 @@ struct TargetPicker: View {
 
     var body: some View {
         List(selection: $targetPickerVM.selectedDays) {
-            Section {
-                HStack {
-                    Button {
-                        targetPickerVM.changeWeek(by: -7)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(
-                        !TargetPlanning.canSetTargetWeek(
-                            cal.date(byAdding: .day, value: -7, to: targetPickerVM.referenceDate)!
-                        )
-                    )
-
-                    Spacer()
-
-                    Text(TargetPlanning.weekName(for: targetPickerVM.referenceDate))
-                        .font(.headline)
-
-                    Spacer()
-
-                    Button {
-                        targetPickerVM.changeWeek(by: 7)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                }
-                .disabled(targetPickerVM.isSettingTarget)
-                .buttonStyle(.glassProminent)
-            }
-
-            Section {
-                if targetPickerVM.isLoading {
+            Group {
+                Section {
                     HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                } else {
-                    ForEach(daysOfWeek, id: \.self) { day in
-                        Text(
-                            day.formatted(
-                                .dateTime
-                                    .weekday(.abbreviated)
-                                    .day()
-                                    .month()
+                        Button {
+                            targetPickerVM.changeWeek(by: -7)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                        .disabled(
+                            !TargetPlanning.canSetTargetWeek(
+                                cal.date(
+                                    byAdding: .day, value: -7, to: targetPickerVM.referenceDate)!
                             )
                         )
-                        .tag(day)
+
+                        Spacer()
+
+                        Text(TargetPlanning.weekName(for: targetPickerVM.referenceDate))
+                            .font(.nunito(.headline))
+
+                        Spacer()
+
+                        Button {
+                            targetPickerVM.changeWeek(by: 7)
+                        } label: {
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                    .disabled(targetPickerVM.isSettingTarget)
+                    .buttonStyle(.glassProminent)
+                    .tint(.accent)
+                    .foregroundStyle(IgniteColor.onAccent)
+                }
+
+                Section {
+                    if targetPickerVM.isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                    } else {
+                        ForEach(daysOfWeek, id: \.self) { day in
+                            Text(
+                                day.formatted(
+                                    .dateTime
+                                        .weekday(.abbreviated)
+                                        .day()
+                                        .month()
+                                )
+                            )
+                            .tag(day)
+                        }
+                    }
+                } header: {
+                    Text("Select Ident days")
+                } footer: {
+                    if targetPickerVM.settingError.isEmpty {
+                        Text("Your target will be \(targetPickerVM.selectedDays.count)")
+                    } else {
+                        Text(targetPickerVM.settingError)
+                            .foregroundStyle(IgniteColor.error)
                     }
                 }
-            } header: {
-                Text("Select Ident days")
-            } footer: {
-                if targetPickerVM.settingError.isEmpty {
-                    Text("Your target will be \(targetPickerVM.selectedDays.count)")
-                } else {
-                    Text(targetPickerVM.settingError)
-                        .foregroundStyle(.red)
-                }
-            }
 
-            if !targetPickerVM.settingError.isEmpty {
-                Section {
-                    if !targetPickerVM.isLoading && !targetPickerVM.hasLoaded {
-                        Button("Retry") {
-                            Task {
-                                await targetPickerVM.loadTargetDays(slug: slug, userID: userID)
+                if !targetPickerVM.settingError.isEmpty {
+                    Section {
+                        if !targetPickerVM.isLoading && !targetPickerVM.hasLoaded {
+                            Button("Retry") {
+                                Task {
+                                    await targetPickerVM.loadTargetDays(slug: slug, userID: userID)
+                                }
                             }
                         }
                     }
                 }
             }
+            .listRowBackground(IgniteColor.surface)
         }
+        .igniteListColors()
         .environment(\.editMode, .constant(.active))
         .disabled(targetPickerVM.isSettingTarget)
         .toolbar {
@@ -141,9 +148,12 @@ struct TargetPicker: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
+                            .foregroundStyle(IgniteColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.accent)
+                .foregroundStyle(IgniteColor.onAccent)
                 .disabled(
                     targetPickerVM.isSettingTarget || targetPickerVM.isLoading
                         || !targetPickerVM.hasLoaded)

@@ -14,90 +14,96 @@ struct IdentDetailView: View {
 
     var body: some View {
         List {
-            Section {
-                HStack {
-                    Spacer()
-                    IdentImageView(image: RemoteImageReference(item: ident.image))
-                        .modifier(
-                            Floating3DEffect(
-                                isActive: true,
-                                animationFactor: 1.2,
-                                showShadow: true
+            Group {
+                Section {
+                    HStack {
+                        Spacer()
+                        IdentImageView(image: RemoteImageReference(item: ident.image))
+                            .modifier(
+                                Floating3DEffect(
+                                    isActive: true,
+                                    animationFactor: 1.2,
+                                    showShadow: true
+                                )
                             )
-                        )
-                        .frame(height: 300)
-                    Spacer()
-                }
-                VStack(alignment: .leading) {
-                    Text(AppCalendar.shortDateAndTime(for: ident.time))
-                        .font(.caption)
-                        .opacity(0.5)
-
-                    Text("\(Text(member.user.nickname).bold())  \(ident.userText)")
-                }
-            }
-
-            // Comments
-            if !ident.comments.isEmpty {  // otherwise VStack empty list entry
-                ForEach(
-                    ident.comments.sorted(by: {
-                        $0.time < $1.time
-                    })
-                ) { comment in
+                            .frame(height: 300)
+                        Spacer()
+                    }
                     VStack(alignment: .leading) {
-                        Text(AppCalendar.shortDateAndTime(for: comment.time))
-                            .font(.caption)
+                        Text(AppCalendar.shortDateAndTime(for: ident.time))
+                            .font(.nunito(.caption))
                             .opacity(0.5)
 
-                        Text("\(Text(comment.user.nickname).bold())  \(comment.text)")
+                        Text("\(Text(member.user.nickname).bold())  \(ident.userText)")
                     }
-                    .contextMenu {
-                        // copy
-                        Button {
-                            UIPasteboard.general.string = comment.text
-                        } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
-                        }
+                }
 
-                        // [own comment] delete
-                        if comment.user.userID == userID {
-                            Button(role: .destructive) {
-                                Task {
-                                    await teamVM.tryDeletingComment(
-                                        commentID: comment.id,
-                                        slug: slug,
-                                        vm: vm,
-                                        ctx: ctx,
-                                        teamsVM: teamsVM
-                                    )
-                                }
+                // Comments
+                if !ident.comments.isEmpty {  // otherwise VStack empty list entry
+                    ForEach(
+                        ident.comments.sorted(by: {
+                            $0.time < $1.time
+                        })
+                    ) { comment in
+                        VStack(alignment: .leading) {
+                            Text(AppCalendar.shortDateAndTime(for: comment.time))
+                                .font(.nunito(.caption))
+                                .opacity(0.5)
+
+                            Text("\(Text(comment.user.nickname).bold())  \(comment.text)")
+                        }
+                        .contextMenu {
+                            // copy
+                            Button {
+                                UIPasteboard.general.string = comment.text
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
+
+                            // [own comment] delete
+                            if comment.user.userID == userID {
+                                Button(role: .destructive) {
+                                    Task {
+                                        await teamVM.tryDeletingComment(
+                                            commentID: comment.id,
+                                            slug: slug,
+                                            vm: vm,
+                                            ctx: ctx,
+                                            teamsVM: teamsVM
+                                        )
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // Comment... prompt
-            VStack {
-                HStack {
-                    TextField("Comment...", text: $teamVM.commentInput)
-                    Button("Comment") {
-                        Task {
-                            await teamVM.tryCommenting(
-                                slug: slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                // Comment... prompt
+                VStack {
+                    HStack {
+                        TextField("Comment...", text: $teamVM.commentInput)
+                        Button("Comment") {
+                            Task {
+                                await teamVM.tryCommenting(
+                                    slug: slug, vm: vm, ctx: ctx, teamsVM: teamsVM)
+                            }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.accent)
+                        .foregroundStyle(IgniteColor.onAccent)
+                        .glassEffect(.regular.tint(IgniteColor.selection).interactive())
                     }
-                    .buttonStyle(.borderedProminent)
-                    .glassEffect(.regular.interactive())
-                }
 
-                if !teamVM.commentError.isEmpty {
-                    Text(teamVM.commentError)
-                        .foregroundStyle(.red)
+                    if !teamVM.commentError.isEmpty {
+                        Text(teamVM.commentError)
+                            .foregroundStyle(IgniteColor.error)
+                    }
                 }
             }
+            .listRowBackground(IgniteColor.surface)
         }
+        .igniteListColors()
     }
 }
