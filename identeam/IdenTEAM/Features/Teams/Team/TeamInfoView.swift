@@ -10,9 +10,9 @@ struct TeamInfoView: View {
                     TextLabeled("Slug", team.slug)
                     TextLabeled("Details", team.details)
                 }
-                .listRowBackground(IgniteColor.surface)
+                .listRowBackground(AppColor.surface)
             }
-            .igniteListColors()
+            .appListColors()
             .navigationTitle(team.name)
         }
     }

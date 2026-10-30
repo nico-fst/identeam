@@ -77,7 +77,7 @@
 				App/SwiftDataStore.swift,
 				Core/Calendar/AppCalendar.swift,
 				"Core/DesignSystem/Font+Nunito.swift",
-				Core/DesignSystem/IgniteColors.swift,
+				Core/DesignSystem/AppColors.swift,
 				Features/Idents/Comment.swift,
 				Features/Idents/Ident.swift,
 				Features/Teams/Team/TeamMember.swift,
@@ -525,7 +525,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = BackgroundWidgetPeachBrown;
 				CODE_SIGN_ENTITLEMENTS = Widgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -557,7 +557,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = BackgroundWidgetPeachBrown;
 				CODE_SIGN_ENTITLEMENTS = Widgets.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;

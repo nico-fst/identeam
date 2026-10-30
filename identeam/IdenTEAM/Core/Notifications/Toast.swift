@@ -37,11 +37,11 @@ struct ToastView: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(IgniteColor.onAccent)
+                .foregroundColor(AppColor.onAccent)
 
             Text(message)
                 .font(.subheadline)
-                .foregroundColor(IgniteColor.onAccent)
+                .foregroundColor(AppColor.onAccent)
                 .multilineTextAlignment(.leading)
         }
         .padding(.vertical, 12)

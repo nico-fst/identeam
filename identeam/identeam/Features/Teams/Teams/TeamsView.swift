@@ -37,9 +37,9 @@ struct TeamsView: View {
                         teamsVM.showingJoinSheet.toggle()
                     }
                 }
-                .listRowBackground(IgniteColor.surface)
+                .listRowBackground(AppColor.surface)
             }
-            .igniteListColors()
+            .appListColors()
             .refreshable {
                 await teamsVM.reloadTeams(ctx: modelContext)
             }
@@ -84,7 +84,7 @@ struct TeamsView: View {
                 )
                 .textFieldStyle(.roundedBorder)
 
-                Text(teamsVM.joinError).foregroundColor(IgniteColor.error)
+                Text(teamsVM.joinError).foregroundColor(AppColor.error)
             }
             .padding(25)
             .navigationTitle("Join Team")
@@ -116,7 +116,7 @@ struct TeamsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.accent)
-                    .foregroundStyle(IgniteColor.onAccent)
+                    .foregroundStyle(AppColor.onAccent)
                 }
             }
         }
@@ -141,11 +141,11 @@ struct TeamsView: View {
                             "Notification Template (optional)",
                             text: $teamsVM.createNotificationTemplate)
                     }
-                    .listRowBackground(IgniteColor.surface)
+                    .listRowBackground(AppColor.surface)
                 }
-                .igniteListColors()
+                .appListColors()
 
-                Text(teamsVM.createError).foregroundStyle(IgniteColor.error)
+                Text(teamsVM.createError).foregroundStyle(AppColor.error)
             }
             .padding(25)
             .navigationTitle("New Team")
@@ -180,7 +180,7 @@ struct TeamsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.accent)
-                    .foregroundStyle(IgniteColor.onAccent)
+                    .foregroundStyle(AppColor.onAccent)
                 }
             }
         }

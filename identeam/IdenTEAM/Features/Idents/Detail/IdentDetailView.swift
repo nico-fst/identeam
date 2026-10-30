@@ -92,18 +92,18 @@ struct IdentDetailView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.accent)
-                        .foregroundStyle(IgniteColor.onAccent)
-                        .glassEffect(.regular.tint(IgniteColor.selection).interactive())
+                        .foregroundStyle(AppColor.onAccent)
+                        .glassEffect(.regular.tint(AppColor.selection).interactive())
                     }
 
                     if !teamVM.commentError.isEmpty {
                         Text(teamVM.commentError)
-                            .foregroundStyle(IgniteColor.error)
+                            .foregroundStyle(AppColor.error)
                     }
                 }
             }
-            .listRowBackground(IgniteColor.surface)
+            .listRowBackground(AppColor.surface)
         }
-        .igniteListColors()
+        .appListColors()
     }
 }

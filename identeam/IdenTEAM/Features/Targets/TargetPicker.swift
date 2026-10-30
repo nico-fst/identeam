@@ -66,7 +66,7 @@ struct TargetPicker: View {
                     .disabled(targetPickerVM.isSettingTarget)
                     .buttonStyle(.glassProminent)
                     .tint(.accent)
-                    .foregroundStyle(IgniteColor.onAccent)
+                    .foregroundStyle(AppColor.onAccent)
                 }
 
                 Section {
@@ -96,7 +96,7 @@ struct TargetPicker: View {
                         Text("Your target will be \(targetPickerVM.selectedDays.count)")
                     } else {
                         Text(targetPickerVM.settingError)
-                            .foregroundStyle(IgniteColor.error)
+                            .foregroundStyle(AppColor.error)
                     }
                 }
 
@@ -112,9 +112,9 @@ struct TargetPicker: View {
                     }
                 }
             }
-            .listRowBackground(IgniteColor.surface)
+            .listRowBackground(AppColor.surface)
         }
-        .igniteListColors()
+        .appListColors()
         .environment(\.editMode, .constant(.active))
         .disabled(targetPickerVM.isSettingTarget)
         .toolbar {
@@ -148,12 +148,12 @@ struct TargetPicker: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(IgniteColor.onAccent)
+                            .foregroundStyle(AppColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.accent)
-                .foregroundStyle(IgniteColor.onAccent)
+                .foregroundStyle(AppColor.onAccent)
                 .disabled(
                     targetPickerVM.isSettingTarget || targetPickerVM.isLoading
                         || !targetPickerVM.hasLoaded)

@@ -45,7 +45,7 @@ struct LastWeeksCompletionView: View {
 
                     FilledFlash(
                         progress: 0,
-                        color: IgniteColor.muted.opacity(0.15),
+                        color: AppColor.muted.opacity(0.15),
                         text: "",
                         animated: false
                     )
@@ -56,7 +56,7 @@ struct LastWeeksCompletionView: View {
                         .frame(maxWidth: .infinity)
                         .font(.nunito(.footnote))
                 }
-                .foregroundStyle(IgniteColor.text.opacity(0.15))
+                .foregroundStyle(AppColor.text.opacity(0.15))
             }
 
             ForEach(Array(lastWeeksSorted.enumerated()), id: \.element) { i, week in
@@ -69,7 +69,7 @@ struct LastWeeksCompletionView: View {
                         progress: week.targetSum > 0
                             ? Double(week.identSum) / Double(week.targetSum)
                             : 0,
-                        color: completed(week) ? IgniteColor.success : .accent,
+                        color: completed(week) ? AppColor.success : .accent,
                         text: "\(week.identSum) / \(week.targetSum)",
                         animated: animated
                             && AppCalendar.calendar.isDate(
@@ -90,13 +90,13 @@ struct LastWeeksCompletionView: View {
                             .labelStyle(CompactStreakLabelStyle())
                             .bold()
                             .font(.system(size: 13))
-                            .foregroundStyle(IgniteColor.streak)
+                            .foregroundStyle(AppColor.streak)
                     } else {
                         if week == lastWeeksSorted.last {
                             streakLabel.labelStyle(.iconOnly)
                         } else {
                             streakLabel.labelStyle(.iconOnly)
-                                .foregroundStyle(IgniteColor.team)
+                                .foregroundStyle(AppColor.team)
                         }
                     }
                 }

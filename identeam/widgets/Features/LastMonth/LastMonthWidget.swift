@@ -9,9 +9,9 @@ struct LastMonthWidget: Widget {
             kind: kind, intent: ConfigurationAppIntent.self, provider: LastMonthProvider()
         ) { entry in
             LastMonthWidgetView(entry: entry)
-                .foregroundStyle(IgniteColor.text)
-                .tint(IgniteColor.link)
-                .containerBackground(IgniteColor.surface, for: .widget)
+                .foregroundStyle(AppColor.text)
+                .tint(AppColor.link)
+                .containerBackground(AppColor.surface, for: .widget)
         }
         .configurationDisplayName("Month Overview")
         .description("See your month and your team's current progress.")
@@ -35,7 +35,7 @@ struct LastMonthWidgetView: View {
                     Text(entry.teamName)
                         .font(.footnote)
                         .bold()
-                        .foregroundStyle(IgniteColor.link)
+                        .foregroundStyle(AppColor.link)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -71,7 +71,7 @@ struct LastMonthWidgetView: View {
             TeamStreakLabel(week: week)
                 .labelStyle(CompactStreakLabelStyle())
                 .bold()
-                .foregroundStyle(completed ? IgniteColor.streak : IgniteColor.team)
+                .foregroundStyle(completed ? AppColor.streak : AppColor.team)
         }
         .padding(10)
         .background {
@@ -80,13 +80,13 @@ struct LastMonthWidgetView: View {
                     $0.targetSum > 0 ? Double($0.identSum) / Double($0.targetSum) : 0
                 } ?? 0,
                 color: week == nil
-                    ? IgniteColor.muted.opacity(0.15) : (completed ? IgniteColor.success : .accent),
+                    ? AppColor.muted.opacity(0.15) : (completed ? AppColor.success : .accent),
                 text: week.map { "\($0.identSum) / \($0.targetSum)" } ?? "",
                 animated: false
             )
             .frame(width: 250, height: 250)
             .shadow(
-                color: completed ? IgniteColor.success.opacity(0.5) : Color.accent.opacity(0.5),
+                color: completed ? AppColor.success.opacity(0.5) : Color.accent.opacity(0.5),
                 radius: 20,
                 x: 0,
                 y: 5

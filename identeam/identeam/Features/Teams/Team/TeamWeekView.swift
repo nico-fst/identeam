@@ -3,32 +3,32 @@ import SwiftUI
 
 struct TeamWeekView: View {
     let slug: String
-
-    enum Tab: Hashable {
-        case team
-        case personal
-    }
-    @State private var selectedTab: Tab = .team
-
     @State private var hasLoadedFreshTeamWeek = false
     @State private var isLoadingMonth = false
     @State private var showTeamSettings = false
     @State private var showTeamInfo = false
-
+    @State private var showAuraInfo = false
+    @State private var showDatePicker = false
     @AppStorage("userID") private var userID: String = ""
-
     @EnvironmentObject var vm: AppVM
     @EnvironmentObject var teamsVM: TeamsVM
     @Environment(\.modelContext) private var ctx
 
     @StateObject var teamVM: TeamWeekVM
 
-    // allows injecting for Preview
-    init(slug: String, teamVM: TeamWeekVM = TeamWeekVM()) {
+    init(
+        slug: String, teamVM: TeamWeekVM = TeamWeekVM(),
+        preview: TeamWeekPreviewConfiguration? = nil, referenceDate: Date = .now
+    ) {
+        self.preview = preview
+        self.referenceDate = referenceDate
         self.slug = slug
         _teamVM = StateObject(wrappedValue: teamVM)
     }
 
+    private let referenceDate: Date
+    private let preview: TeamWeekPreviewConfiguration?
+    private var viewerID: String { preview?.userID ?? userID }
     @Namespace private var transitions
 
     let isXcodePreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -43,8 +43,14 @@ struct TeamWeekView: View {
         teamWeeks.first {
             $0.slug == slug
                 && AppCalendar.startOfWeek(containing: $0.weekStart)
-                    == AppCalendar.startOfWeek(containing: teamVM.weekStart)
+                    == AppCalendar.startOfWeek(contasning: teamVM.weekStart)
         }
+    }
+
+    private var darkCutStage: Int {
+        teamWeek.map {
+            TeamWeekPresentation(week: $0, currentUserID: viewerID, now: referenceDate).darkCutStage
+        } ?? 0
     }
 
     private var lastWeeks: [TeamWeek] {
@@ -70,43 +76,66 @@ struct TeamWeekView: View {
     var body: some View {
         Group {  // .refreshable doesn't work on plain View
             if let team {
-                List {
-                    Group {
-                        weekNavigation
-                            .listRowSeparator(.hidden)
-
-                        IgniteSegmentedPicker(
-                            "View", selection: $selectedTab, options: [.team, .personal]
-                        ) {
-                            $0 == .team ? "Team" : "Personal"
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        if let teamWeek {
+                            let presentation = TeamWeekPresentation(
+                                week: teamWeek, currentUserID: viewerID, now: referenceDate)
+                            header(team: team, week: presentation)
+                            TeamWeekSummaryCards(
+                                week: presentation, initialPage: preview?.card ?? 0
+                            ) {
+                                teamVM.showSettingTarget = true
+                            }
+                            .id(teamVM.weekStart)
+                        } else {
+                            Text(team.name).font(TeamWeekStyle.font(32, heavy: true))
                         }
-                        .listRowSeparator(.hidden)
-
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(selectedWeekTitle)
+                                    .font(TeamWeekStyle.font(19, heavy: true))
+                                Spacer(minLength: 4)
+                                weekNavigation
+                            }
+                            .foregroundStyle(
+                                darkCutStage >= 3
+                                    ? AppColor.Palette.cream : AppColor.Palette.ink)
+                            overviewContent
+                        }
+                        if !lastWeeks.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Letzte Wochen").font(TeamWeekStyle.font(19, heavy: true))
+                                    .foregroundStyle(
+                                        darkCutStage >= 4
+                                            ? AppColor.Palette.cream : AppColor.Palette.ink)
+                                LastWeeksCompletionView(lastWeeks: lastWeeks, animated: true)
+                                    .padding(18)
+                                    .modifier(AppGlass(dark: darkCutStage >= 4))
+                            }
+                        }
+                        monthContent
                         TeamWeekActionsSection(
-                            slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek)
-
-                        overviewContent
-
-                        Section {
-                            Text("Coming soon :)")
-                                .foregroundStyle(IgniteColor.text.opacity(0.3))
-                        } header: {
-                            Text("Chat")
-                                .font(.nunito(.headline))
-                        }
+                            slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek,
+                            dark: darkCutStage >= 4)
                     }
-                    .listRowBackground(IgniteColor.surface)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 28)
                 }
-                .igniteListColors()
-                .refreshable {
-                    await reloadWeek()
-                }
-                .listStyle(InsetGroupedListStyle())
+                .modifier(TeamWeekScrollingBackdrop(stage: darkCutStage))
+                .refreshable { await reloadWeek() }
                 .toolbar { teamToolbar(for: team) }
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbarColorScheme(
+                    darkCutStage >= 2 ? .dark : .light, for: .navigationBar
+                )
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
-                            slug: team.slug
+                            slug: team.slug,
+                            referenceDate: max(
+                                teamVM.weekStart, TargetPlanning.firstPlannableWeek())
                         ) { didChange in
                             teamVM.showSettingTarget = false
                             if didChange {
@@ -122,7 +151,7 @@ struct TeamWeekView: View {
                         TeamSettingsView(
                             slug: team.slug,
                             teamName: team.name,
-                            userID: userID
+                            userID: viewerID
                         )
                     }
                     .navigationTransition(
@@ -164,20 +193,15 @@ struct TeamWeekView: View {
             id:
                 "\(slug)|\(AppCalendar.dateString(teamVM.weekStart))|\(AppCalendar.dateString(month))"
         ) {
-            hasLoadedFreshTeamWeek = false
-            if !isXcodePreview {
-                if team != nil {
-                    await reloadWeek()
-                }
-            } else {
-                hasLoadedFreshTeamWeek = true
-            }
+            hasLoadedFreshTeamWeek = preview != nil || isXcodePreview
+            if !hasLoadedFreshTeamWeek, team != nil { await reloadWeek() }
         }
         .environmentObject(teamVM)
     }
 
     @MainActor
     private func reloadWeek() async {
+        guard preview == nil, !isXcodePreview else { return }
         let selectedWeek = teamVM.weekStart
         let selectedMonth = month
         isLoadingMonth = true
@@ -210,111 +234,127 @@ struct TeamWeekView: View {
 }
 
 extension TeamWeekView {
+    private func header(team: Team, week: TeamWeekPresentation) -> some View {
+        HStack(alignment: .center) {
+            Button {
+                showAuraInfo = true
+            } label: {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(team.name.uppercased())
+                        .font(TeamWeekStyle.font(11, heavy: true)).tracking(1.5)
+                        .foregroundStyle(Color.accentColor)
+                    Text("\(week.completed)/\(week.target) Idents").modifier(TeamWeekHeavyText(31))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(week.darkHeader ? AppColor.Palette.cream : AppColor.Palette.ink)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showAuraInfo, attachmentAnchor: .rect(.bounds), arrowEdge: .top)
+            {
+                TeamWeekAuraLegend().padding(20).presentationCompactAdaptation(.popover)
+            }
+            Spacer(minLength: 10)
+            TeamWeekStreakInfoButton(streak: week.streak)
+        }
+        .padding(.bottom, 22)
+    }
+
     fileprivate var weekNavigation: some View {
-        HStack {
+        HStack(spacing: 6) {
             Button {
                 teamVM.changeWeek(by: -7)
             } label: {
-                Image(systemName: "chevron.left")
-                    .padding(5)
+                Image(systemName: "chevron.left").frame(width: 22, height: 30)
             }
-            .buttonStyle(.glassProminent)
-            .tint(.accent)
-            .foregroundStyle(IgniteColor.onAccent)
-
-            Spacer()
-
             Button {
-                teamVM.referenceDate = Date()
+                showDatePicker = true
             } label: {
-                Text(TargetPlanning.weekName(for: teamVM.referenceDate))
-                    .font(.nunito(.title3))
-                    .padding(5)
+                Text(weekRange).font(TeamWeekStyle.font(11, heavy: true)).lineLimit(1)
             }
-            .buttonStyle(.glass(.regular.tint(IgniteColor.selection)))
-
-            Spacer()
+            .popover(isPresented: $showDatePicker) {
+                VStack(spacing: 12) {
+                    TeamWeekCalendar(selection: $teamVM.referenceDate) { showDatePicker = false }
+                    Button("Diese Woche") {
+                        teamVM.referenceDate = .now
+                        showDatePicker = false
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(AppColor.accent)
+                }.padding().frame(idealWidth: 340).presentationCompactAdaptation(.popover)
+            }
 
             Button {
                 teamVM.changeWeek(by: 7)
             } label: {
-                Image(systemName: "chevron.right")
-                    .padding(5)
+                Image(systemName: "chevron.right").frame(width: 22, height: 30)
             }
-            .buttonStyle(.glassProminent)
-            .tint(.accent)
-            .foregroundStyle(IgniteColor.onAccent)
         }
-        .disabled(!hasLoadedFreshTeamWeek)
+        .font(.system(size: 11, weight: .bold))
+        .padding(.horizontal, 5)
+        .glassEffect(.regular, in: .capsule)
+        .environment(\.colorScheme, darkCutStage >= 3 ? .dark : .light)
     }
+
+    private var selectedWeekTitle: String {
+        TeamWeekPresentation(
+            weekStart: teamVM.weekStart, members: [], currentUserID: viewerID,
+            streak: 0, now: referenceDate
+        ).title
+    }
+
+    private var weekRange: String { TeamWeekPresentation.dateRange(for: teamVM.weekStart) }
 
     @ViewBuilder
     fileprivate var overviewContent: some View {
-        if hasLoadedFreshTeamWeek, let teamWeek {
-            switch selectedTab {
-            case .team:
-                CurrentWeekWidget(teamWeek: teamWeek) { ident in
-                    teamVM.selectedIdent = ident
-                }
-                CurrentProgressWidget(week: teamWeek)
-                Section {
-                    LastWeeksCompletionView(lastWeeks: lastWeeks, animated: true)
-                } header: {
-                    Text("Completion of last weeks")
-                        .font(.nunito(.headline))
-                }
-            case .personal:
-                if monthWeeks.count
-                    == AppCalendar.weekStartsInMonth(containing: month).count
-                {
-                    Section {
-                        LastMonthView(
-                            month: month,
-                            personalWeeks: monthWeeks.compactMap {
-                                PersonalWeek(teamWeek: $0, userID: userID)
-                            }
-                        )
-                    } header: {
-                        Text("Month Overview")
-                            .font(.nunito(.headline))
-                    }
-                } else {
-                    Section {
-                        if isLoadingMonth {
-                            ProgressView()
-                        } else {
-                            Text("Month could not be loaded. Pull to refresh.")
-                                .foregroundStyle(IgniteColor.muted)
-                        }
-                    }
+        if let teamWeek {
+            TeamWeekGrid(
+                slug: slug,
+                week: TeamWeekPresentation(
+                    week: teamWeek, currentUserID: viewerID, now: referenceDate),
+                members: preview == nil ? teamWeek.members : [],
+                initiallyDetailed: preview?.detailed ?? false
+            ) { identID in
+                teamVM.selectedIdent = teamWeek.members.flatMap(\.idents).first {
+                    TeamWeekPresentation.identID($0) == identID
                 }
             }
-
+            .id(teamVM.weekStart)
+        } else if isLoadingMonth {
+            ProgressView().frame(maxWidth: .infinity).padding(40)
         } else {
-            Section {
-                ProgressView()
+            ContentUnavailableView {
+                Label("Woche nicht geladen", systemImage: "wifi.exclamationmark")
+            } actions: {
+                Button("Erneut laden") { Task { await reloadWeek() } }
+            }
+        }
+    }
+
+    private var monthContent: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Dein Monat").font(TeamWeekStyle.font(19, heavy: true))
+                .foregroundStyle(
+                    darkCutStage >= 4 ? AppColor.Palette.cream : AppColor.Palette.ink)
+            if monthWeeks.count == AppCalendar.weekStartsInMonth(containing: month).count {
+                LastMonthView(
+                    month: month,
+                    personalWeeks: monthWeeks.compactMap {
+                        PersonalWeek(teamWeek: $0, userID: viewerID)
+                    }
+                )
+                .padding(16)
+                .modifier(AppGlass(dark: darkCutStage >= 4))
+            } else if isLoadingMonth {
+                ProgressView().frame(maxWidth: .infinity).padding()
+            } else {
+                Text("Monat nicht geladen. Zum Aktualisieren nach unten ziehen.")
+                    .foregroundStyle(AppColor.muted)
             }
         }
     }
 
     @ToolbarContentBuilder
     fileprivate func teamToolbar(for team: Team) -> some ToolbarContent {
-        // Team name etc.
-        ToolbarItem(placement: .topBarLeading) {
-            VStack {
-                Text(team.name)
-                    .font(.nunito(.headline))
-                    .fixedSize(horizontal: true, vertical: false)  // so text doesn't get cropped
-                TeamStreakLabel(week: teamWeek)
-                    .labelStyle(CompactStreakLabelStyle())
-                    .bold()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .font(.nunito(.footnote))
-                    .foregroundStyle(IgniteColor.streak)
-            }
-        }
-        .sharedBackgroundVisibility(.hidden)  // so text is not surrounded by glass
-
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 showTeamSettings = true
@@ -332,64 +372,4 @@ extension TeamWeekView {
             .matchedTransitionSource(id: "info-button", in: transitions)
         }
     }
-}
-
-private struct TeamViewPreviewContainer: View {
-    let container: ModelContainer
-    @StateObject private var teamVM: TeamWeekVM
-
-    init(openIdent: Bool = false) {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-
-        let container = try! ModelContainer(
-            for: Team.self,
-            TeamWeek.self,
-            TeamMember.self,
-            User.self,
-            Ident.self,
-            S3Item.self,
-            Comment.self,
-            configurations: config
-        )
-
-        let team = Team.templateKanten
-        let teamWeek = TeamWeek.templateKanten
-
-        container.mainContext.insert(team)
-        container.mainContext.insert(teamWeek)
-        container.mainContext.insert(TeamWeek.templateStreakKanten)
-        container.mainContext.insert(TeamWeek.templateBadKanten)
-        container.mainContext.insert(TeamWeek.templateGoodkanten)
-        container.mainContext.insert(TeamWeek.templateFrozenKanten)
-
-        let teamVM = TeamWeekVM()
-
-        if openIdent {
-            teamVM.selectedIdent =
-                teamWeek.members
-                .flatMap(\.idents)
-                .first
-        }
-
-        self.container = container
-        _teamVM = StateObject(wrappedValue: teamVM)
-    }
-
-    var body: some View {
-        TeamWeekView(
-            slug: "die-kanten",
-            teamVM: teamVM
-        )
-        .environmentObject(AppVM())
-        .environmentObject(TeamsVM())
-        .modelContainer(container)
-    }
-}
-
-#Preview("Default") {
-    TeamViewPreviewContainer()
-}
-
-#Preview("Ident Open") {
-    TeamViewPreviewContainer(openIdent: true)
 }

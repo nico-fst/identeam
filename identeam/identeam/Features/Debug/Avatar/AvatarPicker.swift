@@ -40,7 +40,7 @@ struct AvatarPicker: View {
                     Spacer()
 
                     Text(avatarVM.uploadError ?? "")
-                        .foregroundStyle(IgniteColor.error)
+                        .foregroundStyle(AppColor.error)
 
                     Spacer()
 
@@ -77,12 +77,12 @@ struct AvatarPicker: View {
                                 ProgressView()
                             } else {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(IgniteColor.onAccent)
+                                    .foregroundStyle(AppColor.onAccent)
                             }
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.accent)
-                        .foregroundStyle(IgniteColor.onAccent)
+                        .foregroundStyle(AppColor.onAccent)
                         .disabled(avatarVM.isUploadingAvatar)
                     }
                 }
@@ -135,7 +135,7 @@ struct AvatarPicker: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 96, height: 96)
-                    .foregroundStyle(IgniteColor.muted)
+                    .foregroundStyle(AppColor.muted)
             }
 
             // always render nickname und username

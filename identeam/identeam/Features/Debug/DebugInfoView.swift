@@ -57,7 +57,7 @@ struct DebugInfoView: View {
                         ProgressView("Checking Session...")
                     case .unauthenticated:
                         Text("Please restart the app to log in again")
-                            .foregroundStyle(IgniteColor.error).bold()
+                            .foregroundStyle(AppColor.error).bold()
                     case .enteringUserDetails:
                         Text("Entering User Details...")
                     case .authenticated:
@@ -75,12 +75,12 @@ struct DebugInfoView: View {
                         Button("Logout") {
                             authVM.logout(ctx: ctx)
                         }
-                        .foregroundStyle(IgniteColor.error)
+                        .foregroundStyle(AppColor.error)
                     }
                 }
-                .listRowBackground(IgniteColor.surface)
+                .listRowBackground(AppColor.surface)
             }
-            .igniteListColors()
+            .appListColors()
             .refreshable {
                 Task {
                     try? await avatarVM.refreshAvatarIfNeeded(avatars: avatars, ctx: ctx)

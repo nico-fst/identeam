@@ -6,6 +6,7 @@ struct TeamSettingsView: View {
     let userID: String
 
     @State private var showMembersWithoutTarget: Bool
+    @State private var showIdentImages: Bool
 
     @Environment(\.dismiss) private var dismiss
 
@@ -17,6 +18,7 @@ struct TeamSettingsView: View {
         self.slug = slug
         self.teamName = teamName
         self.userID = userID
+        _showIdentImages = State(initialValue: TeamWeekImageSettings.showsImages(for: slug))
         _defaultTime = State(
             initialValue: TeamReminderSettingsStore.shared.dateForPicker(
                 userID: userID,
@@ -63,16 +65,22 @@ struct TeamSettingsView: View {
                     )
                 }
 
+                Section {
+                    Toggle("Show Ident images", isOn: $showIdentImages)
+                } footer: {
+                    Text("Show Ident photos instead of only member colors in the week overview.")
+                }
+
                 if !errorMessage.isEmpty {
                     Section {
                         Text(errorMessage)
-                            .foregroundStyle(IgniteColor.error)
+                            .foregroundStyle(AppColor.error)
                     }
                 }
             }
-            .listRowBackground(IgniteColor.surface)
+            .listRowBackground(AppColor.surface)
         }
-        .igniteListColors()
+        .appListColors()
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -95,12 +103,12 @@ struct TeamSettingsView: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(IgniteColor.onAccent)
+                            .foregroundStyle(AppColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.accent)
-                .foregroundStyle(IgniteColor.onAccent)
+                .foregroundStyle(AppColor.onAccent)
                 .disabled(isSaving)
             }
         }
@@ -122,6 +130,8 @@ struct TeamSettingsView: View {
             showMembersWithoutTarget,
             forKey: "week.\(slug).weekgrid.showMembersWithoutTarget"
         )
+
+        TeamWeekImageSettings.setShowsImages(showIdentImages, for: slug)
 
         do {
             _ = try await refreshLocalNotifications(

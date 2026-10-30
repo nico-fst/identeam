@@ -35,7 +35,7 @@ struct IdentingView: View {
                     .overlay {
                         // outside of flash - darkened
                         Rectangle()
-                            .fill(IgniteColor.cameraShade.opacity(0.5))
+                            .fill(AppColor.cameraShade.opacity(0.5))
                             .ignoresSafeArea()
                             .overlay {
                                 Image("Flash")
@@ -56,7 +56,7 @@ struct IdentingView: View {
                 // camera controls
                 VStack {
                     TeamWheel(
-                        textColor: IgniteColor.cameraText,
+                        textColor: AppColor.cameraText,
                         selectedTeamSlug: $identingVM.selectedTeamSlug
                     )
                     .frame(width: 300, height: 110)
@@ -72,23 +72,23 @@ struct IdentingView: View {
                             Image(systemName: flashIcon)
                                 .font(.nunito(.largeTitle))
                                 .frame(width: 70, height: 70)
-                                .foregroundStyle(IgniteColor.cameraText)
+                                .foregroundStyle(AppColor.cameraText)
                         }
 
                         Button {
                             cameraVM.capturePhoto()
                         } label: {
                             Circle()
-                                .strokeBorder(IgniteColor.cameraText, lineWidth: 3)
+                                .strokeBorder(AppColor.cameraText, lineWidth: 3)
                                 .opacity(0.8)
                                 .frame(width: 70, height: 70)
                                 .overlay {
                                     if cameraVM.isCapturingPhoto {
                                         ProgressView()
-                                            .tint(IgniteColor.cameraText)
+                                            .tint(AppColor.cameraText)
                                     } else {
                                         Circle()
-                                            .fill(IgniteColor.cameraText)
+                                            .fill(AppColor.cameraText)
                                             .frame(width: 60, height: 60)
                                     }
                                 }
@@ -101,7 +101,7 @@ struct IdentingView: View {
                             Image(systemName: "arrow.triangle.2.circlepath.camera")
                                 .font(.nunito(.largeTitle))
                                 .frame(width: 70, height: 70)
-                                .foregroundStyle(IgniteColor.cameraText)
+                                .foregroundStyle(AppColor.cameraText)
                         }
                     }
                     .padding(.bottom, 30)
@@ -143,7 +143,7 @@ struct IdentingView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.accent)
-                        .foregroundStyle(IgniteColor.onAccent)
+                        .foregroundStyle(AppColor.onAccent)
                     }
                 }
                 .padding()
@@ -171,7 +171,7 @@ struct IdentingPhotoPreview: View {
         ZStack {
             VStack {
                 TeamWheel(
-                    textColor: IgniteColor.text,
+                    textColor: AppColor.text,
                     selectedTeamSlug: $identingVM.selectedTeamSlug
                 )
                 .frame(width: 300, height: 110)
@@ -212,18 +212,18 @@ struct IdentingPhotoPreview: View {
                 .padding()  // simulating List{TextField} style
                 .background {
                     RoundedRectangle(cornerRadius: 50)
-                        .fill(IgniteColor.surface)
+                        .fill(AppColor.surface)
                 }
                 .lineLimit(1...2)
                 .disabled(identingVM.isUploadingImage)
 
                 Text(identingVM.uploadError ?? "")
-                    .foregroundStyle(IgniteColor.error)
+                    .foregroundStyle(AppColor.error)
             }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .igniteColors()
+        .appColors()
         .navigationTitle("New Ident")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -260,12 +260,12 @@ struct IdentingPhotoPreview: View {
                         ProgressView()
                     } else {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(IgniteColor.onAccent)
+                            .foregroundStyle(AppColor.onAccent)
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.accent)
-                .foregroundStyle(IgniteColor.onAccent)
+                .foregroundStyle(AppColor.onAccent)
                 .disabled(identingVM.isUploadingImage)
             }
         }

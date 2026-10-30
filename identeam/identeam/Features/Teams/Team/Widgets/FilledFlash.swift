@@ -44,8 +44,8 @@ struct FilledFlash: View {
                     Text(text)
                         .font(.custom("Nunito-Black", size: geo.size.height * 0.15))
                         .foregroundStyle(
-                            color == IgniteColor.success
-                                ? IgniteColor.onSuccess : IgniteColor.onAccent
+                            color == AppColor.success
+                                ? AppColor.onSuccess : AppColor.onAccent
                         )
                         .shadow(color: .black.opacity(0.25), radius: 5)  // glow
                 }

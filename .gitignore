@@ -7,6 +7,7 @@ coverage.out
 coverage-summary.txt
 test-output.txt
 *.xcodeproj/xcuserdata/
+identeam/tests
 
 # Docs dynamically generated
 docs/ 

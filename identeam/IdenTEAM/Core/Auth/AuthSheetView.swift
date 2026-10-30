@@ -27,9 +27,9 @@ struct AuthSheetView: View {
                                     text: $authVM.passwordInput
                                 )
                             }
-                            .listRowBackground(IgniteColor.surface)
+                            .listRowBackground(AppColor.surface)
                         }
-                        .igniteListColors()
+                        .appListColors()
 
                         Button {
                             Task {
@@ -53,8 +53,8 @@ struct AuthSheetView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.accent)
-                        .foregroundStyle(IgniteColor.onAccent)
-                        .glassEffect(.regular.tint(IgniteColor.selection).interactive())
+                        .foregroundStyle(AppColor.onAccent)
+                        .glassEffect(.regular.tint(AppColor.selection).interactive())
                     }
                 }
                 .padding()
@@ -72,9 +72,9 @@ struct AuthSheetView: View {
                                 text: $authVM.usernameInput
                             )
                         }
-                        .listRowBackground(IgniteColor.surface)
+                        .listRowBackground(AppColor.surface)
                     }
-                    .igniteListColors()
+                    .appListColors()
 
                     Button {
                         Task { await authVM.tryChangeUserDetails() }
@@ -88,18 +88,18 @@ struct AuthSheetView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.accent)
-                    .foregroundStyle(IgniteColor.onAccent)
-                    .glassEffect(.regular.tint(IgniteColor.selection).interactive())
+                    .foregroundStyle(AppColor.onAccent)
+                    .glassEffect(.regular.tint(AppColor.selection).interactive())
                 }
                 .padding()
             }
 
             Text(authVM.signupError ?? "")
-                .foregroundColor(IgniteColor.error)
+                .foregroundColor(AppColor.error)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .igniteColors()
+        .appColors()
         .interactiveDismissDisabled()
         .presentationDetents([.medium])
     }

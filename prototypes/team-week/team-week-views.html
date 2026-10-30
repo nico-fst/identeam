@@ -6,7 +6,7 @@
 #ignite-team-demo .it-examples{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 auto 18px;max-width:480px}
 #ignite-team-demo .it-examples label{font-weight:800;font-size:13px}
 #ignite-team-demo select{width:100%;min-height:44px;border:1px solid var(--it-line);border-radius:14px;background:var(--it-bg);color:var(--it-ink);padding:10px 12px;font-weight:700;font-size:14px}
-#ignite-team-demo .it-phone{position:relative;isolation:isolate;background:var(--it-bg);border-radius:32px;padding:24px 20px;max-width:480px;margin:auto;overflow:hidden}
+#ignite-team-demo .it-phone{position:relative;isolation:isolate;color-scheme:light;background:var(--it-preview-cream,#fff3e5);border-radius:32px;padding:24px 20px;max-width:480px;margin:auto;overflow:hidden}
 #ignite-team-demo .it-phone::before{display:none;content:"";position:absolute;box-sizing:content-box;inset:0 0 auto;height:100px;padding-bottom:100%;background:#24201d;clip-path:polygon(0 0,100% 0,100% 100%,0 100px);clip-path:var(--it-cut-path,polygon(0 0,100% 0,100% 100%,0 100px));z-index:-1;pointer-events:none}
 #ignite-team-demo .it-phone[data-streak-design="classic"]::before{display:block}
 #ignite-team-demo .it-phone[data-streak-design="classic"]::after{content:"";position:absolute;top:-24px;right:-50px;width:250px;height:250px;z-index:-1;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--it-yellow) 45%,transparent),transparent 65%);filter:blur(28px)}
@@ -25,7 +25,7 @@
 #ignite-team-demo .it-reward-trophy .it-streak-art{background:#eaa817}
 #ignite-team-demo .it-reward-trophy .it-streak-art-front{background:var(--it-yellow)}
 #ignite-team-demo .it-reward-trophy .it-reward-next{color:var(--it-yellow);margin-top:16px}
-#ignite-team-demo .it-reward-halo{position:absolute;z-index:-1;width:240px;height:240px;top:-75px;left:50%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,#ffd16642,transparent 65%)}
+#ignite-team-demo .it-reward-halo{opacity:var(--it-streak-glow);position:absolute;z-index:-1;width:240px;height:240px;top:-75px;left:50%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,#ffd16642,transparent 65%)}
 #ignite-team-demo .it-reward-level{background:var(--it-orange);color:#24201d}
 #ignite-team-demo .it-reward-level .it-reward-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 #ignite-team-demo .it-level-number{font-size:64px;font-weight:1000;letter-spacing:-4px;line-height:1}
@@ -50,6 +50,7 @@
 #ignite-team-demo .it-unlocked{display:inline-block;background:var(--it-ink);color:var(--it-bg);border-radius:999px;padding:6px 12px;font-size:11px;font-weight:1000;letter-spacing:.06em}
 @media(max-width:370px){#ignite-team-demo .it-design-controls{gap:8px}#ignite-team-demo .it-reward{padding:22px 18px}#ignite-team-demo .it-reward h2{font-size:27px}}
 #ignite-team-demo .it-teamtop{display:flex;align-items:center;justify-content:space-between;margin:0 0 24px;gap:12px}
+#ignite-team-demo .it-teamtop .it-eyebrow{color:var(--it-orange)}
 #ignite-team-demo .it-eyebrow{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px}
 #ignite-team-demo h1{font-size:30px;line-height:1.05;letter-spacing:-1px;font-weight:1000;margin:0}
 #ignite-team-demo .it-streak{position:relative;display:flex;align-items:center;justify-content:center;width:72px;height:84px;flex:none;color:hsl(from var(--it-yellow) h s calc(l * .46))}
@@ -76,11 +77,11 @@
 #ignite-team-demo .it-weekhead{display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;gap:8px}
 #ignite-team-demo h3{font-size:22px;font-weight:1000;letter-spacing:-.5px;margin:0}
 #ignite-team-demo .it-dates{font-size:12px;font-weight:700;color:var(--it-muted)}
-#ignite-team-demo .it-week-footer{display:flex;align-items:center;gap:14px;padding:10px 6px 10px;position:relative;z-index:1}
-#ignite-team-demo .it-team-progress{display:flex;align-items:center;gap:8px;flex:1;min-width:64px;margin-inline:clamp(12px,4vw,24px)}
-#ignite-team-demo .it-team-track{height:8px;flex:1;min-width:24px;overflow:hidden;border-radius:999px;background:light-dark(#00000018,#ffffff24)}
-#ignite-team-demo .it-team-track span{display:block;height:100%;border-radius:inherit;background:rgb(0 0 0 / 45%)}
-#ignite-team-demo .it-team-progress strong{font-size:12px;font-weight:900;white-space:nowrap}
+#ignite-team-demo .it-week-footer{--it-legend-size:8px;display:flex;align-items:center;gap:10px;padding:10px 6px 10px;position:relative;z-index:1}
+#ignite-team-demo .it-personal-progress{flex:0 0 64px;min-width:64px}
+#ignite-team-demo .it-personal-track{height:var(--it-legend-size);width:100%;min-width:24px;overflow:hidden;border-radius:999px;background:light-dark(#00000018,#ffffff24)}
+#ignite-team-demo .it-personal-track span{display:block;height:100%;border-radius:inherit;background:var(--user)}
+#ignite-team-demo .it-personal-progress strong{font-size:12px;font-weight:900;white-space:nowrap}
 @media(max-width:370px){#ignite-team-demo .it-week-footer{gap:10px;padding-inline:0}#ignite-team-demo .it-personkey{gap:8px}}
 #ignite-team-demo .it-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px}
 #ignite-team-demo .it-day{text-align:center;min-width:0;border-radius:14px;padding:8px 0 2px}
@@ -99,10 +100,10 @@
 #ignite-team-demo .it-stack .it-halo{fill:var(--it-mark-bg,var(--it-surface));stroke:var(--it-mark-bg,var(--it-surface));stroke-width:48;stroke-linejoin:round}
 #ignite-team-demo .it-stack .it-planned .it-halo{stroke-width:73}
 #ignite-team-demo .it-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.3;line-height:1}
-#ignite-team-demo .it-personkey{display:flex;flex-wrap:nowrap;gap:14px;padding:0;flex:none;font-size:12px;font-weight:800}
+#ignite-team-demo .it-personkey{display:flex;flex-wrap:nowrap;gap:10px;padding:0;flex:1;min-width:0;font-size:11px;font-weight:800}
 #ignite-team-demo .it-personkey span{display:flex;gap:6px;align-items:center}
 @media(max-width:370px){#ignite-team-demo .it-personkey{gap:8px}}
-#ignite-team-demo .it-personkey i{width:8px;height:8px;border-radius:50%;background:var(--user)}
+#ignite-team-demo .it-personkey i{width:var(--it-legend-size);height:var(--it-legend-size);flex-shrink:0;border-radius:50%;background:var(--user)}
 #ignite-team-demo .it-grid{width:100%;table-layout:fixed;border-collapse:collapse;margin:6px 0 4px;font-size:12px}
 #ignite-team-demo .it-grid th,#ignite-team-demo .it-grid td{border:0}
 #ignite-team-demo .it-grid th{font-weight:900;padding:8px 0}
@@ -176,8 +177,8 @@
 #ignite-team-demo .it-week-content{position:relative}
 @media(max-width:370px){#ignite-team-demo .it-grid th:first-child{width:40px}#ignite-team-demo .it-grid .it-progress-column{width:70px;padding:0}#ignite-team-demo .it-weekhead{padding-left:12px;padding-right:12px}#ignite-team-demo h3{font-size:20px}#ignite-team-demo .it-info-button{width:32px}#ignite-team-demo .it-dates{font-size:11px}}
 @media(prefers-reduced-motion:reduce){#ignite-team-demo .it-mark{will-change:auto}}
-#ignite-team-demo .it-screen-comparison{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0;align-items:stretch}
-#ignite-team-demo [data-screen]{scroll-snap-align:start;min-width:0;container-type:inline-size;display:flex;flex-direction:column}
+#ignite-team-demo .it-screen-comparison{display:grid;grid-template-columns:repeat(auto-fit,393px);gap:24px;align-items:start}
+#ignite-team-demo [data-screen]{scroll-snap-align:start;width:393px;min-width:393px;container-type:inline-size;display:flex;flex-direction:column}
 #ignite-team-demo .it-screen-caption{font-size:12px;font-weight:900;margin:0 8px 12px;color:var(--it-muted)}
 #ignite-team-demo .it-hero-carousel{margin-bottom:24px;min-width:0}
 #ignite-team-demo .it-hero-track{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:26px;overscroll-behavior-x:contain}
@@ -188,61 +189,56 @@
 #ignite-team-demo .it-hero-pagination button{border:0;background:transparent;min-width:22px;min-height:24px;display:flex;justify-content:center;align-items:center;cursor:pointer}
 #ignite-team-demo .it-hero-pagination button span{width:6px;height:6px;border-radius:999px;background:#24201d;opacity:.35}
 #ignite-team-demo .it-hero-pagination button[aria-pressed="true"] span{width:16px;background:#24201d;opacity:1}
-
-
-@container(max-width:370px){#ignite-team-demo .it-phone{padding:20px 12px}#ignite-team-demo h1{font-size:26px}#ignite-team-demo .it-hero{padding:22px 18px}#ignite-team-demo .it-hero h2{font-size:32px}#ignite-team-demo .it-week{padding:18px 8px 10px}#ignite-team-demo .it-grid th:first-child{width:36px}#ignite-team-demo .it-grid .it-progress-column{width:60px}#ignite-team-demo .it-week-footer{gap:8px;padding-inline:0}#ignite-team-demo .it-personkey{gap:8px}#ignite-team-demo .it-team-progress{margin-inline:8px}}
+@container(max-width:370px){#ignite-team-demo .it-phone{padding:20px 12px}#ignite-team-demo h1{font-size:26px}#ignite-team-demo .it-hero{padding:22px 18px}#ignite-team-demo .it-hero h2{font-size:32px}#ignite-team-demo .it-week{padding:18px 8px 10px}#ignite-team-demo .it-grid th:first-child{width:36px}#ignite-team-demo .it-grid .it-progress-column{width:60px}#ignite-team-demo .it-week-footer{gap:8px;padding-inline:0}#ignite-team-demo .it-personkey{gap:8px}#ignite-team-demo .it-personal-progress{margin-inline:8px}}
 #ignite-team-demo .it-phone[data-streak-count="0"]::after{display:none}
-@container(max-width:300px){#ignite-team-demo .it-phone{padding:16px 8px}#ignite-team-demo h1{font-size:22px}#ignite-team-demo .it-teamtop{gap:6px}#ignite-team-demo .it-hero{padding:20px 14px}#ignite-team-demo .it-hero h2{font-size:27px}#ignite-team-demo .it-hero p{font-size:13px}#ignite-team-demo .it-week{padding:14px 6px 8px}#ignite-team-demo .it-weekhead{padding-inline:4px}#ignite-team-demo .it-stack .it-mark,#ignite-team-demo .it-grid .it-mark{width:32px;height:44px}#ignite-team-demo .it-personkey{font-size:11px;gap:5px}#ignite-team-demo .it-personkey span{gap:3px}#ignite-team-demo .it-personkey i{width:6px;height:6px}#ignite-team-demo .it-team-progress{margin:0;min-width:52px;gap:4px}#ignite-team-demo .it-week-footer{gap:6px}#ignite-team-demo .it-grid th:first-child{width:30px}#ignite-team-demo .it-grid .it-progress-column{width:44px}#ignite-team-demo .it-progress-number{font-size:20px}#ignite-team-demo .it-progress-number span{font-size:12px}#ignite-team-demo .it-reward{padding:20px 14px}#ignite-team-demo .it-reward h2{font-size:25px}#ignite-team-demo .it-chain-node b{width:30px;height:30px}#ignite-team-demo .it-chain::before{top:15px}}
+@container(max-width:300px){#ignite-team-demo .it-phone{padding:16px 8px}#ignite-team-demo h1{font-size:22px}#ignite-team-demo .it-teamtop{gap:6px}#ignite-team-demo .it-hero{padding:20px 14px}#ignite-team-demo .it-hero h2{font-size:27px}#ignite-team-demo .it-hero p{font-size:13px}#ignite-team-demo .it-week{padding:14px 6px 8px}#ignite-team-demo .it-weekhead{padding-inline:4px}#ignite-team-demo .it-stack .it-mark,#ignite-team-demo .it-grid .it-mark{width:32px;height:44px}#ignite-team-demo .it-personkey{font-size:11px;gap:5px}#ignite-team-demo .it-personkey span{gap:3px}#ignite-team-demo .it-week-footer{--it-legend-size:6px}#ignite-team-demo .it-personal-progress{margin:0;min-width:52px;gap:4px}#ignite-team-demo .it-week-footer{gap:6px}#ignite-team-demo .it-grid th:first-child{width:30px}#ignite-team-demo .it-grid .it-progress-column{width:44px}#ignite-team-demo .it-progress-number{font-size:20px}#ignite-team-demo .it-progress-number span{font-size:12px}#ignite-team-demo .it-reward{padding:20px 14px}#ignite-team-demo .it-reward h2{font-size:25px}#ignite-team-demo .it-chain-node b{width:30px;height:30px}#ignite-team-demo .it-chain::before{top:15px}}
 #ignite-team-demo .it-frozen{display:block;flex:none;width:72px;height:84px;background:light-dark(#338bd1,#74c7ff);mask:url("data:image/svg+xml;base64,PCEtLSBAbGljZW5zZSBsdWNpZGUtc3RhdGljIHYwLjQ2OC4wIC0gSVNDIC0tPgo8c3ZnCiAgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtc25vd2ZsYWtlIgogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMwMDAwMDAiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPGxpbmUgeDE9IjIiIHgyPSIyMiIgeTE9IjEyIiB5Mj0iMTIiIC8+CiAgPGxpbmUgeDE9IjEyIiB4Mj0iMTIiIHkxPSIyIiB5Mj0iMjIiIC8+CiAgPHBhdGggZD0ibTIwIDE2LTQtNCA0LTQiIC8+CiAgPHBhdGggZD0ibTQgOCA0IDQtNCA0IiAvPgogIDxwYXRoIGQ9Im0xNiA0LTQgNC00LTQiIC8+CiAgPHBhdGggZD0ibTggMjAgNC00IDQgNCIgLz4KPC9zdmc+Cg==") center / contain no-repeat;-webkit-mask:url("data:image/svg+xml;base64,PCEtLSBAbGljZW5zZSBsdWNpZGUtc3RhdGljIHYwLjQ2OC4wIC0gSVNDIC0tPgo8c3ZnCiAgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtc25vd2ZsYWtlIgogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiMwMDAwMDAiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPGxpbmUgeDE9IjIiIHgyPSIyMiIgeTE9IjEyIiB5Mj0iMTIiIC8+CiAgPGxpbmUgeDE9IjEyIiB4Mj0iMTIiIHkxPSIyIiB5Mj0iMjIiIC8+CiAgPHBhdGggZD0ibTIwIDE2LTQtNCA0LTQiIC8+CiAgPHBhdGggZD0ibTQgOCA0IDQtNCA0IiAvPgogIDxwYXRoIGQ9Im0xNiA0LTQgNC00LTQiIC8+CiAgPHBhdGggZD0ibTggMjAgNC00IDQgNCIgLz4KPC9zdmc+Cg==") center / contain no-repeat}
-#ignite-team-demo .it-phone[data-streak-count="0"]::before,#ignite-team-demo .it-phone[data-streak-count="1"]::before{display:none}
-#ignite-team-demo .it-phone[data-streak-count="2"]::before{height:0;padding-bottom:65%;clip-path:polygon(35% 0,100% 0,100% 100%);clip-path:var(--it-cut-path,polygon(35% 0,100% 0,100% 100%))}
-#ignite-team-demo .it-phone[data-streak-count="0"]::after,#ignite-team-demo .it-phone[data-streak-count="1"]::after,#ignite-team-demo .it-phone[data-streak-count="2"]::after{display:none}
-#ignite-team-demo .it-phone[data-streak-count="0"] .it-teamtop,#ignite-team-demo .it-phone[data-streak-count="1"] .it-teamtop,#ignite-team-demo .it-phone[data-streak-count="2"] .it-teamtop{color:var(--it-ink)}
-#ignite-team-demo .it-phone[data-streak-count="1"] .it-streak strong{left:50%;top:68%}
-#ignite-team-demo [data-screen]>.it-preview{display:flex;flex-direction:column;flex:1;width:100%;max-width:none;margin:0}
-#ignite-team-demo [data-screen]>.it-preview>.it-scene{display:flex;flex:1;min-width:0}
-#ignite-team-demo [data-screen] .it-phone{flex:1;min-width:0;width:100%;max-width:none;box-sizing:border-box;margin:0;align-self:stretch}
+#ignite-team-demo .it-phone[data-cut-stage="0"]::before{display:none}
+#ignite-team-demo .it-phone[data-cut-stage="1"]::before{height:0;padding-bottom:65%;clip-path:polygon(35% 0,100% 0,100% 100%);clip-path:var(--it-cut-path,polygon(35% 0,100% 0,100% 100%))}
+#ignite-team-demo .it-phone[data-streak-count="0"]::after{display:none}
+#ignite-team-demo .it-phone[data-cut-stage="0"] .it-teamtop,#ignite-team-demo .it-phone[data-cut-stage="1"] .it-teamtop{color:var(--it-ink)}
+#ignite-team-demo .it-streak[data-flame-stage="2"] strong{left:50%;top:68%}
+#ignite-team-demo [data-screen]>.it-preview{width:393px;height:852px;max-width:none;margin:0}
+#ignite-team-demo [data-screen]>.it-preview>.it-scene{width:393px;height:852px;overflow:hidden;border-radius:32px}
+#ignite-team-demo [data-screen] .it-phone{width:393px;height:852px;max-width:none;box-sizing:border-box;margin:0;overflow-y:auto}
 #ignite-team-demo .it-phone[data-streak-count="0"]::after{display:block;content:"";position:absolute;top:-24px;right:-50px;width:250px;height:250px;z-index:-1;pointer-events:none;background:radial-gradient(circle,light-dark(#338bd180,#74c7ff70),transparent 65%);filter:blur(56px)}
-#ignite-team-demo .it-phone[data-streak-count="1"]::after{display:block;top:-50px;right:-75px;width:300px;height:300px;filter:blur(40px);background:radial-gradient(circle,color-mix(in srgb,var(--it-yellow) 65%,transparent),transparent 70%)}
-#ignite-team-demo .it-phone[data-streak-count="4"]::before{height:var(--it-cut-depth,220px)}
-#ignite-team-demo .it-phone[data-streak-count="4"]::after{top:-80px;right:-100px;width:400px;height:400px;filter:blur(48px)}
-#ignite-team-demo .it-phone[data-streak-count="5"]{background:#24201d}
-#ignite-team-demo .it-phone[data-streak-count="5"]::before{display:none}
-#ignite-team-demo .it-phone[data-streak-count="5"]::after{top:-80px;right:-80px;width:420px;height:420px;filter:blur(48px)}
+#ignite-team-demo .it-phone[data-cut-stage="3"]::before{height:var(--it-cut-depth,220px)}
+#ignite-team-demo .it-phone[data-cut-stage="4"]{background:#24201d}
+#ignite-team-demo .it-phone[data-cut-stage="4"]::before{display:none}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-weekhead{color:#fff3e5}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-weekhead .it-info-button{color:#fff3e5;border-color:#fff3e580}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week-nav{background:#fff3e515;border-color:#fff3e530}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week-nav button,#ignite-team-demo .it-phone[data-week-theme="dark"] .it-dates{color:#fff3e5}
 #ignite-team-demo .it-week .it-view-picker{background:light-dark(#24201d0a,#ffffff0a);box-shadow:inset 0 1px 2px #24201d08}
 #ignite-team-demo .it-week .it-view-picker button[aria-pressed="true"]{background:light-dark(#ffffff80,#ffffff24);box-shadow:0 1px 5px #24201d12}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week{--it-ink:#fff3e5;--it-muted:#d6c5b0;--it-line:#fff3e533;--it-surface:#4a4034;--it-user-0:#ffab79;--it-user-1:#bea4ff;--it-user-2:#85cabc;color:var(--it-ink);background:linear-gradient(135deg,#fff3e526,#fff3e50a);border-color:#fff3e540}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week .it-view-picker{background:#00000018}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week .it-view-picker button[aria-pressed="true"]{background:#fff3e526}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-team-track{background:#fff3e51a}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-team-track span{background:#fff3e580}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week{--it-ink:#fff3e5;--it-muted:#d6c5b0;--it-line:#fff3e533;--it-surface:#4a4034;--it-user-0:#ffab79;--it-user-1:#bea4ff;--it-user-2:#85cabc;color:var(--it-ink);background:linear-gradient(135deg,#fff3e526,#fff3e50a);border-color:#fff3e540}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week .it-view-picker{background:#00000018}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week .it-view-picker button[aria-pressed="true"]{background:#fff3e526}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-personal-track{background:#fff3e51a}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-personal-track span{background:var(--user)}
 #ignite-team-demo .it-hero{background:linear-gradient(135deg,#ff682680,#ff682638);border:1px solid #ffffff70;box-shadow:inset 0 1px 0 #ffffff70,0 8px 24px #24201d0a;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
 #ignite-team-demo .it-hero.it-behind{background:linear-gradient(135deg,#dfff6880,#dfff6838)}
 #ignite-team-demo .it-hero.it-catchup{background:linear-gradient(135deg,#c4a5ff80,#c4a5ff38)}
 #ignite-team-demo .it-hero.it-quiet{background:linear-gradient(135deg,light-dark(#fffaf466,#ffffff1f),light-dark(#fff3e52e,#ffffff0a))}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-hero{color:#fff3e5}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-hero p{color:#e4d4c4}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-hero .it-track{background:#fff3e51a}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-hero{color:#fff3e5}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-hero p{color:#e4d4c4}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-hero .it-track{background:#fff3e51a}
 #ignite-team-demo .it-reward{border:1px solid #ffffff70;box-shadow:inset 0 1px 0 #ffffff70;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
 #ignite-team-demo .it-reward-trophy{background:#24201d99}
 #ignite-team-demo .it-reward-level{background:linear-gradient(135deg,#ff682699,#ff68264d)}
 #ignite-team-demo .it-reward-chain,#ignite-team-demo .it-reward-medal{background:linear-gradient(135deg,light-dark(#fffaf466,#ffffff1f),light-dark(#fff3e52e,#ffffff0a))}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-reward{color:#fff3e5}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-reward{color:#fff3e5}
 #ignite-team-demo .it-start-toggle{grid-column:1 / -1;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;min-height:32px;cursor:pointer}
 #ignite-team-demo .it-start-toggle input{width:18px;height:18px;accent-color:var(--it-orange)}
 #ignite-team-demo .it-screen-situation{display:block;font-size:11px;font-weight:700;margin-top:3px}
-#ignite-team-demo .it-phone[data-streak-count="3"]::after,#ignite-team-demo .it-phone[data-streak-count="4"]::after,#ignite-team-demo .it-phone[data-streak-count="5"]::after{left:var(--it-glow-x);top:var(--it-glow-y);right:auto;transform:translate(-50%,-50%);background:radial-gradient(circle,color-mix(in srgb,var(--it-yellow) 45%,transparent),transparent 65%)}
+#ignite-team-demo .it-phone:not([data-streak-count="0"])::after{display:block;left:var(--it-glow-x);top:var(--it-glow-y);right:auto;transform:translate(-50%,-50%);width:420px;height:420px;filter:blur(48px);opacity:var(--it-streak-glow);background:radial-gradient(circle,color-mix(in srgb,var(--it-yellow) 45%,transparent),transparent 65%)}
 #ignite-team-demo .it-phone[data-streak-design="classic"]::before{clip-path:none;background:linear-gradient(45deg,transparent var(--it-cut-stop),#24201d var(--it-cut-stop))}
 #ignite-team-demo .it-phone .it-week{--it-ink:#24201d;--it-muted:#665446;--it-line:#d8c3ad;--it-surface:#eee0ce;--it-user-0:#a4481d;--it-user-1:#6850ba;--it-user-2:#287d71;color:var(--it-ink);background:linear-gradient(135deg,#fff8efa6,#fff3e594);border-color:#ffffffd9;backdrop-filter:blur(28px) saturate(115%);-webkit-backdrop-filter:blur(28px) saturate(115%)}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week{--it-ink:#24201d;--it-muted:#665446;--it-line:#d8c3ad;--it-surface:#eee0ce;--it-user-0:#a4481d;--it-user-1:#6850ba;--it-user-2:#287d71;color:var(--it-ink);background:linear-gradient(135deg,#fff8efa6,#fff3e594);border-color:#ffffffd9}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week .it-view-picker{background:#24201d0a}
-#ignite-team-demo .it-phone[data-streak-count="5"] .it-week .it-view-picker button[aria-pressed="true"]{background:#ffffffb3}
-#ignite-team-demo .it-phone .it-week .it-team-track{background:#24201d18}
-#ignite-team-demo .it-phone .it-week .it-team-track span{background:#24201d80}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week{--it-ink:#24201d;--it-muted:#665446;--it-line:#d8c3ad;--it-surface:#eee0ce;--it-user-0:#a4481d;--it-user-1:#6850ba;--it-user-2:#287d71;color:var(--it-ink);background:linear-gradient(135deg,#fff8efa6,#fff3e594);border-color:#ffffffd9}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week .it-view-picker{background:#24201d0a}
+#ignite-team-demo .it-phone[data-cut-stage="4"] .it-week .it-view-picker button[aria-pressed="true"]{background:#ffffffb3}
+#ignite-team-demo .it-phone .it-week .it-personal-track{background:#24201d18}
+#ignite-team-demo .it-phone .it-week .it-personal-track span{background:var(--user)}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero,#ignite-team-demo .it-phone[data-reward-theme="dark"] .it-reward{color-scheme:dark;--it-ink:#fff3e5;--it-muted:#d6c5b0;--it-line:#fff3e533;--it-bg:#211b18;--it-surface:#3e332b;color:var(--it-ink);background:linear-gradient(135deg,#3c2b25cc,#211b18e6);border-color:#ffffff38;box-shadow:inset 0 1px 0 #ffffff24,0 8px 24px #0000001a}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero.it-behind{background:linear-gradient(135deg,#343b26cc,#211b18e6)}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero.it-catchup{background:linear-gradient(135deg,#332b40cc,#211b18e6)}
@@ -254,8 +250,8 @@
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week{color-scheme:dark;--it-ink:#fff3e5;--it-muted:#d6c5b0;--it-line:#fff3e533;--it-bg:#211b18;--it-surface:#3e332b;--it-user-0:#ffab79;--it-user-1:#bea4ff;--it-user-2:#85cabc;color:var(--it-ink);background:linear-gradient(135deg,#3e332bbf,#211b18b3);border-color:#ffffff38;box-shadow:inset 0 1px 0 #ffffff24,0 8px 24px #0000001a}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-view-picker{background:#00000024}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-view-picker button[aria-pressed="true"]{background:#fff3e526}
-#ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-team-track{background:#fff3e526}
-#ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-team-track span{background:#fff3e580}
+#ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-personal-track{background:#fff3e526}
+#ignite-team-demo .it-phone[data-week-theme="dark"] .it-week .it-personal-track span{background:var(--user)}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero:not(.it-quiet){background:var(--it-orange);color:#24201d}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero.it-behind{background:#dfff68}
 #ignite-team-demo .it-phone[data-info-theme="dark"] .it-hero.it-catchup{background:#c4a5ff}
@@ -303,21 +299,44 @@
 #ignite-team-demo .it-reward-zero{text-align:center;background:linear-gradient(135deg,#e3f2ff80,#fff8ef40);color:var(--it-ink)}
 #ignite-team-demo .it-reward-zero .it-frozen{margin:14px auto 18px;filter:drop-shadow(0 0 18px #338bd150)}
 #ignite-team-demo .it-phone[data-week-theme="dark"] .it-week-nav{color-scheme:dark;--it-bg:#211b18;--it-surface:#3e332b;--it-ink:#fff3e5;--it-muted:#d6c5b0;color:var(--it-ink)}
+#ignite-team-demo .it-streak-info-button{display:flex;align-items:center;justify-content:center;width:72px;height:84px;flex:none;border:0;padding:0;background:transparent;cursor:pointer}
+#ignite-team-demo .it-streak-info-button:focus-visible{outline:2px solid var(--it-orange);outline-offset:4px;border-radius:14px}
+#ignite-team-demo .it-streak-info{position:absolute;z-index:20;top:118px;right:16px;width:340px;max-width:calc(100% - 32px);padding:20px;border:1px solid #ffffff80;border-radius:22px;background:#fff8eff5;color:#24201d;box-shadow:0 10px 36px #0004;backdrop-filter:blur(24px);font-size:14px;line-height:1.45}
+#ignite-team-demo .it-streak-info[hidden]{display:none}
+#ignite-team-demo .it-streak-info-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#ignite-team-demo .it-streak-info h2{font-size:19px;margin:0;font-weight:1000}
+#ignite-team-demo .it-streak-info-heading button{width:32px;height:32px;border:0;border-radius:50%;background:#24201d0a;color:inherit;font-size:24px;cursor:pointer}
+#ignite-team-demo .it-streak-states{display:flex;gap:8px;margin:16px 0}
+#ignite-team-demo .it-streak-states>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:900;text-align:center}
+#ignite-team-demo .it-streak-states .it-streak,#ignite-team-demo .it-streak-states .it-frozen{transform:scale(.65);transform-origin:center;width:72px;height:84px;margin:-8px -6px}
+#ignite-team-demo .it-streak-info p{margin:12px 0 0}
+#ignite-team-demo[data-cream="orange"]{--it-preview-cream:color-mix(in srgb,color-mix(in srgb,var(--it-orange) 45%,var(--it-yellow)) 23%,white);--it-bg:light-dark(var(--it-preview-cream),#211b18)}
+#ignite-team-demo[data-cream="orange"] .it-phone[data-week-theme="light"] .it-week{background:linear-gradient(135deg,color-mix(in srgb,var(--it-preview-cream) 65%,transparent),color-mix(in srgb,var(--it-preview-cream) 58%,transparent))}
+#ignite-team-demo[data-cream="orange"] .it-phone[data-info-theme="light"] .it-hero.it-quiet{background:linear-gradient(135deg,color-mix(in srgb,var(--it-preview-cream) 40%,transparent),color-mix(in srgb,var(--it-preview-cream) 18%,transparent))}
+#ignite-team-demo .it-title-button{font:inherit;text-transform:inherit;letter-spacing:inherit;line-height:inherit;text-align:inherit;color:inherit;border:0;background:transparent;padding:0;cursor:pointer}
+#ignite-team-demo .it-title-button:focus-visible{outline:2px solid var(--it-orange);outline-offset:4px;border-radius:4px}
+#ignite-team-demo .it-aura-info{position:absolute;z-index:20;top:118px;left:16px;right:16px;padding:20px;border:1px solid #ffffff80;border-radius:22px;background:#fff8eff5;color:#24201d;box-shadow:0 10px 36px #0004;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-size:14px;line-height:1.45}
+#ignite-team-demo .it-aura-info[hidden]{display:none}
+#ignite-team-demo .it-aura-info h2{font-size:19px;margin:0;font-weight:1000}
+#ignite-team-demo .it-aura-info p{margin:12px 0 0}
+#ignite-team-demo .it-info-panel{--it-muted:#665446;--it-surface:#eee0ce;--it-ink:#24201d;position:absolute;left:12px;right:12px;top:68px;z-index:20;margin:0;padding:16px;border:1px solid #ffffff80;background:#fff8eff5;color:#24201d;box-shadow:0 8px 28px #0003;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+#ignite-team-demo .it-info-panel[hidden]{display:none}
+#ignite-team-demo [data-close-ident-info]{float:right;width:28px;height:28px;margin:-8px -8px 4px 4px;border:0;border-radius:50%;background:#24201d0a;color:inherit;font-size:20px;cursor:pointer}
 </style>
-<div id="ignite-team-demo">
+<div id="ignite-team-demo" data-cream="orange">
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><symbol id="it-brand-flash" viewBox="0 0 512 512"><path xmlns="http://www.w3.org/2000/svg" d="M0 0 C9.17977737 7.24162859 14.02018751 17.79751885 15.66015625 29.16796875 C16.61170692 42.86307141 11.60441152 54.10222838 6.29403687 66.41592407 C4.95031117 69.53229145 3.62485939 72.65587924 2.30395508 75.78198242 C0.45715692 80.14928902 -1.39607223 84.51376932 -3.25488281 88.87597656 C-7.42250324 98.66552272 -11.54068281 108.47545632 -15.62722778 118.29910278 C-16.88837192 121.32197922 -18.16152097 124.33960916 -19.43530273 127.35717773 C-20.20227283 129.19619643 -20.96866287 131.03545717 -21.734375 132.875 C-22.09167694 133.71336395 -22.44897888 134.55172791 -22.81710815 135.41549683 C-23.1337442 136.18306305 -23.45038025 136.95062927 -23.77661133 137.74145508 C-24.0560408 138.40720047 -24.33547028 139.07294586 -24.62336731 139.75886536 C-25.32035638 141.76129949 -25.32035638 141.76129949 -24.08984375 144.54296875 C-22.19916563 145.94270606 -22.19916563 145.94270606 -19.8046875 147.1875 C-18.89420654 147.69200684 -17.98372559 148.19651367 -17.0456543 148.71630859 C-16.04961182 149.25723145 -15.05356934 149.7981543 -14.02734375 150.35546875 C-11.90669005 151.52969451 -9.78692468 152.70552578 -7.66796875 153.8828125 C-6.57419922 154.48851074 -5.48042969 155.09420898 -4.35351562 155.71826172 C1.71056568 159.10866744 7.69364134 162.63698894 13.68237305 166.15820312 C18.4632573 168.96404502 23.25252667 171.74852149 28.088974 174.45782471 C29.84744784 175.44300726 31.6030856 176.43308251 33.3581543 177.42431641 C35.56868638 178.66997494 37.78464739 179.9060712 40.00708008 181.13037109 C52.62409705 188.2707214 63.20898253 197.28447208 67.38671875 211.5625 C67.55945313 212.21605469 67.7321875 212.86960937 67.91015625 213.54296875 C68.13703125 214.34734375 68.36390625 215.15171875 68.59765625 215.98046875 C70.36049 230.43570553 66.21816764 241.50148576 58.03515625 253.23046875 C55.6077307 255.8720789 52.9772585 258.13098955 50.25 260.45703125 C47.52894096 262.88281677 44.96680098 265.44715353 42.41015625 268.04296875 C38.74202516 271.76175945 34.9786405 275.2796707 31.00390625 278.66796875 C28.37030098 281.02642123 25.89189111 283.52742279 23.41015625 286.04296875 C19.74168044 289.7614238 15.97866396 293.2796507 12.00390625 296.66796875 C8.86495278 299.47897186 5.93664944 302.49564672 2.97875977 305.49389648 C-0.24350823 308.74297482 -3.5832502 311.76740738 -7.0625 314.734375 C-9.50413009 316.91255367 -11.79032407 319.21544883 -14.08984375 321.54296875 C-16.98576333 324.47415066 -19.89226946 327.30700049 -23.02734375 329.98046875 C-26.37909471 332.8446923 -29.49540792 335.90630968 -32.58984375 339.04296875 C-36.25831595 342.76142865 -40.02133601 346.27965067 -43.99609375 349.66796875 C-46.62969902 352.02642123 -49.10810889 354.52742279 -51.58984375 357.04296875 C-55.25831956 360.7614238 -59.02133604 364.2796507 -62.99609375 367.66796875 C-65.62969902 370.02642123 -68.10810889 372.52742279 -70.58984375 375.04296875 C-74.25831956 378.7614238 -78.02133604 382.2796507 -81.99609375 385.66796875 C-84.62971152 388.02643243 -87.10790303 390.52761404 -89.58984375 393.04296875 C-93.35447845 396.8534035 -97.1831164 400.52617976 -101.26953125 403.9921875 C-102.46436774 405.01010614 -103.63756941 406.05409523 -104.78515625 407.125 C-113.98582246 415.57677478 -124.90137167 419.06917762 -137.26171875 418.79296875 C-149.18342931 417.73911588 -159.98952977 412.3439428 -168.08984375 403.54296875 C-175.74670577 393.09706876 -179.33871956 381.26443238 -177.5625 368.328125 C-175.98788535 359.49365113 -172.23485139 351.49104456 -168.71484375 343.29296875 C-167.96664358 341.52287832 -167.21984936 339.75219305 -166.47436523 337.98095703 C-164.8771046 334.19013185 -163.27326679 330.40218864 -161.66455078 326.61621094 C-157.56839096 316.96714661 -153.52864273 307.2944532 -149.4911499 297.62072754 C-148.17040077 294.46116566 -146.84366648 291.30416895 -145.51611328 288.14746094 C-144.698057 286.19343689 -143.88017716 284.23933897 -143.0625 282.28515625 C-142.68927109 281.40143341 -142.31604218 280.51771057 -141.9315033 279.60720825 C-139.99652975 274.96756349 -138.35518754 270.40954919 -137.08984375 265.54296875 C-146.90859462 259.73103404 -156.76511551 253.98766517 -166.65234375 248.29296875 C-175.45121826 243.22202656 -184.24721982 238.14632503 -193.02734375 233.04296875 C-194.45445679 232.21684082 -194.45445679 232.21684082 -195.91040039 231.37402344 C-211.47237168 222.31369915 -223.82345602 214.98766352 -229.90234375 197.16015625 C-232.83709206 185.78800656 -231.24274712 174.31010503 -225.90234375 163.91796875 C-221.56186482 156.64051905 -215.65074734 150.85424218 -209.22265625 145.421875 C-206.73368646 143.22921114 -204.41914555 140.90432516 -202.08984375 138.54296875 C-199.19392417 135.61178684 -196.28741804 132.77893701 -193.15234375 130.10546875 C-189.80059279 127.2412452 -186.68427958 124.17962782 -183.58984375 121.04296875 C-179.92137155 117.32450885 -176.15835149 113.80628683 -172.18359375 110.41796875 C-169.04464028 107.60696564 -166.11633694 104.59029078 -163.15844727 101.59204102 C-159.93617927 98.34296268 -156.5964373 95.31853012 -153.1171875 92.3515625 C-150.67555741 90.17338383 -148.38936343 87.87048867 -146.08984375 85.54296875 C-143.19392417 82.61178684 -140.28741804 79.77893701 -137.15234375 77.10546875 C-133.80059279 74.2412452 -130.68427958 71.17962782 -127.58984375 68.04296875 C-123.92137155 64.32450885 -120.15835149 60.80628683 -116.18359375 57.41796875 C-113.04464028 54.60696564 -110.11633694 51.59029078 -107.15844727 48.59204102 C-103.93617927 45.34296268 -100.5964373 42.31853012 -97.1171875 39.3515625 C-94.67555741 37.17338383 -92.38936343 34.87048867 -90.08984375 32.54296875 C-87.19392417 29.61178684 -84.28741804 26.77893701 -81.15234375 24.10546875 C-77.80054846 21.24120732 -74.68481905 18.17913294 -71.58984375 15.04296875 C-67.25454371 10.66174549 -62.82939142 6.48467674 -58.08984375 2.54296875 C-57.39503906 1.93582031 -56.70023438 1.32867187 -55.984375 0.703125 C-39.18812641 -13.35815922 -17.39528302 -12.12792629 0 0 Z "  transform="translate(337.08984375,51.45703125)" />
 </symbol></defs></svg>
 <div class="it-design-controls"><div class="it-examples"><label for="it-scenario">Beispielsituation</label><select id="it-scenario"><option value="">Alle Situationen verteilt</option>
 <option value="goal">Ziel setzen</option><option value="near">Team fast fertig &#183; 8 von 9</option><option value="behind">Team hinterher &#183; 3 von 10</option><option value="catchup">Die anderen sind fast fertig &#183; 6 von 9</option><option value="start">Neue Woche &#183; 0 von 9</option><option value="you">Du bist auf Kurs &#183; 2 von 3</option><option value="team">Dein Team ist auf Kurs &#183; 6 von 9</option>
-</select></div><div class="it-examples"><label for="it-streak-design">Streak-Design</label><select id="it-streak-design"><option value="trophy">Flammen-Troph&#228;e</option><option value="level">Level-Up</option><option value="chain">Streak-Kette</option><option value="medal">Meilenstein</option></select></div><label class="it-start-toggle"><input type="checkbox" id="it-streak-first">Streak-Info zuerst</label></div>
+</select></div><div class="it-examples"><label for="it-streak-design">Streak-Design</label><select id="it-streak-design"><option value="trophy">Flammen-Troph&#228;e</option><option value="level">Level-Up</option><option value="chain">Streak-Kette</option><option value="medal">Meilenstein</option></select></div><div class="it-examples"><label for="it-cream">Heller Grundton</label><select id="it-cream"><option value="orange" selected>Ignite Orange-Creme</option><option value="original">Original #FFF3E5</option></select></div><label class="it-start-toggle"><input type="checkbox" id="it-streak-first">Streak-Info zuerst</label></div>
 <div class="it-screen-comparison">
+<div data-screen data-screen-id="week6" data-streak="0" data-week-offset="0" data-scenario="goal"><p class="it-screen-caption">Screen 7 &#183; Ziel setzen<span class="it-screen-situation">Ziel setzen</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week0" data-streak="0" data-week-offset="-3" data-scenario="near"><p class="it-screen-caption">Woche 1 &#183; Keine Streak<span class="it-screen-situation">Team fast fertig</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week1" data-streak="1" data-week-offset="-2" data-scenario="behind"><p class="it-screen-caption">Woche 2 &#183; 1 Woche Streak<span class="it-screen-situation">Team hinterher</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week2" data-streak="2" data-week-offset="-1" data-scenario="catchup"><p class="it-screen-caption">Woche 3 &#183; 2 Wochen Streak<span class="it-screen-situation">Die anderen fast fertig</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week3" data-streak="3" data-week-offset="0" data-scenario="start"><p class="it-screen-caption">Woche 4 &#183; 3 Wochen Streak<span class="it-screen-situation">Neue Woche</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week4" data-streak="4" data-week-offset="1" data-scenario="you"><p class="it-screen-caption">Woche 5 &#183; 4 Wochen Streak<span class="it-screen-situation">Du bist auf Kurs</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 <div data-screen data-screen-id="week5" data-streak="5" data-week-offset="2" data-scenario="team"><p class="it-screen-caption">Woche 6 &#183; 5 Wochen Streak<span class="it-screen-situation">Team auf Kurs</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
-<div data-screen data-screen-id="week6" data-streak="0" data-week-offset="0" data-scenario="goal"><p class="it-screen-caption">Screen 7 &#183; Ziel setzen<span class="it-screen-situation">Ziel setzen</span></p><div class="it-preview"><div class="it-scene" aria-live="polite"></div></div></div>
 </div>
 </div>
 <script>
@@ -326,18 +345,22 @@ const host=document.getElementById('ignite-team-demo');
 const scenarioControl=host.querySelector('#it-scenario');
 const designControl=host.querySelector('#it-streak-design');
 const startControl=host.querySelector('#it-streak-first');
+const creamControl=host.querySelector('#it-cream');
+function setCream(){host.dataset.cream=creamControl.value==='original'?'original':'orange';}
+creamControl.addEventListener('change',setCream);
+setCream();
 host.querySelectorAll('[data-screen]').forEach(root=>{
 const screenId=root.dataset.screenId;
 const baseStreak=Number(root.dataset.streak);
 const initialWeekOffset=Number(root.dataset.weekOffset);
 let heroSlide=startControl.checked?1:0;
-const users=[{name:'Du',initial:'N',color:'var(--it-user-0,light-dark(#a4481d,#ffab79))'},{name:'Lena',initial:'L',color:'var(--it-user-1,light-dark(#6850ba,#bea4ff))'},{name:'Max',initial:'M',color:'var(--it-user-2,light-dark(#287d71,#85cabc))'}];
+const users=[{name:'Du',initial:'N',color:'var(--it-user-0,light-dark(#a4481d,#ffab79))'},{name:'Greta',initial:'L',color:'var(--it-user-1,light-dark(#6850ba,#bea4ff))'},{name:'Veit',initial:'M',color:'var(--it-user-2,light-dark(#287d71,#85cabc))'}];
 // One slot per person and day: completed, planned, missed, or empty.
 const scenarios={
  goal:{tone:'it-quiet',kicker:'Nicht planlos durchs Leben',title:'Her mit deinem Ziel!',copy:'Setz dir jetzt ein Wochenziel und mach den ersten Schritt. Dein Team wartet auf dich.',rows:['.......','.P.P.P.','P.P.P..'],targets:[0,3,3],today:4},
  near:{tone:'',kicker:'So nah dran',title:'1 Noch. Fritten in die T&uuml;te jetzt!',copy:'8 von 9 Male habt ihr schon durchgezogen. Peinlich, wenn das jetzt so kurz vorm Ziel eine Antiklimax wird.',rows:['D.D...P','DDD....','DDD....'],today:4},
  behind:{tone:'it-behind',kicker:'Peinlichrrrr Juliano',title:'Starte jetzt ein Comeback!',copy:'Deswegen wurdest du bei deinem letzten Job-Interview abgelehnt. Zieh jetzt endlich mal durch. Von nichts kommt nichts...',rows:['.X...PP','DDX..PP','X.D..PP'],targets:[3,4,3],today:4},
- catchup:{tone:'it-catchup',kicker:'Opfer? L',title:'Dein Team zieht durch (du nicht).',copy:'Lena ist fertig, Max fehlt noch einer. Dir fehlen zwei Idents \u2013 deinen n\u00e4chsten hast du am Samstag geplant.',rows:['.D...PP','D.DD...','D..D..P'],today:4},
+ catchup:{tone:'it-catchup',kicker:'Opfer? L',title:'Dein Team zieht durch (du nicht).',copy:'Greta ist fertig, Veit fehlt noch einer. Dir fehlen zwei Idents \u2013 deinen n\u00e4chsten hast du am Samstag geplant.',rows:['.D...PP','D.DD...','D..D..P'],today:4},
  start:{tone:'it-quiet',kicker:'Neue Woche. Abfahrt.',title:'Fetzt du den 1. Ident diese Woche?',copy:'Setzt du dir nur Ziele, oder bist du ein Macher?',rows:['.P.P.P.','P.P.P..','.P..P.P'],today:0},
  you:{tone:'it-quiet',kicker:'Macher',title:'Du bist auf Kurs!',copy:'Geil, dass du durchziehst, ehrlich! Du darfst einmal dabben, ohne dabei Aura zu verlieren.',rows:['D..D.P.','.DX..PP','..D..PP'],today:4},
  team:{tone:'it-quiet',kicker:'Macher Team <3',title:'Dein Team ist auf Kurs.',copy:'Jede Person hat 2 von 3 Idents geschafft. Eure n\u00e4chsten Termine stehen f\u00fcrs Wochenende.',rows:['D..D.P.','D.D...P','.D.D.P.'],today:4}
@@ -349,6 +372,10 @@ let swipeStart=null;
 let swallowWeekClick=false;
 let viewMode='combined';
 let infoOpen=false;
+let infoTrigger=null;
+let auraInfoOpen=false;
+let auraTrigger=null;
+let streakInfoOpen=false;
 let renderGeneration=0;
 let todayObserver=null;
 let carouselObserver=null;
@@ -380,7 +407,7 @@ function changeWeek(offset,focusSelector=''){
  const oldRect=oldContent.getBoundingClientRect();
  const sceneRect=scene.getBoundingClientRect();
  const ghost=!reduced?oldContent.cloneNode(true):null;
- weekOffset=offset;infoOpen=false;swallowWeekClick=false;
+ weekOffset=offset;infoOpen=false;infoTrigger=null;streakInfoOpen=false;auraInfoOpen=false;auraTrigger=null;swallowWeekClick=false;
  render();
  if(focusSelector)root.querySelector(focusSelector).focus({preventScroll:true});
  if(reduced)return;
@@ -393,10 +420,51 @@ function changeWeek(offset,focusSelector=''){
  root.querySelector('.it-week-content').animate([{transform:`translateX(${direction*36}px)`,opacity:0},{transform:'translateX(0)',opacity:1}],{duration:380,easing:motion.easing});
 }
 function streakCount(){return Math.max(0,baseStreak+weekOffset-initialWeekOffset);}
-function streakIcon(){
- const count=streakCount();
+function streakGlowStrength(streak){return Math.min(3,Math.max(0,streak))/3;}
+function streakIcon(count=streakCount()){
  if(!count)return '<span class="it-frozen" role="img" aria-label="Keine Streak"></span>';
- return `<div class="it-streak" role="img" aria-label="${count} ${count===1?'Woche':'Wochen'} Streak"><span class="it-streak-art" aria-hidden="true"></span>${count>=2?'<span class="it-streak-art it-streak-art-front" aria-hidden="true"></span>':''}<strong aria-hidden="true">${count}</strong></div>`;
+ return `<div class="it-streak" data-flame-stage="${count}" role="img" aria-label="${count} ${count===1?'Woche':'Wochen'} Streak">${count>=2?'<span class="it-streak-art" aria-hidden="true"></span>':''}${count===1||count>=3?'<span class="it-streak-art it-streak-art-front" aria-hidden="true"></span>':''}<strong aria-hidden="true">${count}</strong></div>`;
+}
+function streakExplanation(){
+ return `<section id="it-streak-info-${screenId}" class="it-streak-info" role="dialog" aria-labelledby="it-streak-title-${screenId}" data-streak-help="${screenId}"${streakInfoOpen?'':' hidden'}><div class="it-streak-info-heading"><h2 id="it-streak-title-${screenId}">Eure Team-Streak</h2><button type="button" data-close-streak-info aria-label="Streak-Erkl\u00e4rung schlie\u00dfen">\u00d7</button></div><div class="it-streak-states">${[0,1,2,3].map(count=>`<div>${streakIcon(count)}<span>${['Keine','1 Woche','2 Wochen','Ab 3 Wochen'][count]}</span></div>`).join('')}</div><p>Erreicht euer Team in einer Woche mindestens die Summe aller pers\u00f6nlichen Wochenziele, w\u00e4chst eure Streak um 1.</p><p>Beispiel: Eure Ziele sind 3, 2 und 4 Idents. Zusammen braucht ihr 9 Idents \u2013 egal, wer sie macht.</p><p>Verfehlt ihr das gemeinsame Wochenziel, verliert ihr eure Streak und startet wieder bei 0.</p></section>`;
+}
+function setStreakInfo(open,restoreFocus=false){
+ streakInfoOpen=open;
+ root.querySelector('.it-streak-info').hidden=!open;
+ const button=root.querySelector('[data-streak-info]');
+ button.setAttribute('aria-expanded',String(open));
+ if(open)root.querySelector('[data-close-streak-info]').focus();
+ else if(restoreFocus)button.focus();
+}
+function auraExplanation(){
+ return `<section id="it-aura-info-${screenId}" class="it-aura-info" role="dialog" aria-labelledby="it-aura-title-${screenId}" data-aura-help="${screenId}"${auraInfoOpen?'':' hidden'}><div class="it-streak-info-heading"><h2 id="it-aura-title-${screenId}">Locked in.</h2><button type="button" data-close-aura-info aria-label="Aura-Erkl\u00e4rung schlie\u00dfen">\u00d7</button></div><p>Je mehr Idents ihr gemeinsam f\u00fcr euer Wochenziel sammelt, desto st\u00e4rker h\u00fcllt schwarze Aura den Bildschirm ein.</p><p>Der Dark Cut zeigt: Euer Team zieht durch. Ihr seid locked in.</p></section>`;
+}
+function setAuraInfo(open,restoreFocus=false,trigger=null){
+ auraInfoOpen=open;
+ if(trigger)auraTrigger=trigger;
+ root.querySelector('.it-aura-info').hidden=!open;
+ for(const button of root.querySelectorAll('[data-aura-info]'))button.setAttribute('aria-expanded',String(open));
+ if(open)root.querySelector('[data-close-aura-info]').focus();
+ else if(restoreFocus)auraTrigger?.focus();
+}
+function closeIdentInfo(restoreFocus=false){
+ infoOpen=false;
+ root.querySelector('.it-info-panel').hidden=true;
+ infoTrigger?.setAttribute('aria-expanded','false');
+ if(restoreFocus)infoTrigger?.focus();
+ infoTrigger=null;
+}
+function showIdentInfo(button){
+ if(infoTrigger===button&&infoOpen){closeIdentInfo();return;}
+ closeIdentInfo();
+ infoOpen=true;infoTrigger=button;
+ const panel=root.querySelector('.it-info-panel');
+ panel.hidden=false;
+ button.setAttribute('aria-expanded','true');
+ const bounds=button.getBoundingClientRect();
+ const weekBounds=root.querySelector('.it-week').getBoundingClientRect();
+ panel.style.top=Math.max(12,bounds.top-weekBounds.top-panel.getBoundingClientRect().height-8)+'px';
+ root.querySelector('[data-close-ident-info]').focus();
 }
 function iconForZero(){return '<span class="it-frozen" role="img" aria-label="Noch keine Streak"></span>';}
 function streakPresentation(design){
@@ -414,23 +482,27 @@ function streakPresentation(design){
  };
  return `<section class="it-reward it-reward-${design}" aria-label="Streak-Belohnung">${content[design]||content.trophy}</section>`;
 }
-function positionRoundedCut(){
+function darkCutStage(completed,target){
+ return target>0?Math.round(Math.max(0,Math.min(1,completed/target))*4):0;
+}
+function positionRoundedCut(stage){
  const phone=root.querySelector('.it-phone');
  const bounds=phone.getBoundingClientRect();
  const width=bounds.width;
- if(streakCount()>=3){
+ phone.style.setProperty('--it-streak-glow',String(streakGlowStrength(streakCount())));
+ if(streakCount()>=1){
   const flame=root.querySelector('.it-teamtop .it-streak').getBoundingClientRect();
   phone.style.setProperty('--it-glow-x',(flame.left-bounds.left+flame.width/2)+'px');
   phone.style.setProperty('--it-glow-y',(flame.top-bounds.top+flame.height/2)+'px');
  }
  if(!width)return;
  phone.style.setProperty('--it-cut-stop',(width/Math.SQRT2)+'px');
- const depth=streakCount()===4?Math.max(0,bounds.height-width*.75):100;
+ const depth=stage===3?Math.max(0,bounds.height-width*.75):100;
  phone.style.setProperty('--it-cut-depth',depth+'px');
  const r=52;
- const end=streakCount()===2?width*.65:width+depth;
+ const end=stage===1?width*.65:width+depth;
  const upper=width*.35;
- const path=streakCount()===2
+ const path=stage===1
   ? `M${upper-r} 0 H${width} V${end+r} C${width} ${end+r*.5} ${width-r*.5} ${end-r*.5} ${width-r} ${end-r} L${upper+r} ${r} C${upper+r*.5} ${r*.5} ${upper-r*.5} 0 ${upper-r} 0 Z`
   : `M0 0 H${width} V${end+r} C${width} ${end+r*.5} ${width-r*.5} ${end-r*.5} ${width-r} ${end-r} L${r} ${depth+r} C${r*.5} ${depth+r*.5} 0 ${depth+r*1.5} 0 ${depth+r} Z`;
  phone.style.setProperty('--it-cut-path',`path("${path}")`);
@@ -482,8 +554,8 @@ function progressFlash(user,done,target,index){
  const number=target>0?`<strong class="it-progress-number">${done}<span>/${target}</span></strong>`:'<strong class="it-progress-number">?</strong>';
  return `<div class="it-person-progress" style="--user:${user.color}" ${target>0?`role="progressbar" aria-label="${user.name}: Wochenziel" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${target}"`:`role="img" aria-label="${user.name}: Noch kein Wochenziel"`} ${typeof index==='number'?`data-progress-user="${index}" data-side="right" data-row="${index}"`:`data-hero-summary="${index}"`}><div class="it-progress-flash"><svg viewBox="92 28 328 456" aria-hidden="true"><use href="#it-brand-flash" width="512" height="512"/></svg><svg class="it-progress-wave-back" viewBox="92 28 328 456" style="clip-path:${waterClip(progress,'back')}" aria-hidden="true"><use href="#it-brand-flash" width="512" height="512"/></svg><svg class="it-progress-fill" viewBox="92 28 328 456" style="clip-path:${waterClip(progress)}" aria-hidden="true"><use href="#it-brand-flash" width="512" height="512"/></svg><svg class="it-progress-outline" viewBox="92 28 328 456" aria-hidden="true"><use href="#it-brand-flash" width="512" height="512"/></svg><div class="it-number-base" style="clip-path:${waterClip(progress,'union',true)}" aria-hidden="true">${number}</div><div class="it-number-inverse" style="clip-path:${waterClip(progress,'union')}" aria-hidden="true">${number}</div></div></div>`;
 }
-
 function render(animate=false){
+ if(infoOpen)closeIdentInfo();
  const scene=root.querySelector('.it-scene');
  const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
  const sceneBounds=scene.getBoundingClientRect();
@@ -501,18 +573,20 @@ function render(animate=false){
  const targets=s.targets||users.map(()=>3);
  const teamTarget=targets.reduce((sum,target)=>sum+target,0);
  const count=done.reduce((a,b)=>a+b,0);
+ const cutStage=darkCutStage(count,teamTarget);
  const cards=weekdays.map((day,i)=>{
   const entries=users.flatMap((u,j)=>s.rows[j][i]!=='.'?[{u,userIndex:j,state:s.rows[j][i]}]:[]).sort((a,b)=>Number(a.state==='X')-Number(b.state==='X'));
   const stacked=entries.map((e,n)=>mark(e.u,e.state,`--dx:${(n-(entries.length-1)/2)*8}px;--dy:${n*6}px;z-index:${e.state==='X'?0:entries.length-n}`,`${e.userIndex}-${i}`)).join('');
   return `<div class="it-day ${weekOffset===0&&i===s.today?'it-today':''}" aria-label="${day}, ${weekDay(i).getUTCDate()}. ${new Intl.DateTimeFormat('de-DE',{month:'long',timeZone:'UTC'}).format(weekDay(i))}${weekOffset===0&&i===s.today?', heute':''}"><span class="it-dayname" data-weekday="${i}">${day}</span><span class="it-date">${weekDay(i).getUTCDate()}</span><span class="it-stack">${stacked||'<span class="it-empty">\u2013</span>'}</span></div>`;
  }).join('');
- const rows=users.map((u,j)=>`<tr class="it-personrow"><th scope="row" style="--user:${u.color}"><div data-side="left" data-row="${j}" style="--user:${u.color}"><span class="it-avatar">${u.initial}</span><span class="it-userlabel">${u.name}</span></div></th>${[...s.rows[j]].map((state,i)=>`<td class="it-daycell ${weekOffset===0&&i===s.today?'it-today':''}">${state==='.'?'<span class="it-emptycell">\u00b7</span>':`<button type="button" class="it-ident-open" data-open-ident="${j}-${i}" aria-label="Ident von ${u.name} am ${weekdays[i]} ansehen">${mark(u,state,'',`${j}-${i}`)}</button>`}</td>`).join('')}<td class="it-progress-column">${progressFlash(u,done[j],targets[j],j)}</td></tr>`).join('');
+ const rows=users.map((u,j)=>`<tr class="it-personrow"><th scope="row" style="--user:${u.color}"><div data-side="left" data-row="${j}" style="--user:${u.color}"><span class="it-avatar">${u.initial}</span><span class="it-userlabel">${u.name}</span></div></th>${[...s.rows[j]].map((state,i)=>`<td class="it-daycell ${weekOffset===0&&i===s.today?'it-today':''}">${state==='.'?'<span class="it-emptycell">\u00b7</span>':`<button type="button" class="it-ident-open" data-open-ident="${j}-${i}" data-ident-kind="${state}" ${state!=='D'?`data-ident-help="${screenId}" aria-controls="it-ident-info-${screenId}" aria-expanded="false"`:""} aria-label="${{D:'Ident',P:'Geplanter Ident',X:'Verpasster Ident'}[state]} von ${u.name} am ${weekdays[i]} ${state==='D'?'ansehen':'erkl\u00e4ren'}">${mark(u,state,'',`${j}-${i}`)}</button>`}</td>`).join('')}<td class="it-progress-column">${progressFlash(u,done[j],targets[j],j)}</td></tr>`).join('');
  const legend=[['D','Erledigt'],['P','Geplant'],['X','Verpasst']].map(([state,text])=>`<span>${mark({name:'Ident',color:'var(--it-muted)'},state)}${text}</span>`).join('');
- const weekContent=viewMode==='combined'?`<div class="it-days">${cards}</div><div class="it-week-footer"><div class="it-personkey">${users.map(u=>`<span style="--user:${u.color}"><i></i>${u.name}</span>`).join('')}</div><div class="it-team-progress" role="progressbar" aria-label="Team: Wochenziel" aria-valuenow="${count}" aria-valuemin="0" aria-valuemax="${teamTarget}" data-team-total><div class="it-team-track"><span style="width:${Math.min(count/(teamTarget),1)*100}%"></span></div><strong>${count}/${teamTarget}</strong></div></div>`:`<table class="it-grid" aria-label="Idents pro Person und Tag mit Wochenfortschritt"><thead><tr><th scope="col" aria-label="Person"></th>${weekdays.map((d,i)=>`<th scope="col" class="${weekOffset===0&&i===s.today?'it-today':''}"><span class="it-dayname" data-weekday="${i}">${d}</span></th>`).join('')}<th scope="col" class="it-progress-column" aria-label="Ziel"></th></tr></thead><tbody>${rows}</tbody></table>`;
- root.querySelector('.it-scene').innerHTML=`<article class="it-phone" data-streak-design="classic" data-reward-design="${streakDesign}" data-streak-count="${streakCount()}" data-info-theme="${streakCount()>=3&&!(streakCount()===3&&s.tone!=='it-quiet')?'dark':'light'}" data-reward-theme="${streakCount()>=3?'dark':'light'}" data-week-theme="${streakCount()>=4?'dark':'light'}" aria-label="Team Die Kanten"><header class="it-teamtop"><div><p class="it-eyebrow">${{near:'Am Edgen',behind:'Lowperformer',catchup:'Besser als du',start:'Am Durchstarten',you:'Von dir outperformed',team:'Am Performen'}[key]||'Dein Team'}</p><h1>Die Kanten</h1></div>${streakIcon()}</header><div class="it-hero-carousel"><div class="it-hero-track"><div class="it-hero-slide"><section class="it-hero ${s.tone}${key==='near'?' it-near':''}" aria-label="Wochenstatus">${key==='you'||key==='team'?'<span class="it-hero-letter it-hero-win" aria-hidden="true">W</span>':key==='catchup'?'<span class="it-hero-letter it-hero-loss" aria-hidden="true">L</span>':'<svg class="it-hero-brand" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><use href="#it-brand-flash" width="512" height="512"/></svg>'}<div class="it-shout">${s.kicker}</div><h2>${s.title}</h2><p>${s.copy}</p>${key==='goal'?'<div class="it-goal-action"><button type="button" class="it-goal-button" data-set-goal>Wochenziel setzen</button><p class="it-goal-feedback" role="status" hidden></p></div>':key==='start'||key==='you'?`<div class="it-hero-summaries">${users.map((u,j)=>`<div class="it-hero-member-summary${key==='you'&&j!==0?' it-hero-summary-muted':''}">${progressFlash(u,done[j],targets[j],'hero-'+j)}<span class="it-hero-sum-name">${u.name}</span></div>`).join('')}</div>`:key==='catchup'?`<div class="it-hero-members">${users.map((u,j)=>({u,j,progress:done[j]/targets[j]})).sort((a,b)=>b.progress-a.progress).map(({u,j},place)=>`<div class="it-hero-member${j===0?' it-hero-member-self':''}" style="--user:${u.color}"><span class="it-member-place">${place+1}.</span><span>${u.name}</span><div class="it-member-track" role="progressbar" aria-label="${u.name}: Wochenziel" aria-valuenow="${done[j]}" aria-valuemin="0" aria-valuemax="${targets[j]}"><i style="width:${Math.min(done[j]/targets[j],1)*100}%"></i></div><strong>${done[j]}<small>/${targets[j]}</small></strong></div>`).join('')}</div>`:`<div class="it-hero-progress"><span>${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?'Dein Fortschritt':'Euer Wochenziel'}</span><strong>${key==='near'?`Noch ${Math.max(0,teamTarget-count)}`:key==='behind'?`${count}<span class="it-hero-target">/${teamTarget}</span>`:`${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]:count} / ${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?targets[0]:teamTarget}`}</strong></div><div class="it-track" role="progressbar" aria-label="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?'Dein Fortschritt':'Teamfortschritt'}" aria-valuenow="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]:count}" aria-valuemin="0" aria-valuemax="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?targets[0]:teamTarget}"><span style="width:${(key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]/targets[0]:count/teamTarget)*100}%"></span></div>`}</section></div>${streakDesign!=='classic'?`<div class="it-hero-slide">${streakPresentation(streakDesign)}</div>`:''}</div>${streakDesign!=='classic'?`<div class="it-hero-pagination" data-pagination-theme="${streakCount()>=4?'dark':'light'}" role="group" aria-label="Infobox ausw\u00e4hlen"><button type="button" data-hero-slide="0" aria-pressed="${heroSlide===0}" aria-label="Wocheninfo"><span></span></button><button type="button" data-hero-slide="1" aria-pressed="${heroSlide===1}" aria-label="Streak-Belohnung"><span></span></button></div>`:''}</div><section class="it-week-section" aria-label="${weekTitle()}"><header class="it-weekhead"><div class="it-heading-with-info"><h3>${weekTitle()}</h3><button type="button" class="it-info-button" data-info aria-label="Ident-Arten erkl\u00e4ren" aria-controls="it-ident-info-${screenId}" aria-expanded="${infoOpen}"><span aria-hidden="true">i</span></button></div><div class="it-week-nav" role="group" aria-label="Woche wechseln"><button type="button" data-week-step="-1" aria-label="Vorige Woche">\u2039</button><details class="it-date-picker"><summary class="it-dates" aria-label="Woche ausw\u00e4hlen">${weekRange()}</summary><div class="it-date-popover"><label>Datum ausw\u00e4hlen<input type="date" data-week-date value="${weekStart().toISOString().slice(0,10)}"></label></div></details><button type="button" data-week-step="1" aria-label="N\u00e4chste Woche">\u203a</button>${weekOffset?'<button type="button" class="it-return-today" data-current-week>Heute</button>':''}</div></header><div class="it-week"><div class="it-view-picker" role="group" aria-label="Wochenansicht">${[['combined','Smart'],['detailed','Detailed']].map(([mode,label])=>`<button type="button" data-mode="${mode}" aria-pressed="${viewMode===mode}">${label}</button>`).join('')}</div><div id="it-ident-info-${screenId}" class="it-info-panel"${infoOpen?'':' hidden'}><div class="it-legend">${legend}</div></div><div class="it-week-content" data-view="${viewMode}"><span class="it-today-highlight" aria-hidden="true"></span>${weekContent}${viewMode==='combined'?'<button type="button" class="it-week-expand" data-expand-week aria-label="Wochenansicht pro Person anzeigen"></button>':''}</div><p class="it-detail-hint" id="it-detail-hint-${screenId}" role="status" hidden></p></div></section></article>`;
+ const personalProgress=targets[0]>0?Math.min(done[0]/targets[0],1):0;
+ const weekContent=viewMode==='combined'?`<div class="it-days">${cards}</div><div class="it-week-footer"><div class="it-personal-progress" style="--user:${users[0].color}" role="progressbar" aria-label="Du: Wochenziel" aria-valuenow="${done[0]}" aria-valuemin="0" aria-valuemax="${targets[0]}" data-personal-total><div class="it-personal-track"><span style="width:${personalProgress*100}%"></span></div></div><div class="it-personkey">${users.map((u,j)=>`<span style="--user:${u.color}">${j===0?'':'<i></i>'}${j===0?`Du (${done[0]}/${targets[0]})`:u.name}</span>`).join('')}</div></div>`:`<table class="it-grid" aria-label="Idents pro Person und Tag mit Wochenfortschritt"><thead><tr><th scope="col" aria-label="Person"></th>${weekdays.map((d,i)=>`<th scope="col" class="${weekOffset===0&&i===s.today?'it-today':''}"><span class="it-dayname" data-weekday="${i}">${d}</span></th>`).join('')}<th scope="col" class="it-progress-column" aria-label="Ziel"></th></tr></thead><tbody>${rows}</tbody></table>`;
+ root.querySelector('.it-scene').innerHTML=`<article class="it-phone" data-streak-design="classic" data-reward-design="${streakDesign}" data-streak-count="${streakCount()}" data-cut-stage="${cutStage}" data-info-theme="${cutStage>=2&&!(cutStage===2&&s.tone!=='it-quiet')?'dark':'light'}" data-reward-theme="${cutStage>=2?'dark':'light'}" data-week-theme="${cutStage>=3?'dark':'light'}" aria-label="Team Die Kanten"><header class="it-teamtop"><div><p class="it-eyebrow"><button type="button" class="it-title-button" data-aura-info data-aura-help="${screenId}" aria-controls="it-aura-info-${screenId}" aria-expanded="${auraInfoOpen}">Die Kanten</button></p><h1><button type="button" class="it-title-button" data-aura-info data-aura-help="${screenId}" aria-controls="it-aura-info-${screenId}" aria-expanded="${auraInfoOpen}">${count}/${teamTarget} Idents</button></h1></div><button type="button" class="it-streak-info-button" data-streak-info data-streak-help="${screenId}" aria-label="Streak erkl\u00e4ren" aria-controls="it-streak-info-${screenId}" aria-expanded="${streakInfoOpen}">${streakIcon()}</button></header>${streakExplanation()}${auraExplanation()}<div class="it-hero-carousel"><div class="it-hero-track"><div class="it-hero-slide"><section class="it-hero ${s.tone}${key==='near'?' it-near':''}" aria-label="Wochenstatus">${key==='you'||key==='team'?'<span class="it-hero-letter it-hero-win" aria-hidden="true">W</span>':key==='catchup'?'<span class="it-hero-letter it-hero-loss" aria-hidden="true">L</span>':'<svg class="it-hero-brand" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><use href="#it-brand-flash" width="512" height="512"/></svg>'}<div class="it-shout">${s.kicker}</div><h2>${s.title}</h2><p>${s.copy}</p>${key==='goal'?'<div class="it-goal-action"><button type="button" class="it-goal-button" data-set-goal>Wochenziel setzen</button><p class="it-goal-feedback" role="status" hidden></p></div>':key==='start'||key==='you'?`<div class="it-hero-summaries">${users.map((u,j)=>`<div class="it-hero-member-summary${key==='you'&&j!==0?' it-hero-summary-muted':''}">${progressFlash(u,done[j],targets[j],'hero-'+j)}<span class="it-hero-sum-name">${u.name}</span></div>`).join('')}</div>`:key==='catchup'?`<div class="it-hero-members">${users.map((u,j)=>({u,j,progress:done[j]/targets[j]})).sort((a,b)=>b.progress-a.progress).map(({u,j},place)=>`<div class="it-hero-member${j===0?' it-hero-member-self':''}" style="--user:${u.color}"><span class="it-member-place">${place+1}.</span><span>${u.name}</span><div class="it-member-track" role="progressbar" aria-label="${u.name}: Wochenziel" aria-valuenow="${done[j]}" aria-valuemin="0" aria-valuemax="${targets[j]}"><i style="width:${Math.min(done[j]/targets[j],1)*100}%"></i></div><strong>${done[j]}<small>/${targets[j]}</small></strong></div>`).join('')}</div>`:`<div class="it-hero-progress"><span>${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?'Dein Fortschritt':'Euer Wochenziel'}</span><strong>${key==='near'?`Noch ${Math.max(0,teamTarget-count)}`:key==='behind'?`${count}<span class="it-hero-target">/${teamTarget}</span>`:`${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]:count} / ${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?targets[0]:teamTarget}`}</strong></div><div class="it-track" role="progressbar" aria-label="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?'Dein Fortschritt':'Teamfortschritt'}" aria-valuenow="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]:count}" aria-valuemin="0" aria-valuemax="${key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?targets[0]:teamTarget}"><span style="width:${(key==='you'&&(scenarioControl.value||weekOffset===initialWeekOffset)?done[0]/targets[0]:count/teamTarget)*100}%"></span></div>`}</section></div>${streakDesign!=='classic'?`<div class="it-hero-slide">${streakPresentation(streakDesign)}</div>`:''}</div>${streakDesign!=='classic'?`<div class="it-hero-pagination" data-pagination-theme="${cutStage>=3?'dark':'light'}" role="group" aria-label="Infobox ausw\u00e4hlen"><button type="button" data-hero-slide="0" aria-pressed="${heroSlide===0}" aria-label="Wocheninfo"><span></span></button><button type="button" data-hero-slide="1" aria-pressed="${heroSlide===1}" aria-label="Streak-Belohnung"><span></span></button></div>`:''}</div><section class="it-week-section" aria-label="${weekTitle()}"><header class="it-weekhead"><div class="it-heading-with-info"><h3>${weekTitle()}</h3></div><div class="it-week-nav" role="group" aria-label="Woche wechseln"><button type="button" data-week-step="-1" aria-label="Vorige Woche">\u2039</button><details class="it-date-picker"><summary class="it-dates" aria-label="Woche ausw\u00e4hlen">${weekRange()}</summary><div class="it-date-popover"><label>Datum ausw\u00e4hlen<input type="date" data-week-date value="${weekStart().toISOString().slice(0,10)}"></label></div></details><button type="button" data-week-step="1" aria-label="N\u00e4chste Woche">\u203a</button>${weekOffset?'<button type="button" class="it-return-today" data-current-week>Heute</button>':''}</div></header><div class="it-week"><div class="it-view-picker" role="group" aria-label="Wochenansicht">${[['combined','Smart'],['detailed','Detailed']].map(([mode,label])=>`<button type="button" data-mode="${mode}" aria-pressed="${viewMode===mode}">${label}</button>`).join('')}</div><div id="it-ident-info-${screenId}" class="it-info-panel"${infoOpen?'':' hidden'} role="dialog" aria-label="Ident-Arten" data-ident-help="${screenId}"><button type="button" data-close-ident-info aria-label="Ident-Arten schlie\u00dfen">\u00d7</button><div class="it-legend">${legend}</div></div><div class="it-week-content" data-view="${viewMode}"><span class="it-today-highlight" aria-hidden="true"></span>${weekContent}${viewMode==='combined'?'<button type="button" class="it-week-expand" data-expand-week aria-label="Wochenansicht pro Person anzeigen"></button>':''}</div><p class="it-detail-hint" id="it-detail-hint-${screenId}" role="status" hidden></p></div></section></article>`;
  prepareCarousel();
  sizeHeroLetters();
- positionRoundedCut();
+ positionRoundedCut(cutStage);
  if(todayObserver)todayObserver.disconnect();
  const todayHighlight=root.querySelector('.it-today-highlight');
  function positionToday(){
@@ -529,7 +603,7 @@ function render(animate=false){
  }
  const {todayLeft,todayTop,todayWidth,todayHeight}=positionToday();
  if(typeof ResizeObserver!=='undefined'){
-  todayObserver=new ResizeObserver(()=>{positionToday();positionRoundedCut();sizeHeroLetters();});
+  todayObserver=new ResizeObserver(()=>{positionToday();positionRoundedCut(cutStage);sizeHeroLetters();});
   todayObserver.observe(root.querySelector('.it-week-content'));
   todayObserver.observe(root.querySelector('.it-phone'));
   todayObserver.observe(root.querySelector('.it-hero'));
@@ -579,7 +653,7 @@ function render(animate=false){
  const week=root.querySelector('.it-week');
  const nextHeight=week.getBoundingClientRect().height;
  running.push(week.animate([{height:previousHeight+'px'},{height:nextHeight+'px'}],motion).finished);
- for(const bar of root.querySelectorAll('.it-team-track span')){
+ for(const bar of root.querySelectorAll('.it-personal-track span')){
   running.push(bar.animate([{width:'0%'},{width:bar.style.width}],{...motion,delay:120,fill:'backwards'}).finished);
  }
  for(const fill of [...root.querySelectorAll('.it-progress-fill'),...root.querySelectorAll('.it-progress-wave-back'),...root.querySelectorAll('.it-number-inverse')]){
@@ -594,11 +668,28 @@ function render(animate=false){
 }
 function setMode(mode){
  if(mode===viewMode||!['combined','detailed'].includes(mode))return;
+ if(infoOpen)closeIdentInfo();
  viewMode=mode;
  render(true);
  root.querySelector(`[data-mode="${mode}"]`).focus({preventScroll:true});
 }
 root.addEventListener('click',event=>{
+ const aura=event.target.closest('[data-aura-info]');
+ if(aura){
+  if(streakInfoOpen)setStreakInfo(false);
+  if(infoOpen)closeIdentInfo();
+  setAuraInfo(!auraInfoOpen,false,aura);return;
+ }
+ if(event.target.closest('[data-close-aura-info]')){setAuraInfo(false,true);return;}
+ if(event.target.closest('[data-close-ident-info]')){closeIdentInfo(true);return;}
+
+ if(event.target.closest('[data-streak-info]')){
+  if(auraInfoOpen)setAuraInfo(false);
+  if(infoOpen)closeIdentInfo();
+  setStreakInfo(!streakInfoOpen);return;
+ }
+ if(event.target.closest('[data-close-streak-info]')){setStreakInfo(false,true);return;}
+
  if(event.target.closest('[data-set-goal]')){
   const feedback=root.querySelector('.it-goal-feedback');
   feedback.hidden=false;
@@ -621,6 +712,12 @@ root.addEventListener('click',event=>{
  if(picker){setMode(picker.dataset.mode);return;}
  const ident=event.target.closest('[data-open-ident]');
  if(ident&&viewMode==='detailed'){
+  if(ident.dataset.identKind!=='D'){
+   if(auraInfoOpen)setAuraInfo(false);
+   if(streakInfoOpen)setStreakInfo(false);
+   showIdentInfo(ident);return;
+  }
+  if(infoOpen)closeIdentInfo();
   const hint=root.querySelector('.it-detail-hint');
   hint.hidden=false;
   hint.textContent='Hier w'+String.fromCharCode(252)+'rde sich IdentDetailView '+String.fromCharCode(246)+'ffnen.';
@@ -628,12 +725,6 @@ root.addEventListener('click',event=>{
  }
  const week=event.target.closest('[data-expand-week]');
  if(week&&viewMode==='combined'){setMode('detailed');return;}
- const info=event.target.closest('[data-info]');
- if(info){
-  infoOpen=!infoOpen;
-  info.setAttribute('aria-expanded',String(infoOpen));
-  root.querySelector('.it-info-panel').hidden=!infoOpen;
- }
 });
 root.addEventListener('change',event=>{
  if(!event.target.matches('[data-week-date]'))return;
@@ -656,18 +747,21 @@ root.addEventListener('pointerup',event=>{
  changeWeek(weekOffset+(dx<0?1:-1));
  swallowWeekClick=true;
 });
+document.addEventListener('click',event=>{
+ if(streakInfoOpen&&!event.target.closest(`[data-streak-help="${screenId}"]`))setStreakInfo(false);
+ if(auraInfoOpen&&!event.target.closest(`[data-aura-help="${screenId}"]`))setAuraInfo(false);
+ if(infoOpen&&!event.target.closest(`[data-ident-help="${screenId}"]`))closeIdentInfo();
+});
 root.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&auraInfoOpen){setAuraInfo(false,true);return;}
+ if(event.key==='Escape'&&streakInfoOpen){setStreakInfo(false,true);return;}
+
  const picker=event.target.closest('[data-mode]');
  if(picker&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){
   event.preventDefault();
   setMode(event.key==='Home'?'combined':event.key==='End'?'detailed':viewMode==='combined'?'detailed':'combined');
  }
- if(event.key==='Escape'&&infoOpen){
-  infoOpen=false;
-  root.querySelector('.it-info-panel').hidden=true;
-  const info=root.querySelector('[data-info]');
-  info.setAttribute('aria-expanded','false');info.focus();
- }
+ if(event.key==='Escape'&&infoOpen){closeIdentInfo(true);return;}
 });
 scenarioControl.addEventListener('change',()=>{heroSlide=startControl.checked?1:0;render();});
 designControl.addEventListener('change',()=>{heroSlide=startControl.checked?1:0;render();});

@@ -17,7 +17,7 @@ struct IdenteamApp: App {
     var sharedModelContainer = SharedModelConfig.makeContainer(for: .app)
 
     init() {
-        IgniteAppearance.configure()
+        AppAppearance.configure()
     }
 
     var body: some Scene {
@@ -25,7 +25,7 @@ struct IdenteamApp: App {
             Image(.logoLong)
         } rootContent: {
             ContentView()
-                .igniteColors()
+                .appColors()
         }
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)

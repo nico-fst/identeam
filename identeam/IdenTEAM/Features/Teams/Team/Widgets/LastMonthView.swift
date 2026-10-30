@@ -31,11 +31,11 @@ struct LastMonthView: View {
                                         .renderingMode(.template)
                                         .resizable()
                                         .scaledToFit()
-                                        .foregroundStyle(IgniteColor.success)
+                                        .foregroundStyle(AppColor.success)
                                 } else if isTarget(on: date) {
                                     if isMissedTarget(on: date) {
                                         FlashShape()
-                                            .strokeBorder(IgniteColor.error, lineWidth: 1)
+                                            .strokeBorder(AppColor.error, lineWidth: 1)
                                     } else {
                                         FlashShape()
                                             .strokeBorder(.accent, lineWidth: 1)
@@ -43,7 +43,7 @@ struct LastMonthView: View {
                                 } else {
                                     Text(String(AppCalendar.calendar.component(.day, from: date)))
                                         .monospacedDigit()
-                                        .foregroundStyle(IgniteColor.text)
+                                        .foregroundStyle(AppColor.text)
                                 }
 
                                 if AppCalendar.calendar.isDate(date, inSameDayAs: referenceDate) {
@@ -60,7 +60,7 @@ struct LastMonthView: View {
                     if weekReachedGoal {
                         GeometryReader { geometry in
                             RoundedRectangle(cornerRadius: dayHeight / 2, style: .continuous)
-                                .fill(IgniteColor.successSurface)
+                                .fill(AppColor.successSurface)
                                 .padding(
                                     backgroundInsets(in: weekStart, rowWidth: geometry.size.width)
                                 )
