@@ -16,10 +16,19 @@ struct LastMonthView: View {
         VStack(spacing: rowSpacing) {
             ForEach(AppCalendar.weekStartsInMonth(containing: month), id: \.self) { weekStart in
                 let week = calendarDays(in: weekStart)
-                let weekReachedGoal = personalWeeks.contains {
-                    $0.goalReached
-                        && AppCalendar.calendar.isDate($0.weekStart, inSameDayAs: weekStart)
+                let personalWeek = personalWeeks.first {
+                    AppCalendar.calendar.isDate($0.weekStart, inSameDayAs: weekStart)
                 }
+                let isCurrentWeek =
+                    AppCalendar.startOfWeek(containing: weekStart)
+                    == AppCalendar.startOfWeek(containing: referenceDate)
+                let personalGoalReached = personalWeek?.goalReached ?? false
+                let teamGoalReached = personalWeek?.teamGoalReached ?? false
+                let weekReachedGoal = isCurrentWeek ? teamGoalReached : personalGoalReached
+                let identColor =
+                    weekReachedGoal
+                    ? AppColor.success
+                    : isCurrentWeek ? AppColor.accent : AppColor.team
 
                 HStack(spacing: 2) {
                     ForEach(week.indices, id: \.self) { index in
@@ -31,15 +40,13 @@ struct LastMonthView: View {
                                         .renderingMode(.template)
                                         .resizable()
                                         .scaledToFit()
-                                        .foregroundStyle(AppColor.success)
+                                        .foregroundStyle(identColor)
                                 } else if isTarget(on: date) {
-                                    if isMissedTarget(on: date) {
-                                        FlashShape()
-                                            .strokeBorder(AppColor.error, lineWidth: 1)
-                                    } else {
-                                        FlashShape()
-                                            .strokeBorder(.accent, lineWidth: 1)
-                                    }
+                                    FlashShape()
+                                        .strokeBorder(
+                                            isCurrentWeek || isMissedTarget(on: date)
+                                                ? identColor : AppColor.accent,
+                                            lineWidth: 1)
                                 } else {
                                     Text(String(AppCalendar.calendar.component(.day, from: date)))
                                         .monospacedDigit()

@@ -110,7 +110,7 @@ struct TeamWeekGrid: View {
                     .position(x: detailed ? 24 : -40, y: layout.rowY(index))
                     .opacity(detailed ? 1 : 0)
                     .animation(rowAnimation(index), value: detailed)
-                TeamWeekProgressFlash(
+                ProgressFlash(
                     completed: member.completed, target: member.target,
                     color: TeamWeekStyle.color(for: member.id, in: week),
                     dark: week.darkWeek, active: detailed

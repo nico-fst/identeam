@@ -4,6 +4,14 @@ struct PersonalWeek {
     let weekStart: Date
     let identDates: [Date]
     let targetDates: [Date]
+    let teamGoalReached: Bool
+
+    init(weekStart: Date, identDates: [Date], targetDates: [Date], teamGoalReached: Bool = false) {
+        self.weekStart = weekStart
+        self.identDates = identDates
+        self.targetDates = targetDates
+        self.teamGoalReached = teamGoalReached
+    }
 
     var targetCount: Int {
         targetDates.count
@@ -23,7 +31,8 @@ extension PersonalWeek {
         self.init(
             weekStart: teamWeek.weekStart,
             identDates: member.idents.map(\.time),
-            targetDates: member.targetDays
+            targetDates: member.targetDays,
+            teamGoalReached: teamWeek.targetSum > 0 && teamWeek.identSum >= teamWeek.targetSum
         )
     }
 }

@@ -29,6 +29,8 @@ function mount({
   ownScenario = "near",
   streakFirst = false,
   totals = null,
+  rows = null,
+  targets = null,
 } = {}) {
   const classes = new Set();
   const scene = {
@@ -134,6 +136,10 @@ function mount({
       this.change = fn;
     },
   };
+  const cutColor = {
+    value: "ink",
+    addEventListener(event, fn) { this.change = fn; },
+  };
   const design = {
     value: "classic",
     addEventListener(event, fn) {
@@ -173,6 +179,8 @@ function mount({
       if (this.onscroll) this.onscroll();
     },
   };
+  const phone = node("phone", {left:0,top:0,width:480,height:900}, pageStyle);
+  phone.scrollTop = 0;
   const root = {
     dataset: {
       screenId: "demo",
@@ -193,27 +201,25 @@ function mount({
             focusedMode = selector;
           },
         };
-      if (selector === ".it-teamtop .it-streak")
+      if (selector === ".it-teamtop .it-streak" || selector === ".it-teamtop .it-frozen")
         return node("header-flame", {
           left: 380,
           top: 24,
           width: 72,
           height: 84,
         });
-      if (selector === ".it-phone")
-        return node(
-          "phone",
-          { left: 0, top: 0, width: 480, height: 900 },
-          pageStyle,
-        );
+      if (selector === ".it-phone") return phone;
       if (selector === ".it-hero")
-        return node("hero", { top: 120, height: 200 }, heroStyle);
+        return scene.innerHTML.includes('class="it-hero ')
+          ? node("hero", { top: 120, height: 200 }, heroStyle)
+          : null;
       if (selector === ".it-goal-feedback") return goalFeedback;
       if (selector === ".it-screen-situation") return { textContent: "" };
       if (selector === "#it-streak-first") return start;
       if (selector === "#it-streak-design") return design;
       if (selector === "#it-scenario") return select;
       if (selector === "#it-cream") return cream;
+      if (selector === "#it-cut-color") return cutColor;
       if (selector === ".it-hero-track") return heroTrack;
       if (selector === ".it-scene") return scene;
       if (selector === ".it-streak-info") return streakInfo;
@@ -253,10 +259,14 @@ function mount({
       throw new Error("Unexpected selector: " + selector);
     },
     querySelectorAll(selector) {
+      const markup = selector.startsWith(".it-week-content ")
+        ? scene.innerHTML.slice(scene.innerHTML.indexOf('<div class="it-week-content"'), scene.innerHTML.indexOf('<p class="it-detail-hint"'))
+        : scene.innerHTML;
+      selector = selector.replace(/^\.it-week-content /, "");
       if (selector === "[data-aura-info]") return auraButtons;
       if (selector === "[data-screen]") return [root];
       if (selector === ".it-hero-slide")
-        return [...scene.innerHTML.matchAll(/class="it-hero-slide"/g)].map(
+        return [...markup.matchAll(/class="it-hero-slide"/g)].map(
           (_, i) => node("hero-slide", { height: i === 0 ? 240 : 360 }),
         );
       if (selector === ".it-today") {
@@ -274,7 +284,7 @@ function mount({
       }
       if (selector === "[data-side]")
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             /data-side="(left|right)" data-row="(\d)"/g,
           ),
         ].map((m) =>
@@ -292,7 +302,7 @@ function mount({
         );
       if (selector === "[data-weekday]") {
         const detailed = scene.innerHTML.includes('data-view="detailed"');
-        return [...scene.innerHTML.matchAll(/data-weekday="(\d)"/g)].map((m) =>
+        return [...markup.matchAll(/data-weekday="(\d)"/g)].map((m) =>
           node(
             "weekday",
             {
@@ -309,7 +319,7 @@ function mount({
       if (selector === "[data-ident]") {
         const detailed = scene.innerHTML.includes('data-view="detailed"');
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             /<span class="it-mark [^"]+" style="([^"]*)"[^>]*data-ident="(\d)-(\d)"/g,
           ),
         ].map((m) => {
@@ -331,40 +341,48 @@ function mount({
       }
       if (selector === ".it-personal-track span")
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             /class="it-personal-track"><span style="width:([^"]*)"/g,
           ),
         ].map((m) => node("team-bar", {}, { width: m[1] }));
       if (selector === ".it-number-inverse" || selector === ".it-number-base") {
         const kind = selector.slice(1);
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             new RegExp('class="' + kind + '" style="clip-path:([^"]*)"', "g"),
           ),
         ].map((m) => node(kind, {}, { clipPath: m[1] }));
       }
       if (selector === ".it-progress-wave-back")
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             /class="it-progress-wave-back"[^>]*style="clip-path:([^"]*)"/g,
           ),
         ].map((m) => node("back-wave", {}, { clipPath: m[1] }));
       if (selector === ".it-progress-fill")
         return [
-          ...scene.innerHTML.matchAll(
+          ...markup.matchAll(
             /class="it-progress-fill"[^>]*style="clip-path:([^"]*)"/g,
           ),
         ].map((m) => node("fill", {}, { clipPath: m[1] }));
       return [];
     },
   };
-  const fixtureScript = totals
+  const fixtureScript = rows
+    ? script.replace("const weekdays=", `Object.assign(scenarios[${JSON.stringify(scenario || ownScenario)}],{rows:${JSON.stringify(rows)},targets:${JSON.stringify(targets || [3,3,3])}});const weekdays=`)
+    : totals
     ? script.replace(
         "const weekdays=",
         `Object.assign(scenarios[${JSON.stringify(scenario || ownScenario)}],{rows:${JSON.stringify([0, 1, 2].map((i) => "D".repeat(Math.min(7, Math.max(0, totals.completed - i * 7))).padEnd(7, ".")))},targets:[${totals.target},0,0]});const weekdays=`,
       )
     : script;
   vm.runInNewContext(fixtureScript, {
+    ResizeObserver: class {
+      observe(target) {
+        assert.ok(target, "ResizeObserver requires an existing element");
+      }
+      disconnect() {}
+    },
     document: {
       addEventListener(event, handler) {
         documentEvents[event] = handler;
@@ -387,6 +405,7 @@ function mount({
     design,
     start,
     cream,
+    cutColor,
     auraInfo,
     auraButtons,
     auraClose,
@@ -468,6 +487,7 @@ function mount({
     pageStyle,
     heroStyle,
     heroTrack,
+    phone,
     setGoal() {
       events.click({
         target: {
@@ -632,7 +652,7 @@ test("every requested situation defaults to Combined with correct totals and a h
             ? `<strong>Noch ${9 - value}</strong>`
             : key === "behind"
               ? `<strong>${value}<span class="it-hero-target">/10</span></strong>`
-              : `<strong>${value} / ${key === "you" ? 3 : key === "behind" ? 10 : 9}</strong>`,
+              : `<strong>${value}<span class="it-hero-target">/${key === "behind" ? 10 : 9}</span></strong>`,
         ),
         key,
       );
@@ -663,7 +683,7 @@ test("planned, completed and missed flashes stay in each person color; shared da
   const out = scene.innerHTML;
   for (const kind of ["it-done", "it-planned", "it-missed"])
     assert.ok(out.includes(kind));
-  for (const name of ["Du", "Greta", "Veit"])
+  for (const name of ["Du", "Veit"])
     assert.ok(out.includes(`aria-label="${name}: verpasst"`));
   assert.ok(!out.includes("it-todaynote"));
   assert.ok(out.includes("--dy:12px"));
@@ -1265,9 +1285,9 @@ test("total flash retains native symbol dimensions and is centered in an unpadde
       /<div class="it-progress-flash">([\s\S]*?)<strong/g,
     ),
   ];
-  assert.equal(progress.length, 3);
+  assert.equal(progress.length, 7);
   for (const [, content] of progress) {
-    assert.equal((content.match(/viewBox="92 28 328 456"/g) || []).length, 4);
+    assert.equal((content.match(/viewBox="0 0 512 512"/g) || []).length, 4);
     assert.equal(
       (
         content.match(
@@ -1333,7 +1353,7 @@ test("Smart footer puts personal colored progress before Du and the other names"
       footer.indexOf(`Du (${done}/${target})`) < footer.indexOf("Greta"),
     );
     assert.ok(
-      footer.includes("--user:var(--it-user-0,light-dark(#a4481d,#ffab79))"),
+      footer.includes("--user:var(--it-user-0,#a6421c)"),
     );
     assert.ok(!out.includes("NaN"));
     app.switchMode("detailed");
@@ -1569,7 +1589,7 @@ test("week arrows change dates, summaries and rows while retaining the selected 
   app.stepWeek(-1);
   assert.ok(app.scene.innerHTML.includes("<h3>Letzte Woche</h3>"));
   assert.ok(app.scene.innerHTML.includes('value="2026-10-05"'));
-  assert.ok(app.scene.innerHTML.includes("Euer Wochenabschluss"));
+  assert.ok(app.scene.innerHTML.includes("Woche im Rückblick"));
   assert.ok(app.scene.innerHTML.includes("data-current-week"));
   assert.ok(app.scene.innerHTML.includes('data-view="detailed"'));
   assert.ok(!app.scene.innerHTML.includes("it-daycell it-today"));
@@ -1650,7 +1670,7 @@ test("dark background cut runs from top left to bottom right with a downward off
   assert.ok(style.includes("height:100px;padding-bottom:100%"));
   assert.ok(style.includes("background:#24201d"));
   assert.ok(style.includes("clip-path:polygon(0 0,100% 0,100% 100%,0 100px)"));
-  assert.ok(style.includes("z-index:-1"));
+  assert.match(html, /data-streak-count="0"\]::after\{[^}]*z-index:-1/);
   assert.match(
     html,
     /\.it-streak-art\{[^}]*background:hsl\(from var\(--it-yellow\) h s calc\(l \* \.46\)\)/,
@@ -1692,11 +1712,11 @@ test("four reward screens are selectable beside the situation and preserve all w
     assert.ok(app.scene.innerHTML.includes(`data-reward-design="${design}"`));
     assert.equal(
       (app.scene.innerHTML.match(/aria-label="4 Wochen Streak"/g) || []).length,
-      design === "classic" ? 1 : 2,
+      5,
     );
     assert.equal(
       app.scene.innerHTML.includes('aria-label="Streak-Belohnung"'),
-      design !== "classic",
+      true,
     );
     for (const scenario of [
       "near",
@@ -1732,7 +1752,7 @@ test("Dark Cut keeps the streak at top right with a blurred yellow glow and trop
     /<header class="it-teamtop">([\s\S]*?)<\/header>/,
   )[1];
   assert.ok(header.includes('aria-label="4 Wochen Streak"'));
-  assert.ok(!app.scene.innerHTML.includes('aria-label="Streak-Belohnung"'));
+  assert.equal((app.scene.innerHTML.match(/aria-label="Streak-Belohnung"/g)||[]).length, 4);
   assert.match(
     html,
     /\.it-phone\[data-streak-design="classic"\]::after\{[^}]*right:-50px[^}]*var\(--it-yellow\)[^}]*filter:blur\(28px\)/,
@@ -1750,10 +1770,10 @@ test("all comparison weeks include a streak info page with an appropriate zero s
       /data-screen data-screen-id="week(\d)" data-streak="(\d)" data-week-offset="(-?\d)"/g,
     ),
   ];
-  assert.equal(screens.length, 7);
-  screens.slice(1).forEach((m, i) => {
-    assert.equal(Number(m[2]), i);
-    assert.equal(Number(m[3]), i - 3);
+  assert.equal(screens.length, 5);
+  screens.forEach((m, i) => {
+    assert.equal(Number(m[2]), Math.min(i, 3));
+    assert.equal(Number(m[3]), 0);
   });
   for (let count = 0; count < 4; count++) {
     const app = mount({ streak: count, initialWeek: count - 3 });
@@ -1767,7 +1787,7 @@ test("all comparison weeks include a streak info page with an appropriate zero s
           `data-reward-design="${design}" data-streak-count="${count}"`,
         ),
       );
-      assert.equal((out.match(/class="it-hero-slide"/g) || []).length, 2);
+      assert.equal((out.match(/class="it-hero-slide"/g) || []).length, 5);
       assert.equal(out.includes('aria-label="Streak-Belohnung"'), true);
       assert.equal(out.includes('data-hero-slide="1"'), true);
       if (count) {
@@ -1829,7 +1849,7 @@ test("streak icons retain their tiers while cuts use progress stage selectors", 
   }
   assert.match(
     html,
-    /\.it-frozen\{[^}]*background:light-dark\(#338bd1,#74c7ff\)/,
+    /\.it-frozen\{[^}]*background:var\(--it-violet\)/,
   );
   assert.match(html, /data-cut-stage="0"\]::before\{display:none/);
   assert.match(
@@ -1858,84 +1878,38 @@ test("comparison uses fixed iPhone 16 screen viewports and wraps into new rows",
   );
 });
 
-test("zero streak has a strongly blurred blue glow behind its snowflake", () => {
+test("zero streak has a strongly blurred themed violet glow behind its snowflake", () => {
   const style = [
     ...html.matchAll(/\.it-phone\[data-streak-count="0"\]::after\{([^}]+)\}/g),
   ].at(-1)[1];
-  assert.ok(style.includes("display:block"));
-  assert.ok(style.includes("light-dark(#338bd180,#74c7ff70)"));
-  assert.ok(style.includes("filter:blur(56px)"));
-  assert.ok(style.includes("z-index:-1"));
+  assert.match(html, /data-streak-count="0"\]::after\{display:block/);
+  assert.match(html, /var\(--it-violet\) 40%/);
+  assert.match(html, /width:130px;height:130px;filter:blur\(55px\)/);
+  assert.match(html, /data-streak-count="0"\]::after\{[^}]*z-index:-1/);
   const app = mount({ streak: 0 });
   assert.ok(app.scene.innerHTML.includes('class="it-frozen"'));
 });
 
-test("single flame has yellow glow and both dark cuts round their screen-edge intersections", () => {
-  assert.match(
-    html,
-    /\.it-phone:not\(\[data-streak-count="0"\]\)::after\{display:block/,
-  );
-  for (const count of [2, 3]) {
-    const app = mount({
-      streak: count,
-      totals: { completed: (count - 1) * 4, target: 16 },
-    });
-    const path = app.pageStyle["--it-cut-path"];
-    assert.ok(path.startsWith('path("M'));
-    assert.equal((path.match(/C/g) || []).length, 2);
-    assert.ok(!/NaN|Infinity/.test(path));
-    if (count === 2) {
-      assert.ok(path.includes("M116 0"));
-      assert.ok(path.includes("V364"));
-    } else {
-      assert.ok(path.includes("L52 152"));
-      assert.ok(path.includes("V632"));
-    }
-  }
-  assert.ok(html.includes("clip-path:var(--it-cut-path,"));
+test("dark cut uses the same viewport-based polygon as Swift", () => {
+  const medium=mount({totals:{completed:8,target:16}});
+  assert.equal(medium.pageStyle["--it-cut-depth"], "260px");
+  assert.equal(medium.pageStyle["--it-cut-polygon"], "polygon(0 260px,0 0,100% 0,100% 740px)");
+  const corner=mount({totals:{completed:4,target:16}});
+  assert.equal(corner.pageStyle["--it-cut-depth"], "-168px");
+  assert.equal(corner.pageStyle["--it-cut-polygon"], "polygon(0 -168px,0 0,100% 0,100% 312px)");
 });
 
-test("dark cuts use a pronounced 52px corner rounding", () => {
-  const app = mount({ totals: { completed: 8, target: 16 } });
-  assert.ok(
-    app.pageStyle["--it-cut-path"].includes("L52 152 C26 126 0 178 0 152"),
-  );
-  assert.ok(
-    app.pageStyle["--it-cut-path"].includes("V632 C480 606 454 554 428 528"),
-  );
+test("dark cut has straight edges and spans the viewport", () => {
+  const app=mount({totals:{completed:16,target:16}});
+  assert.equal(app.pageStyle["--it-cut-polygon"], "polygon(0 0,100% 0,100% 100%,0 100%)");
+  assert.equal(app.pageStyle["--it-viewport-height"], "900px");
+  assert.equal(app.pageStyle["--it-scroll-y"], "0px");
 });
 
-test("deep and full progress designs retain existing geometry and comparison layout", () => {
-  assert.ok(
-    html.includes(
-      'data-screen-id="week4" data-streak="4" data-week-offset="1"',
-    ),
-  );
-  assert.ok(
-    html.includes(
-      'data-screen-id="week5" data-streak="5" data-week-offset="2"',
-    ),
-  );
-  const fifth = mount({
-    streak: 4,
-    initialWeek: 1,
-    totals: { completed: 12, target: 16 },
-  });
-  assert.ok(fifth.pageStyle["--it-cut-path"].includes("L52 592"));
-  assert.ok(fifth.pageStyle["--it-cut-path"].includes("V1072"));
-  const sixth = mount({ streak: 5, initialWeek: 2 });
-  assert.ok(sixth.scene.innerHTML.includes('data-streak-count="5"'));
-  assert.match(
-    html,
-    /\.it-phone:not\(\[data-streak-count="0"\]\)::after\{[^}]*width:420px;height:420px;filter:blur\(48px\)/,
-  );
-  assert.match(html, /data-cut-stage="4"\]\{background:#24201d/);
-  assert.match(html, /data-cut-stage="4"\]::before\{display:none/);
-  assert.match(
-    html,
-    /\.it-screen-comparison\{[^}]*grid-template-columns:repeat\(auto-fit,393px\)/,
-  );
-  assert.ok(!html.match(/\.it-screen-comparison\{[^}]*overflow-x:auto/));
+test("five comparison screens represent the five Dark Cut progress stages", () => {
+  const stages=[...html.matchAll(/data-progress-stage="(\d)"/g)].map(m=>Number(m[1]));
+  assert.deepEqual(stages,[0,1,2,3,4]);
+  assert.match(html,/grid-template-columns:repeat\(auto-fit,393px\)/);
 });
 
 test("week section has translucent glass, backdrop blur and a legible dark-screen palette", () => {
@@ -1987,31 +1961,15 @@ test("swiped streak reward cards also use glass surfaces", () => {
   assert.match(html, /\.it-reward-trophy\{background:#24201d99/);
 });
 
-test("empty situation picker distributes all six scenarios and an override applies to every screen", () => {
-  assert.ok(html.includes('<select id="it-scenario"><option value="">'));
-  const keys = ["near", "behind", "catchup", "start", "you", "team"];
-  keys.forEach((key, i) => {
-    assert.ok(
-      html.includes(`data-week-offset="${i - 3}" data-scenario="${key}"`),
-    );
-    const app = mount({
-      streak: i,
-      initialWeek: i - 3,
-      scenario: "",
-      ownScenario: key,
-    });
-    if (key === "behind")
-      assert.ok(app.scene.innerHTML.includes(">3/10 Idents</button></h1>"));
-    if (key === "start")
-      assert.ok(app.scene.innerHTML.includes('class="it-hero-summaries"'));
-    app.select.value = "behind";
-    app.select.change();
-    assert.ok(app.scene.innerHTML.includes("it-hero it-behind"));
-    assert.ok(app.scene.innerHTML.includes(">3/10 Idents</button></h1>"));
-    app.select.value = "";
-    app.select.change();
-    assert.ok(app.scene.innerHTML.includes(`data-streak-count="${i}"`));
-  });
+test("situation overrides retain all five cards and keep week interactions", () => {
+  for(const scenario of ["near","behind","catchup","start","you","team","goal"]){
+    const app=mount({scenario,initialWeek:0});
+    assert.equal((app.scene.innerHTML.match(/class="it-hero-slide"/g)||[]).length,5);
+    app.switchMode("detailed");
+    assert.ok(app.scene.innerHTML.includes('data-view="detailed"'));
+    app.select.value="behind";app.select.change();
+    assert.ok(app.scene.innerHTML.includes('>3/10 Idents</button></h1>'));
+  }
 });
 
 test("start toggle selects the preferred carousel page without removing swipe navigation", () => {
@@ -2026,7 +1984,7 @@ test("start toggle selects the preferred carousel page without removing swipe na
   assert.equal(app.heroTrack.scrollLeft, 0);
   app.design.value = "chain";
   app.design.change();
-  assert.equal(app.heroTrack.scrollLeft, 400);
+  assert.equal(app.heroTrack.scrollLeft, 1200);
   app.start.checked = false;
   app.start.change();
   assert.equal(app.heroTrack.scrollLeft, 0);
@@ -2035,7 +1993,7 @@ test("start toggle selects the preferred carousel page without removing swipe na
   zero.design.change();
   assert.equal(zero.heroTrack.scrollLeft, 400);
   assert.ok(zero.scene.innerHTML.includes('data-hero-slide="1"'));
-  assert.ok(zero.scene.innerHTML.includes("it-reward-zero"));
+  assert.ok(zero.scene.innerHTML.includes("Entfacht euer Feuer."));
   assert.equal(
     mount({ streak: 1 }).pageStyle["--it-streak-glow"],
     String(1 / 3),
@@ -2045,10 +2003,10 @@ test("start toggle selects the preferred carousel page without removing swipe na
 test("75 percent cut extends farther down while retaining a light bottom-left area", () => {
   const app = mount({ totals: { completed: 12, target: 16 } });
   const depth = parseFloat(app.pageStyle["--it-cut-depth"]);
-  assert.equal(depth, 540);
+  assert.equal(depth, 684);
   assert.ok(depth < 900);
   assert.ok(depth + 480 > 900);
-  assert.ok(app.pageStyle["--it-cut-path"].includes("V1072"));
+  assert.ok(app.pageStyle["--it-cut-polygon"].includes("100% 1164px"));
   assert.ok(
     html.includes(
       '[data-cut-stage="3"]::before{height:var(--it-cut-depth,220px)}',
@@ -2087,26 +2045,12 @@ test("positive streak glows share a stable footprint centered on the header flam
   );
 });
 
-test("dark cut has a hard diagonal edge without rounding or blur", () => {
-  const rules = [
-    ...html.matchAll(
-      /\.it-phone\[data-streak-design="classic"\]::before\{([^}]+)\}/g,
-    ),
-  ];
-  const final = rules.at(-1)[1];
-  assert.ok(final.includes("clip-path:none"));
-  assert.ok(
-    final.includes(
-      "background:linear-gradient(45deg,transparent var(--it-cut-stop),#24201d var(--it-cut-stop))",
-    ),
-  );
-  for (const streak of [2, 3, 4]) {
-    const app = mount({ streak });
-    assert.ok(
-      Math.abs(parseFloat(app.pageStyle["--it-cut-stop"]) - 480 / Math.SQRT2) <
-        0.001,
-    );
-  }
+test("dark cut is a hard polygon using the selected color", () => {
+  const rules=[...html.matchAll(/\.it-phone\[data-streak-design="classic"\]::before\{([^}]+)\}/g)];
+  const final=rules.at(-1)[1];
+  assert.ok(final.includes("clip-path:var(--it-cut-polygon)"));
+  assert.ok(final.includes("background:var(--it-cut-color)"));
+  assert.ok(final.includes("filter:none"));
 });
 
 test("light week surfaces suppress the dark cut with readable dark text", () => {
@@ -2201,24 +2145,13 @@ test("nearly finished hero shows the remaining team idents", () => {
   );
 });
 
-test("middle cut keeps bold information cards light and quiet cards dark", () => {
-  for (const scenario of [
-    "near",
-    "behind",
-    "catchup",
-    "start",
-    "you",
-    "team",
-  ]) {
-    const app = mount({ scenario, totals: { completed: 8, target: 16 } });
-    assert.ok(
-      app.scene.innerHTML.includes(
-        `data-info-theme="${["near", "behind", "catchup"].includes(scenario) ? "light" : "dark"}"`,
-      ),
-    );
-    assert.ok(app.scene.innerHTML.includes('data-reward-theme="dark"'));
-    assert.ok(app.scene.innerHTML.includes('data-week-theme="light"'));
-  }
+test("middle cut follows computed card priority rather than fixture labels", () => {
+  const aggressive=mount({scenario:"near",totals:{completed:1,target:2}});
+  assert.ok(aggressive.scene.innerHTML.includes('data-card-type="aggressive"'));
+  assert.ok(aggressive.scene.innerHTML.includes('data-info-theme="light"'));
+  const reaction=mount({scenario:"near",totals:{completed:8,target:16}});
+  assert.ok(reaction.scene.innerHTML.includes('data-card-type="reaction"'));
+  assert.ok(reaction.scene.innerHTML.includes('data-info-theme="dark"'));
 });
 
 test("comeback card emphasizes completed count over target", () => {
@@ -2394,12 +2327,12 @@ test("summary flashes have a user-colored outline around both empty and filled r
   app.select.change();
   assert.equal(
     (app.scene.innerHTML.match(/class="it-progress-outline"/g) || []).length,
-    3,
+    7,
   );
   app.switchMode("detailed");
   assert.equal(
     (app.scene.innerHTML.match(/class="it-progress-outline"/g) || []).length,
-    6,
+    10,
   );
   assert.match(
     html,
@@ -2416,9 +2349,9 @@ test("summary flash layers share a padded viewBox so the left contour and outlin
       /<div class="it-progress-flash">([\s\S]*?)<div class="it-number-base"/g,
     ),
   ];
-  assert.equal(flashes.length, 3);
+  assert.equal(flashes.length, 7);
   for (const [, flash] of flashes) {
-    assert.equal((flash.match(/viewBox="92 28 328 456"/g) || []).length, 4);
+    assert.equal((flash.match(/viewBox="0 0 512 512"/g) || []).length, 4);
     assert.ok(!flash.includes('viewBox="114 36 320 440"'));
   }
 });
@@ -2450,16 +2383,23 @@ test("personal on-course card uses summary flashes and subdues only the other me
   assert.match(html, /\.it-hero-summary-muted\{opacity:\.55/);
 });
 
-test("information carousel follows the active card natural height instead of stretching to its taller neighbor", () => {
+test("all five carousel pages keep the same fixed height", () => {
   const app = mount();
   app.design.value = "trophy";
   app.design.change();
-  assert.equal(app.heroTrack.style.height, "240px");
+  assert.equal(app.heroTrack.style.height, "320px");
   app.heroSlide(1);
-  assert.equal(app.heroTrack.style.height, "360px");
+  assert.equal(app.heroTrack.style.height, "320px");
   app.heroSlide(0);
-  assert.equal(app.heroTrack.style.height, "240px");
+  assert.equal(app.heroTrack.style.height, "320px");
   assert.match(html, /\.it-hero-track\{display:flex;align-items:flex-start/);
+});
+
+test("card contents cannot scroll while the carousel and phone retain navigation", () => {
+  assert.match(html, /\.it-hero-slide>\.it-hero,#[^\n]+\.it-hero-slide>\.it-reward\{[^}]*overflow:clip/);
+  assert.doesNotMatch(html, /\.it-hero-slide>\.it-(?:hero|reward)[^{]*\{[^}]*overflow-y:auto/);
+  assert.match(html, /\.it-hero-track\{[^}]*overflow-x:auto/);
+  assert.match(html, /\[data-screen\] \.it-phone\{[^}]*overflow-y:auto/);
 });
 
 test("others-nearly-finished card replaces the background flash with an oversized bold L", () => {
@@ -2548,17 +2488,17 @@ test("goal screen appears first and prompts setting a weekly goal without an inv
     [...html.matchAll(/<div data-screen data-screen-id="([^"]+)"/g)].map(
       (match) => match[1],
     ),
-    ["week6", "week0", "week1", "week2", "week3", "week4", "week5"],
+    ["week0", "week1", "week2", "week3", "week4"],
   );
   assert.ok(
     html.includes(
-      'data-screen-id="week6" data-streak="0" data-week-offset="0" data-scenario="goal"',
+      'data-screen-id="week0" data-streak="0" data-week-offset="0" data-scenario="goal"',
     ),
   );
   const app = mount({ streak: 0, scenario: "", ownScenario: "goal" });
   assert.ok(app.scene.innerHTML.includes('class="it-goal-action"'));
   assert.ok(
-    app.scene.innerHTML.includes("data-set-goal>Wochenziel setzen</button>"),
+    app.scene.innerHTML.includes("data-set-goal>Ziel für nächste Woche setzen</button>"),
   );
   assert.ok(!app.scene.innerHTML.includes("NaN"));
   app.setGoal();
@@ -2641,8 +2581,8 @@ test("Streak Info first also works for nearly finished and set-goal screens at z
     app.start.checked = true;
     app.start.change();
     assert.equal(app.heroTrack.scrollLeft, 400);
-    assert.ok(app.scene.innerHTML.includes("it-reward-zero"));
-    assert.ok(app.scene.innerHTML.includes("Entfacht euer<br>erstes Feuer."));
+    assert.ok(app.scene.innerHTML.includes("Entfacht euer Feuer."));
+    assert.ok(app.scene.innerHTML.includes("Entfacht euer Feuer."));
     app.heroSlide(0);
     assert.equal(app.heroTrack.scrollLeft, 0);
     app.heroSlide(1);
@@ -2673,7 +2613,7 @@ test("hero team bar stays neutral while personal footer keeps its person color i
     assert.ok(scene.innerHTML.includes('class="it-track" role="progressbar"'));
     assert.ok(
       scene.innerHTML.includes(
-        'class="it-personal-progress" style="--user:var(--it-user-0,light-dark(#a4481d,#ffab79))"',
+        'class="it-personal-progress" style="--user:var(--it-user-0,#a6421c)"',
       ),
     );
   }
@@ -2871,4 +2811,135 @@ test("both title buttons open the locked-in aura tooltip and support closing and
   app.clickIdent("P");
   assert.equal(app.auraInfo.hidden, true);
   assert.equal(app.info.hidden, false);
+});
+
+test("Dark Cut color selector switches among ink, flame gold and accent without resetting the screen", () => {
+  const app = mount();
+  app.switchMode("detailed");
+  const before = app.scene.innerHTML;
+  for (const color of ["ink", "gold", "orange"]) {
+    app.cutColor.value = color;
+    app.cutColor.change();
+    assert.equal(app.hostDataset.cutColor, color);
+    assert.equal(app.scene.innerHTML, before);
+  }
+  app.cutColor.value = "invalid";
+  app.cutColor.change();
+  assert.equal(app.hostDataset.cutColor, "ink");
+  assert.match(html, /data-cut-color="gold"\]\{--it-cut-color:var\(--it-yellow\)/);
+  assert.match(html, /data-cut-color="orange"\]\{--it-cut-color:var\(--it-orange\)/);
+});
+
+test("card families and ordering match Swift for every live situation and retrospective", () => {
+  for (const [scenario, type] of Object.entries({
+    goal: "action", near: "aggressive", behind: "aggressive", catchup: "aggressive",
+    start: "reaction", you: "reaction", team: "reaction",
+  })) {
+    const app = mount({ scenario });
+    assert.ok(app.scene.innerHTML.includes(`data-card-type="${type}"`));
+    assert.deepEqual([...app.scene.innerHTML.matchAll(/data-streak-card="([^"]+)"/g)].map(m => m[1]),
+      ["trophy", "level", "chain", "medal"]);
+    for (let index = 0; index < 5; index++) {
+      app.heroSlide(index);
+      assert.equal(app.heroTrack.scrollLeft, index * 400);
+      assert.equal(app.heroTrack.style.height, "320px");
+    }
+  }
+  const past = mount({ initialWeek: -1, scenario: "near" });
+  assert.ok(past.scene.innerHTML.includes("Woche im Rückblick"));
+  assert.ok(past.scene.innerHTML.includes('data-card-type="reaction"'));
+});
+
+test("today's viewer Ident takes priority over aggressive situations", () => {
+  for (const scenario of ["near", "behind", "catchup"]) {
+    const app = mount({ scenario, rows: ["D...D.P", "DDD....", "D.D...."] });
+    assert.ok(app.scene.innerHTML.includes('data-card-type="reaction"'));
+    assert.ok(app.scene.innerHTML.includes("Dein Team ist auf Kurs."));
+    assert.ok(!app.scene.innerHTML.includes('data-card-type="aggressive"'));
+  }
+  const personal = mount({ scenario: "behind", rows: ["D...D.P", "D....PP", "D....PP"] });
+  assert.ok(personal.scene.innerHTML.includes("Du bist auf Kurs!"));
+});
+
+test("without a viewer Ident today, completed or partially completed weeks can have only streak cards", () => {
+  for (const rows of [["D.D...P", "D.D...P", "D.D...P"], ["DDD....", "DDD....", "DDD...."]]) {
+    const app = mount({ scenario: "team", rows });
+    assert.ok(!app.scene.innerHTML.includes('data-card-type="reaction"'));
+    assert.equal((app.scene.innerHTML.match(/class="it-hero-slide"/g) || []).length, 4);
+    assert.deepEqual([...app.scene.innerHTML.matchAll(/data-streak-card="([^"]+)"/g)].map(m => m[1]),
+      ["trophy", "level", "chain", "medal"]);
+    assert.ok(app.scene.innerHTML.includes('aria-label="Flammen-Trophäe"'));
+    assert.ok(!app.scene.innerHTML.includes('aria-label="Wocheninfo"'));
+  }
+});
+
+test("another member's Ident today does not trigger an on-track reaction", () => {
+  const app = mount({ scenario: "team", rows: ["D.D...P", "D...D.P", "D.D...P"] });
+  assert.ok(!app.scene.innerHTML.includes('data-card-type="reaction"'));
+});
+
+test("streak-first selection uses the correct page when the primary card is absent", () => {
+  const app = mount({ scenario: "team", rows: ["D.D...P", "D.D...P", "D.D...P"], streakFirst: true });
+  assert.equal(app.heroTrack.scrollLeft, 0);
+  app.design.value = "medal";
+  app.design.change();
+  assert.equal(app.heroTrack.scrollLeft, 3 * 400);
+});
+
+test("a today's column Ident in a different selected week never triggers a today's reaction", () => {
+  const future = mount({ initialWeek: 1, scenario: "team" });
+  assert.ok(!future.scene.innerHTML.includes('data-card-type="reaction"'));
+  const past = mount({ initialWeek: -1, scenario: "team" });
+  assert.ok(past.scene.innerHTML.includes("Woche im Rückblick"));
+});
+
+test("all current-month flashes and outlines follow the team goal independently of personal completion", () => {
+  for (const [completed, expected] of [[1, "var(--it-orange)"], [9, "var(--it-success)"]]) {
+    const app = mount({ scenario: "near", rows: ["D.X...P", completed === 9 ? "DDDD..." : ".......", completed === 9 ? "DDDD..." : "......."], targets: [3,3,3] });
+    const row = app.scene.innerHTML.match(/class="it-month-row" data-month-current="true"([\s\S]*?)<\/div>/)[1];
+    const colors = [...row.matchAll(/style="--user:([^;]+);/g)].map(m => m[1]);
+    assert.ok(colors.length > 0);
+    assert.ok(colors.every(color => color === expected), row);
+    assert.ok(row.includes(`data-goal-reached="${completed === 9}"`));
+  }
+  const missed = mount({ scenario: "behind" });
+  const current = missed.scene.innerHTML.match(/class="it-month-row" data-month-current="true"([\s\S]*?)<\/div>/)[1];
+  assert.ok(current.includes('it-planned'));
+  assert.ok(!current.includes('var(--it-violet)'));
+});
+
+test("history uses the same two-layer ratio flashes as the week grid", () => {
+  const app = mount({ scenario: "start" });
+  const history = app.scene.innerHTML.match(/<div class="it-history it-custom-glass"([\s\S]*?)<\/section>/)[1];
+  assert.equal((history.match(/data-history-summary=/g) || []).length, 4);
+  assert.equal((history.match(/class="it-number-base"/g) || []).length, 4);
+  assert.equal((history.match(/class="it-number-inverse"/g) || []).length, 4);
+  assert.ok(history.includes('var(--it-orange)'));
+  assert.ok(history.includes('var(--it-success)'));
+  assert.ok(history.includes('var(--it-violet)'));
+  assert.ok(history.includes('class="it-progress-number">0<span>/9</span>'));
+});
+
+test("month and grouped actions follow the week history in screen order", () => {
+  const { scene } = mount();
+  const out = scene.innerHTML;
+  assert.ok(out.indexOf('class="it-week-section"') < out.indexOf('class="it-history-section"'));
+  assert.ok(out.indexOf('class="it-history-section"') < out.indexOf('class="it-month-section"'));
+  assert.ok(out.indexOf('class="it-month-section"') < out.indexOf('class="it-actions"'));
+  assert.equal((out.match(/data-remind-team/g) || []).length, 1);
+  assert.ok(out.includes('data-set-goal>◎ Ziel planen</button>'));
+});
+
+test("prototype has no Ident image toggle or placeholder photo rendering", () => {
+  assert.ok(!html.includes("it-images"));
+  assert.ok(!html.includes("identPhoto"));
+  assert.ok(!mount().scene.innerHTML.includes("<image href="));
+});
+
+test("mode switches preserve scroll position and anchor only the cut edge", () => {
+  const app=mount({scenario:"team"});
+  app.phone.scrollTop=180;
+  app.switchMode("detailed");
+  assert.equal(app.phone.scrollTop,180);
+  assert.equal(app.pageStyle["--it-scroll-y"],"180px");
 });

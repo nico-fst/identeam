@@ -4,7 +4,7 @@ import UIKit
 /// Shared semantic colors for SwiftUI, UIKit and WidgetKit.
 /// Semantic roles adapt to appearance; fixed palettes also support earned week stages.
 enum AppColor {
-    static let accent = Color.accentColor
+    static let accent = Color("AccentColor")
 
     /// Fixed colors used when appearance is driven by content rather than device settings.
     enum Palette {
@@ -38,7 +38,7 @@ enum AppColor {
         static let flame = Color("StreakFlameGold")
         static let highlight = Color("StreakHighlightGold")
         static let glow = Color("StreakGlowGold")
-        static let frozen = Color("StreakFrozenBlue")
+        static let frozen = AppColor.team
     }
 
     static let background = Color("BackgroundAppCreamInk")
@@ -47,12 +47,13 @@ enum AppColor {
     static let muted = Color("TextSecondaryTaupeSand")
     static let link = Color("TextLinkBurntOrange")
     static let team = Color("StatusTeamViolet")
-    static let streak = Color("StatusStreakOrangeGold")
+    static let streak = Color("StatusStreakGold")
     static let success = Color("StatusSuccessGreen")
     static let successSurface = Color("BackgroundSuccessSageBrown")
     static let error = Color("StatusErrorRed")
     static let onAccent = Color("TextOnAccentInk")
     static let onSuccess = Color("TextOnSuccessIvoryInk")
+    static let onTeam = Color("TextOnTeamIvoryInk")
     static let cameraText = Color("CameraTextIvory")
     static let cameraShade = Color("CameraShadeInk")
     static let selection = Color("BackgroundSelectionPeachViolet")

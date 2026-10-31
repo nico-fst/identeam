@@ -18,16 +18,21 @@ struct LastWeeksCompletionView: View {
         return week.targetSum > 0 && week.targetSum <= week.identSum
     }
 
+    private func isCurrent(_ week: TeamWeek) -> Bool {
+        AppCalendar.startOfWeek(containing: week.weekStart)
+            == AppCalendar.startOfWeek(containing: referenceDate)
+    }
+
     var weekLabels: [String] {
-        lastWeeksSorted.enumerated().map { index, week in
-            switch index {
-            case lastWeeksSorted.count - 1:
-                "Current"
-            case lastWeeksSorted.count - 2:
-                "Last"
-            default:
-                AppCalendar.dayDotMonth(for: week.weekStart)
+        let previous = AppCalendar.calendar.date(byAdding: .day, value: -7, to: referenceDate)!
+        return lastWeeksSorted.map { week in
+            if isCurrent(week) { return "Current" }
+            if AppCalendar.startOfWeek(containing: week.weekStart)
+                == AppCalendar.startOfWeek(containing: previous)
+            {
+                return "Last"
             }
+            return AppCalendar.dayDotMonth(for: week.weekStart)
         }
     }
 
@@ -43,14 +48,12 @@ struct LastWeeksCompletionView: View {
                     Text(" ")
                         .font(.nunito(.footnote))
 
-                    FilledFlash(
-                        progress: 0,
+                    ProgressFlash(
+                        completed: 0, target: 0,
                         color: AppColor.muted.opacity(0.15),
-                        text: "",
-                        animated: false
+                        animated: false, showsRatio: false
                     )
                     .frame(height: 80)
-                    .aspectRatio(0.5, contentMode: .fit)
 
                     Text("No data")
                         .frame(maxWidth: .infinity)
@@ -65,12 +68,11 @@ struct LastWeeksCompletionView: View {
                         .font(.nunito(.footnote))
                         .opacity(0.5)
 
-                    FilledFlash(
-                        progress: week.targetSum > 0
-                            ? Double(week.identSum) / Double(week.targetSum)
-                            : 0,
-                        color: completed(week) ? AppColor.success : .accent,
-                        text: "\(week.identSum) / \(week.targetSum)",
+                    ProgressFlash(
+                        completed: Int(week.identSum), target: Int(week.targetSum),
+                        color: completed(week)
+                            ? AppColor.success
+                            : isCurrent(week) ? AppColor.accent : AppColor.team,
                         animated: animated
                             && AppCalendar.calendar.isDate(
                                 week.weekStart,
@@ -79,11 +81,10 @@ struct LastWeeksCompletionView: View {
                             )
                     )
                     .frame(height: 80)
-                    .aspectRatio(0.5, contentMode: .fit)
 
                     let streakLabel = TeamStreakLabel(
                         week: week,
-                        context: .completion(isLatestWeek: week == lastWeeksSorted.last)
+                        context: .completion(isLatestWeek: isCurrent(week))
                     )
                     if completed(week) {
                         streakLabel
@@ -92,12 +93,8 @@ struct LastWeeksCompletionView: View {
                             .font(.system(size: 13))
                             .foregroundStyle(AppColor.streak)
                     } else {
-                        if week == lastWeeksSorted.last {
-                            streakLabel.labelStyle(.iconOnly)
-                        } else {
-                            streakLabel.labelStyle(.iconOnly)
-                                .foregroundStyle(AppColor.team)
-                        }
+                        streakLabel.labelStyle(.iconOnly)
+                            .foregroundStyle(AppColor.team)
                     }
                 }
             }

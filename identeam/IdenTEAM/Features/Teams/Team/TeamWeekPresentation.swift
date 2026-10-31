@@ -2,6 +2,8 @@ import CoreGraphics
 import Foundation
 
 /// Value data for the weekly UI. Identity belongs to the user and Ident, never a SwiftData reload.
+/// `primarySummaryCard` and `summaryCards` (TeamWeekCardSelection.swift) select card identities directly
+/// from these values. TeamWeekSummaryCards renders them through the four card families.
 nonisolated struct TeamWeekPresentation: Equatable {  // equatable: 2 instances can be compared
     struct Member: Identifiable, Equatable {
         let id: String
@@ -40,26 +42,6 @@ nonisolated struct TeamWeekPresentation: Equatable {  // equatable: 2 instances 
 
         var interaction: MarkInteraction {
             identID.map(MarkInteraction.image) ?? .explanation
-        }
-    }
-
-    enum Scenario: String, CaseIterable {
-        case setGoal, nearlyFinished, behind, catchingUp, newWeek, personallyOnTrack, teamOnTrack
-
-        var caption: String {
-            switch self {
-            case .setGoal: "Ziellos"
-            case .nearlyFinished: "Am Edgen"
-            case .behind: "Lowperformer"
-            case .catchingUp: "Besser als du"
-            case .newWeek: "Am Durchstarten"
-            case .personallyOnTrack: "Von dir outperformed"
-            case .teamOnTrack: "Am Performen"
-            }
-        }
-
-        var isBold: Bool {
-            [.nearlyFinished, .behind, .catchingUp].contains(self)
         }
     }
 
@@ -109,36 +91,18 @@ nonisolated struct TeamWeekPresentation: Equatable {  // equatable: 2 instances 
     var progress: Double { target > 0 ? min(1, Double(completed) / Double(target)) : 0 }
     var isPast: Bool { weekStart < AppCalendar.startOfWeek(containing: now) }
     var isFuture: Bool { weekStart > AppCalendar.startOfWeek(containing: now) }
+    var viewerIdentedToday: Bool {
+        !isPast && !isFuture
+            && currentMember?.idents.contains {
+                AppCalendar.calendar.isDate($0.time, inSameDayAs: now)
+            } == true
+    }
     /// Round to the five existing cut designs: light, corner, medium, deep and full dark.
     var darkCutStage: Int { Int((progress * 4).rounded()) }
     var darkHeader: Bool { darkCutStage >= 2 }
-    var darkInfo: Bool { darkCutStage >= (scenario.isBold ? 3 : 2) }
+    var darkInfo: Bool { darkCutStage >= (primarySummaryCard?.isAggressive == true ? 3 : 2) }
     var darkWeek: Bool { darkCutStage >= 3 }
     var darkStreak: Bool { darkCutStage >= 2 }
-
-    /// Approved priority: unset personal goal, untouched week, one remaining, personal catch-up,
-    /// missed scheduled days, personal on-course, then team on-course.
-    var scenario: Scenario {
-        if let currentMember, currentMember.target == 0, !isPast { return .setGoal }
-        if completed == 0 { return .newWeek }
-        if target > 0, remaining == 1 { return .nearlyFinished }
-        if let currentMember, currentMember.remaining > 0 {
-            let others = members.filter { $0.id != currentUserID && $0.target > 0 }
-            if !others.isEmpty, others.allSatisfy({ $0.remaining <= 1 }),
-                others.allSatisfy({ $0.progress > currentMember.progress })
-            {
-                return .catchingUp
-            }
-        }
-        if marks.contains(where: { $0.kind == .missed }), remaining > 0 { return .behind }
-        if let currentMember, currentMember.completed > 0, currentMember.remaining > 0 {
-            let others = members.filter { $0.id != currentUserID && $0.target > 0 }
-            if others.isEmpty || others.contains(where: { $0.progress < currentMember.progress }) {
-                return .personallyOnTrack
-            }
-        }
-        return .teamOnTrack
-    }
 
     var rankedMembers: [Member] {
         members.sorted {
@@ -217,18 +181,6 @@ nonisolated struct TeamWeekGeometry {
         CGRect(
             x: personWidth + CGFloat(day) * dayWidth, y: 0,
             width: dayWidth, height: height)
-    }
-}
-
-/// Interpolate during the drag and deceleration instead of resizing only after a page settles.
-nonisolated enum TeamWeekPagerGeometry {
-    static func height(_ heights: [Int: CGFloat], progress: CGFloat) -> CGFloat {
-        let position = min(4, max(0, progress))
-        let lower = Int(position.rounded(.down))
-        let upper = min(4, lower + 1)
-        let fraction = position - CGFloat(lower)
-        let start = heights[lower] ?? 310
-        return start + ((heights[upper] ?? start) - start) * fraction
     }
 }
 

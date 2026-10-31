@@ -66,27 +66,27 @@ struct LastMonthWidgetView: View {
         let week = entry.currentWeek
         let completed = week.map { $0.targetSum > 0 && $0.identSum >= $0.targetSum } ?? false
 
+        let flashColor =
+            week == nil
+            ? AppColor.muted.opacity(0.15)
+            : completed ? AppColor.success : AppColor.accent
         return VStack(spacing: 8) {
             Spacer()
             TeamStreakLabel(week: week)
                 .labelStyle(CompactStreakLabelStyle())
                 .bold()
-                .foregroundStyle(completed ? AppColor.streak : AppColor.team)
+                .foregroundStyle((week?.teamStreak ?? 0) > 0 ? AppColor.streak : AppColor.team)
         }
         .padding(10)
         .background {
-            FilledFlash(
-                progress: week.map {
-                    $0.targetSum > 0 ? Double($0.identSum) / Double($0.targetSum) : 0
-                } ?? 0,
-                color: week == nil
-                    ? AppColor.muted.opacity(0.15) : (completed ? AppColor.success : .accent),
-                text: week.map { "\($0.identSum) / \($0.targetSum)" } ?? "",
+            ProgressFlash(
+                completed: Int(week?.identSum ?? 0), target: Int(week?.targetSum ?? 0),
+                color: flashColor,
                 animated: false
             )
             .frame(width: 250, height: 250)
             .shadow(
-                color: completed ? AppColor.success.opacity(0.5) : Color.accent.opacity(0.5),
+                color: flashColor.opacity(0.5),
                 radius: 20,
                 x: 0,
                 y: 5

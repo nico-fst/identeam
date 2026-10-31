@@ -43,7 +43,7 @@ struct TeamWeekView: View {
         teamWeeks.first {
             $0.slug == slug
                 && AppCalendar.startOfWeek(containing: $0.weekStart)
-                    == AppCalendar.startOfWeek(contasning: teamVM.weekStart)
+                    == AppCalendar.startOfWeek(containing: teamVM.weekStart)
         }
     }
 
@@ -83,7 +83,7 @@ struct TeamWeekView: View {
                                 week: teamWeek, currentUserID: viewerID, now: referenceDate)
                             header(team: team, week: presentation)
                             TeamWeekSummaryCards(
-                                week: presentation, initialPage: preview?.card ?? 0
+                                week: presentation, stacked: preview != nil
                             ) {
                                 teamVM.showSettingTarget = true
                             }
@@ -109,9 +109,12 @@ struct TeamWeekView: View {
                                     .foregroundStyle(
                                         darkCutStage >= 4
                                             ? AppColor.Palette.cream : AppColor.Palette.ink)
-                                LastWeeksCompletionView(lastWeeks: lastWeeks, animated: true)
-                                    .padding(18)
-                                    .modifier(AppGlass(dark: darkCutStage >= 4))
+                                LastWeeksCompletionView(
+                                    lastWeeks: lastWeeks, referenceDate: referenceDate,
+                                    animated: true
+                                )
+                                .padding(18)
+                                .modifier(AppGlass(dark: darkCutStage >= 4))
                             }
                         }
                         monthContent
@@ -291,8 +294,7 @@ extension TeamWeekView {
         }
         .font(.system(size: 11, weight: .bold))
         .padding(.horizontal, 5)
-        .glassEffect(.regular, in: .capsule)
-        .environment(\.colorScheme, darkCutStage >= 3 ? .dark : .light)
+        .modifier(AppGlass(dark: darkCutStage >= 3))
     }
 
     private var selectedWeekTitle: String {
@@ -312,7 +314,7 @@ extension TeamWeekView {
                 week: TeamWeekPresentation(
                     week: teamWeek, currentUserID: viewerID, now: referenceDate),
                 members: preview == nil ? teamWeek.members : [],
-                initiallyDetailed: preview?.detailed ?? false
+                initiallyDetailed: false
             ) { identID in
                 teamVM.selectedIdent = teamWeek.members.flatMap(\.idents).first {
                     TeamWeekPresentation.identID($0) == identID
@@ -340,7 +342,8 @@ extension TeamWeekView {
                     month: month,
                     personalWeeks: monthWeeks.compactMap {
                         PersonalWeek(teamWeek: $0, userID: viewerID)
-                    }
+                    },
+                    referenceDate: referenceDate
                 )
                 .padding(16)
                 .modifier(AppGlass(dark: darkCutStage >= 4))
@@ -373,3 +376,11 @@ extension TeamWeekView {
         }
     }
 }
+
+#if DEBUG
+    #Preview("Dark Cut · 0") { TeamWeekScreenPreview(stage: 0) }
+    #Preview("Dark Cut · 1") { TeamWeekScreenPreview(stage: 1) }
+    #Preview("Dark Cut · 2") { TeamWeekScreenPreview(stage: 2) }
+    #Preview("Dark Cut · 3") { TeamWeekScreenPreview(stage: 3) }
+    #Preview("Dark Cut · 4") { TeamWeekScreenPreview(stage: 4) }
+#endif
