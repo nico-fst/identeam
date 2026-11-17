@@ -1,139 +1,204 @@
-// Heavily inspired from: https://www.youtube.com/watch?v=UraPKevc8MI
-
 import SwiftUI
 
-struct LaunchScreen<RootView: View, Logo: View>: Scene {
-    @ViewBuilder var logo: () -> Logo
+/// Keeps startup above authentication sheets while the app prepares underneath.
+struct LaunchScreen<RootView: View>: Scene {
     @ViewBuilder var rootContent: RootView
-
-    var config: LaunchScreenConfig = .init()
 
     var body: some Scene {
         WindowGroup {
-            rootContent
-                .modifier(LaunchScreenModifier(logo: logo, config: config))
+            rootContent.modifier(LaunchScreenModifier())
         }
     }
 }
 
-private struct LaunchScreenModifier<Logo: View>: ViewModifier {
-    @ViewBuilder var logo: Logo
-
-    var config: LaunchScreenConfig
-
-    // View Props
+private struct LaunchScreenModifier: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
     @State private var splashWindow: UIWindow?
+    @State private var didPresent = false
+    @State private var rootVisible = false
 
     func body(content: Content) -> some View {
         content
+            .opacity(rootVisible ? 1 : 0)
+            .background(AppColor.accent.ignoresSafeArea())
+            .onAppear { presentIfNeeded() }
+            .onChange(of: scenePhase) { presentIfNeeded() }
+    }
 
-            // adding overlay window so splash screen visible on top of entire app
-            .onAppear {
-                let scenes = UIApplication.shared.connectedScenes
-
-                for scene in scenes {
-                    guard let windowScene = scene as? UIWindowScene,
-                        checkStates(windowScene.activationState),  // same activation states?
-                        !windowScene.windows.contains(where: { $0.tag == 1009 })  // no splash screen already?
-                    else {
-                        print("Already has splash window for this scene")
-                        continue
-                    }
-
-                    let window = UIWindow(windowScene: windowScene)
-                    window.backgroundColor = .clear
-                    window.isHidden = false
-                    window.isUserInteractionEnabled = true
-                    let rootViewController = UIHostingController(
-                        rootView: LaunchScreenView(config: config) {
-                            logo
-                        } isCompleted: {
-                            window.isHidden = true
-                            window.isUserInteractionEnabled = false
-                        })
-                    window.tag = 1009  // if several screens opened
-                    rootViewController.view.backgroundColor = .clear
-                    window.rootViewController = rootViewController
-
-                    self.splashWindow = window
-                    print("Splash Window added")
+    private func presentIfNeeded() {
+        guard !didPresent,
+            let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState != .background })
+        else { return }
+        didPresent = true
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = UIWindow.Level(rawValue: UIWindow.Level.normal.rawValue + 1)
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        let controller = UIHostingController(
+            rootView: LaunchScreenView(
+                captureFlash: {
+                    snapshotFlash(in: window)
+                },
+                onReveal: {
+                    rootVisible = true
                 }
+            ) {
+                window.isHidden = true
+                window.rootViewController = nil
+                splashWindow = nil
+                rootVisible = true
+            })
+        controller.view.backgroundColor = .clear
+        controller.view.isOpaque = false
+        window.rootViewController = controller
+        splashWindow = window
+        window.isHidden = false
+    }
+
+    private func snapshotFlash(in window: UIWindow) -> UIImage? {
+        let side = LaunchScreenGeometry(size: window.bounds.size).flashSide
+        let origin = CGPoint(
+            x: (window.bounds.width - side) / 2, y: (window.bounds.height - side) / 2)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = window.traitCollection.displayScale
+        var didDraw = false
+        let image = UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
+            .image { _ in
+                didDraw = window.drawHierarchy(
+                    in: CGRect(
+                        origin: CGPoint(x: -origin.x, y: -origin.y), size: window.bounds.size),
+                    afterScreenUpdates: false)
             }
-    }
-
-    /// Checking ScenePhase and WindowScene activation states are same
-    private func checkStates(_ state: UIWindowScene.ActivationState) -> Bool {
-        switch scenePhase {
-        case .active: return state == .foregroundActive
-        case .inactive: return state == .foregroundInactive
-        case .background: return state == .background
-        default: return state.hashValue == scenePhase.hashValue
-        }
+        return didDraw ? image : nil
     }
 }
 
-struct LaunchScreenConfig {
-    var initialDelay: Double = 0.35
-    var backgroundColor: Color = .accent
+/// FlashShape retains the icon's square viewBox, including its original padding.
+struct LaunchScreenGeometry {
+    let size: CGSize
 
-    var forceHideLogo: Bool = false
-    var logoScale: CGFloat = 1.1
+    var flashSide: CGFloat { min(size.width * 0.96, size.height * 0.62) }
 
-    var initialOffset: CGFloat = 300
-    var bounceOffset: CGFloat = 150
-    var flyOutOffset: CGFloat = 1200
-
-    var bounceAnimation: Animation = .interpolatingSpring(duration: 0.38, bounce: 0.45)
-    var flyOutAnimation: Animation = .interpolatingSpring(duration: 1, bounce: 0)
+    // The flash contains a central disc of radius > 8% of its viewBox.
+    // Expand that disc beyond the screen diagonal, also on iPad and in landscape.
+    var exitScale: CGFloat { hypot(size.width, size.height) / max(1, flashSide * 0.16) }
 }
 
-private struct LaunchScreenView<Logo: View>: View {
-    var config: LaunchScreenConfig
-    @ViewBuilder var logo: Logo
-    var isCompleted: () -> Void
+struct LaunchScreenView: View {
+    var captureFlash: () -> UIImage? = { nil }
+    var onReveal: () -> Void = {}
+    let onComplete: () -> Void
+    @State private var fill: CGFloat = 0
+    @State private var flashSnapshot: UIImage?
+    @State private var phase = Phase.glass
 
-    // View Props
-    @State private var bounceUp: Bool = false
-    @State private var flyOut: Bool = false
+    private enum Phase { case glass, filling, charged, anticipating, revealing }
 
     var body: some View {
-        Rectangle()
-            .fill(config.backgroundColor.opacity(flyOut ? 0 : 1))
-            .overlay {
-                if !config.forceHideLogo {
-                    HStack {
-                        Spacer(minLength: 0)
-
-                        logo
-                            .scaledToFit()
-                            .scaleEffect(config.logoScale)
-                            .offset(
-                                y: flyOut
-                                    ? config.flyOutOffset
-                                    : (bounceUp ? config.bounceOffset : config.initialOffset))
-
-                        Spacer(minLength: 0)
+        GeometryReader { geometry in
+            let layout = LaunchScreenGeometry(size: geometry.size)
+            let scale = phase == .revealing ? layout.exitScale : phase == .anticipating ? 0.88 : 1
+            let rotation = phase == .revealing ? 90.0 : phase == .anticipating ? -9.0 : 0
+            ZStack {
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(red: 0.98, green: 0.56, blue: 0.32), location: 0),
+                        .init(color: AppColor.accent, location: 0.45),
+                        .init(color: Color(red: 0.73, green: 0.25, blue: 0.09), location: 1),
+                    ], startPoint: .top, endPoint: .bottom
+                )
+                .mask {
+                    ZStack {
+                        Rectangle()
+                        FlashShape()
+                            .frame(width: layout.flashSide, height: layout.flashSide)
+                            .scaleEffect(scale)
+                            .rotationEffect(.degrees(rotation), anchor: .center)
+                            .opacity(phase == .revealing ? 1 : 0)
+                            .blendMode(.destinationOut)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .compositingGroup()
                 }
+
+                Group {
+                    if let flashSnapshot {
+                        Image(uiImage: flashSnapshot).resizable()
+                            .clipShape(FlashShape())
+                    } else {
+                        flash
+                    }
+                }
+                .frame(width: layout.flashSide, height: layout.flashSide)
+                .scaleEffect(scale)
+                .rotationEffect(.degrees(rotation), anchor: .center)
+                .opacity(phase == .revealing ? 0 : 1)
             }
-            .ignoresSafeArea()
-            .task {
-                guard !bounceUp else { return }
-                try? await Task.sleep(for: .seconds(config.initialDelay))
+            .opacity(phase == .revealing ? 0 : 1)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
+            .contentShape(.rect)
+        }
+        .ignoresSafeArea()
+        .environment(\.colorScheme, .light)
+        .task { await animateLaunch() }
+    }
 
-                withAnimation(config.bounceAnimation) {
-                    bounceUp = true
-                }
+    private var flash: some View {
+        ZStack {
+            Color.clear.glassEffect(.clear, in: FlashShape())
+                .clipShape(FlashShape())
+            TimelineView(.animation(minimumInterval: 1 / 30, paused: phase != .filling)) {
+                timeline in
+                FlashShape()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black, location: 0),
+                                .init(color: .black.opacity(0.96), location: 0.28),
+                                .init(color: .black.opacity(0.55), location: 0.65),
+                                .init(color: .black.opacity(0.08), location: 1),
+                            ], startPoint: .top, endPoint: .bottom)
+                    )
+                    .mask {
+                        ProgressFlashWater(
+                            progress: fill,
+                            phase: timeline.date.timeIntervalSinceReferenceDate * 1.6,
+                            layer: .combined)
+                    }
+            }
+            FlashShape().strokeBorder(
+                LinearGradient(
+                    colors: [.white.opacity(0.7), .white.opacity(0.08), .white.opacity(0.4)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+        }
+    }
 
-                try? await Task.sleep(for: .seconds(0.22))
-
-                withAnimation(config.flyOutAnimation, completionCriteria: .logicallyComplete) {
-                    flyOut = true
+    private func animateLaunch() async {
+        guard phase == .glass else { return }
+        do {
+            try await Task.sleep(for: .seconds(0.24))
+            phase = .filling
+            withAnimation(.easeInOut(duration: 0.9)) { fill = 1 }
+            try await Task.sleep(for: .seconds(1.02))
+            // Freeze the fully rendered glass before transforming it. Native glass otherwise
+            // morphs its surface independently of the fill during scale/rotation animations.
+            flashSnapshot = captureFlash()
+            phase = .charged
+            try await Task.sleep(for: .seconds(0.16))
+            withAnimation(.easeIn(duration: 0.16), completionCriteria: .logicallyComplete) {
+                phase = .anticipating
+            } completion: {
+                onReveal()
+                withAnimation(.easeOut(duration: 1.25), completionCriteria: .logicallyComplete) {
+                    phase = .revealing
                 } completion: {
-                    isCompleted()
+                    onComplete()
                 }
             }
+        } catch {
+            onComplete()
+        }
     }
 }

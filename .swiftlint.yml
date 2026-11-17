@@ -3,6 +3,7 @@ excluded:
 
 disabled_rules:
   - opening_brace
+  - closure_parameter_position # allow swift-format to wrap closure parameters
   - trailing_comma
   - todo # allow // TODO
   - function_body_length

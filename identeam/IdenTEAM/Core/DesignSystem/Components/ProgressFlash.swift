@@ -73,7 +73,7 @@ struct ProgressFlash: View {
 
 }
 
-private struct ProgressFlashWater: Shape {
+struct ProgressFlashWater: Shape {
     enum Layer { case front, back, combined }
     var progress: CGFloat
     let phase: CGFloat

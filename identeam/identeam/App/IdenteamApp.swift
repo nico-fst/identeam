@@ -22,10 +22,9 @@ struct IdenteamApp: App {
 
     var body: some Scene {
         LaunchScreen {
-            Image(.logoLong)
-        } rootContent: {
             ContentView()
                 .appColors()
+            // rootContent: {} would allow specifying custom static launch screen
         }
         .modelContainer(sharedModelContainer)
         .environmentObject(authVM)
