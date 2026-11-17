@@ -62,7 +62,8 @@ struct LastWeeksCompletionView: View {
                 .foregroundStyle(AppColor.text.opacity(0.15))
             }
 
-            ForEach(Array(lastWeeksSorted.enumerated()), id: \.element) { i, week in
+            // This history belongs to one team. Dates stay stable when SwiftData persists its models.
+            ForEach(Array(lastWeeksSorted.enumerated()), id: \.element.weekStart) { i, week in
                 VStack {
                     Text(weekLabels[i])
                         .font(.nunito(.footnote))

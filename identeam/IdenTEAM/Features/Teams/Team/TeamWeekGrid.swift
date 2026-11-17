@@ -4,6 +4,7 @@ struct TeamWeekGrid: View {
     let week: TeamWeekPresentation
     let members: [TeamMember]
     let onSelectIdent: (String) -> Void
+    let onSelectMember: (String) -> Void
     @AppStorage private var showIdentImages: Bool
     @State private var detailed = false
     @State private var explanationMarkID: String?
@@ -12,6 +13,7 @@ struct TeamWeekGrid: View {
     init(
         slug: String, week: TeamWeekPresentation, members: [TeamMember],
         initiallyDetailed: Bool = false,
+        onSelectMember: @escaping (String) -> Void = { _ in },
         onSelectIdent: @escaping (String) -> Void
     ) {
         _showIdentImages = AppStorage(
@@ -19,10 +21,9 @@ struct TeamWeekGrid: View {
         self.week = week
         self.members = members
         self.onSelectIdent = onSelectIdent
+        self.onSelectMember = onSelectMember
         _detailed = State(initialValue: initiallyDetailed)
     }
-
-    private let legendMarkerSize: CGFloat = 10
 
     private var foreground: Color { week.darkWeek ? AppColor.Palette.cream : AppColor.Palette.ink }
     private var transitionAnimation: Animation {
@@ -54,7 +55,7 @@ struct TeamWeekGrid: View {
             explanationMarkID = nil
             if detailed { barProgress = 0 } else { fillBar() }
         }
-        .onChange(of: week.personalProgress) { if !detailed { fillBar() } }
+        .onChange(of: week.members) { if !detailed { fillBar() } }
     }
 
     private func scene(_ layout: TeamWeekGeometry) -> some View {
@@ -75,7 +76,7 @@ struct TeamWeekGrid: View {
                         .opacity(0.6)
                 }
                 .frame(width: layout.dayWidth, height: 34)
-                .position(x: layout.dayX(index), y: 17)
+                .position(x: layout.dayX(index), y: layout.verticalPadding + 17)
             }
             ForEach(0..<7, id: \.self) { day in
                 if detailed {
@@ -85,7 +86,9 @@ struct TeamWeekGrid: View {
                         }
                     }
                 } else if week.marks(on: day).isEmpty {
-                    emptyMark.position(x: layout.dayX(day), y: layout.dayHeaderHeight + 30)
+                    emptyMark.position(
+                        x: layout.dayX(day), y: layout.verticalPadding + layout.dayHeaderHeight + 30
+                    )
                 }
             }
             // One retained view per Ident/plan. Only its coordinates and depth change.
@@ -184,60 +187,60 @@ struct TeamWeekGrid: View {
     }
 
     private func person(_ member: TeamWeekPresentation.Member) -> some View {
-        VStack(spacing: 3) {
-            if let source = members.first(where: { $0.user.userID == member.id }) {
-                UserAvatarView(image: RemoteImageReference(item: source.user.avatar)).frame(
-                    width: 31, height: 31)
-            } else {
-                Text(String(member.name.prefix(1))).font(TeamWeekStyle.font(17, heavy: true))
-                    .frame(width: 31, height: 31)
-                    .background(
-                        TeamWeekStyle.color(for: member.id, in: week).opacity(0.22), in: .circle)
+        Button {
+            onSelectMember(member.id)
+        } label: {
+            VStack(spacing: 3) {
+                if let source = members.first(where: { $0.user.userID == member.id }) {
+                    UserAvatarView(image: RemoteImageReference(item: source.user.avatar)).frame(
+                        width: 31, height: 31)
+                } else {
+                    Text(String(member.name.prefix(1))).font(TeamWeekStyle.font(17, heavy: true))
+                        .frame(width: 31, height: 31)
+                        .background(
+                            TeamWeekStyle.color(for: member.id, in: week).opacity(0.22), in: .circle
+                        )
+                }
+                Text(member.id == week.currentUserID ? "Du" : member.name)
+                    .font(TeamWeekStyle.font(10, heavy: true)).lineLimit(1).minimumScaleFactor(0.65)
             }
-            Text(member.id == week.currentUserID ? "Du" : member.name)
-                .font(TeamWeekStyle.font(10, heavy: true)).lineLimit(1).minimumScaleFactor(0.65)
         }
+        .buttonStyle(.plain)
     }
 
     private var footer: some View {
-        HStack(spacing: 10) {
-            progress.frame(width: 64)
-            names
+        HStack(alignment: .top, spacing: 12) {
+            ForEach(week.legendMembers) { member in
+                VStack(alignment: .leading, spacing: 6) {
+                    GeometryReader { geometry in
+                        Capsule().fill(foreground.opacity(0.10))
+                        Capsule().fill(TeamWeekStyle.color(for: member.id, in: week))
+                            .frame(
+                                width: geometry.size.width * min(1, max(0, member.progress))
+                                    * barProgress)
+                    }
+                    .frame(height: 6)
+                    Button {
+                        onSelectMember(member.id)
+                    } label: {
+                        Text(
+                            member.id == week.currentUserID
+                                ? "Du (\(member.completed)/\(member.target))" : member.name
+                        )
+                        .font(TeamWeekStyle.font(11, heavy: true))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .foregroundStyle(foreground)
     }
 
-    private var names: some View {
-        HStack(spacing: 9) {
-            ForEach(week.legendMembers) { member in
-                HStack(spacing: 4) {
-                    if member.id != week.currentUserID {
-                        Circle().fill(TeamWeekStyle.color(for: member.id, in: week)).frame(
-                            width: legendMarkerSize, height: legendMarkerSize)
-                    }
-                    Text(
-                        member.id == week.currentUserID
-                            ? "Du (\(member.completed)/\(member.target))" : member.name
-                    )
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                }.font(TeamWeekStyle.font(11, heavy: true))
-            }
-        }
-    }
-
-    private var progress: some View {
-        GeometryReader { geometry in
-            Capsule().fill(foreground.opacity(0.10))
-            Capsule().fill(TeamWeekStyle.color(for: week.currentUserID, in: week))
-                .frame(width: geometry.size.width * barProgress)
-        }
-        .frame(height: legendMarkerSize)
-    }
-
     private func fillBar() {
-        withAnimation(.easeOut(duration: 0.8).delay(0.15)) {
-            barProgress = week.personalProgress
-        }
+        barProgress = 0
+        withAnimation(.easeOut(duration: 0.8).delay(0.15)) { barProgress = 1 }
     }
 
 }

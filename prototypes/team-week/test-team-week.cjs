@@ -52,6 +52,7 @@ function mount({
     },
   };
   const animations = [];
+  const resizeObservers = [];
   const events = {};
   const documentEvents = {};
   const streakInfo = { hidden: true };
@@ -171,7 +172,7 @@ function mount({
     },
   });
   const heroTrack = {
-    style: {},
+    style: {setProperty(key,value) { this[key]=value; }},
     clientWidth: 400,
     scrollLeft: 0,
     scrollTo(options) {
@@ -378,6 +379,7 @@ function mount({
     : script;
   vm.runInNewContext(fixtureScript, {
     ResizeObserver: class {
+      constructor(callback) { this.callback=callback; resizeObservers.push(this); }
       observe(target) {
         assert.ok(target, "ResizeObserver requires an existing element");
       }
@@ -487,6 +489,10 @@ function mount({
     pageStyle,
     heroStyle,
     heroTrack,
+    resizeCards(width) {
+      heroTrack.clientWidth=width;
+      resizeObservers.forEach(observer=>observer.callback());
+    },
     phone,
     setGoal() {
       events.click({
@@ -2383,15 +2389,15 @@ test("personal on-course card uses summary flashes and subdues only the other me
   assert.match(html, /\.it-hero-summary-muted\{opacity:\.55/);
 });
 
-test("all five carousel pages keep the same fixed height", () => {
+test("all carousel pages keep the same width-derived 6:5 height", () => {
   const app = mount();
   app.design.value = "trophy";
   app.design.change();
-  assert.equal(app.heroTrack.style.height, "320px");
+  assert.equal(app.heroTrack.style.height, `${400*5/6}px`);
   app.heroSlide(1);
-  assert.equal(app.heroTrack.style.height, "320px");
+  assert.equal(app.heroTrack.style.height, `${400*5/6}px`);
   app.heroSlide(0);
-  assert.equal(app.heroTrack.style.height, "320px");
+  assert.equal(app.heroTrack.style.height, `${400*5/6}px`);
   assert.match(html, /\.it-hero-track\{display:flex;align-items:flex-start/);
 });
 
@@ -2842,7 +2848,7 @@ test("card families and ordering match Swift for every live situation and retros
     for (let index = 0; index < 5; index++) {
       app.heroSlide(index);
       assert.equal(app.heroTrack.scrollLeft, index * 400);
-      assert.equal(app.heroTrack.style.height, "320px");
+      assert.equal(app.heroTrack.style.height, `${400*5/6}px`);
     }
   }
   const past = mount({ initialWeek: -1, scenario: "near" });
@@ -2942,4 +2948,24 @@ test("mode switches preserve scroll position and anchor only the cut edge", () =
   app.switchMode("detailed");
   assert.equal(app.phone.scrollTop,180);
   assert.equal(app.pageStyle["--it-scroll-y"],"180px");
+});
+
+
+test("card width changes retain a 6:5 frame, content scale and selected page", () => {
+  const app=mount();
+  app.heroSlide(2);
+  for(const width of [284,330,366,600]) {
+    app.resizeCards(width);
+    assert.equal(app.heroTrack.style.height,`${width*5/6}px`);
+    assert.equal(app.heroTrack.style['--it-card-scale'],width/360);
+    assert.equal(app.heroTrack.scrollLeft,2*width);
+  }
+});
+
+
+test("message cards spread four content groups vertically inside the shared padded canvas", () => {
+  assert.match(html,/\.it-phone \.it-hero \.it-card-content\{[^}]*justify-content:space-between/);
+  const app=mount({scenario:"behind"});
+  assert.ok(app.scene.innerHTML.includes('class="it-card-details"><div class="it-hero-progress"'));
+  assert.match(html,/\.it-card-content\{[^}]*padding:18px/);
 });

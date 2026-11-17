@@ -7,9 +7,9 @@ import SwiftUI
 struct TeamWeekSummaryCards: View {
     let week: TeamWeekPresentation
     var stacked = false
+    var onSelectMember: (String) -> Void = { _ in }
     let setGoal: () -> Void
     @State private var page: Int? = 0
-    @ScaledMetric(relativeTo: .body) private var height = TeamWeekCardLayout.height
 
     var body: some View {
         let cards = Array(week.summaryCards.enumerated())
@@ -34,7 +34,7 @@ struct TeamWeekSummaryCards: View {
                     .scrollTargetBehavior(.paging)
                     .scrollPosition(id: $page)
                 }
-                .frame(height: height)
+                .aspectRatio(TeamWeekCardLayout.aspectRatio, contentMode: .fit)
                 pageIndicator
             }
             .onChange(of: week.summaryCards) {
@@ -48,9 +48,11 @@ struct TeamWeekSummaryCards: View {
         case .action(let kind):
             TeamWeekActionCard(kind: kind, week: week, dark: week.darkInfo, setGoal: setGoal)
         case .aggressive(let kind):
-            TeamWeekAggressiveCard(kind: kind, week: week, dark: week.darkInfo)
+            TeamWeekAggressiveCard(
+                kind: kind, week: week, dark: week.darkInfo, onSelectMember: onSelectMember)
         case .reaction(let kind):
-            TeamWeekReactionCard(kind: kind, week: week, dark: week.darkInfo)
+            TeamWeekReactionCard(
+                kind: kind, week: week, dark: week.darkInfo, onSelectMember: onSelectMember)
         case .streak(let kind):
             TeamWeekStreakCard(kind: kind, week: week, dark: week.darkStreak)
         }

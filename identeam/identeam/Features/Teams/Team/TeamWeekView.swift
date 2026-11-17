@@ -4,11 +4,12 @@ import SwiftUI
 struct TeamWeekView: View {
     let slug: String
     @State private var hasLoadedFreshTeamWeek = false
-    @State private var isLoadingMonth = false
+    @State private var isLoadingWeek = false
     @State private var showTeamSettings = false
     @State private var showTeamInfo = false
     @State private var showAuraInfo = false
     @State private var showDatePicker = false
+    @State private var selectedProfileUser: User?
     @AppStorage("userID") private var userID: String = ""
     @EnvironmentObject var vm: AppVM
     @EnvironmentObject var teamsVM: TeamsVM
@@ -68,11 +69,6 @@ struct TeamWeekView: View {
         AppCalendar.startOfMonth(containing: teamVM.referenceDate)
     }
 
-    private var monthWeeks: [TeamWeek] {
-        let weekStarts = AppCalendar.weekStartsInMonth(containing: month)
-        return teamWeeks.filter { $0.slug == slug && weekStarts.contains($0.weekStart) }
-    }
-
     var body: some View {
         Group {  // .refreshable doesn't work on plain View
             if let team {
@@ -83,7 +79,8 @@ struct TeamWeekView: View {
                                 week: teamWeek, currentUserID: viewerID, now: referenceDate)
                             header(team: team, week: presentation)
                             TeamWeekSummaryCards(
-                                week: presentation, stacked: preview != nil
+                                week: presentation, stacked: preview != nil,
+                                onSelectMember: showProfile
                             ) {
                                 teamVM.showSettingTarget = true
                             }
@@ -93,7 +90,7 @@ struct TeamWeekView: View {
                         }
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text(selectedWeekTitle)
+                                Text(selectedWeek.title)
                                     .font(TeamWeekStyle.font(19, heavy: true))
                                 Spacer(minLength: 4)
                                 weekNavigation
@@ -103,7 +100,7 @@ struct TeamWeekView: View {
                                     ? AppColor.Palette.cream : AppColor.Palette.ink)
                             overviewContent
                         }
-                        if !lastWeeks.isEmpty {
+                        if !selectedWeek.isFuture, !lastWeeks.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("Letzte Wochen").font(TeamWeekStyle.font(19, heavy: true))
                                     .foregroundStyle(
@@ -113,11 +110,11 @@ struct TeamWeekView: View {
                                     lastWeeks: lastWeeks, referenceDate: referenceDate,
                                     animated: true
                                 )
+                                .frame(maxWidth: .infinity)
                                 .padding(18)
                                 .modifier(AppGlass(dark: darkCutStage >= 4))
                             }
                         }
-                        monthContent
                         TeamWeekActionsSection(
                             slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek,
                             dark: darkCutStage >= 4)
@@ -133,6 +130,11 @@ struct TeamWeekView: View {
                 .toolbarColorScheme(
                     darkCutStage >= 2 ? .dark : .light, for: .navigationBar
                 )
+                .toolbarColorScheme(darkCutStage >= 3 ? .dark : .light, for: .tabBar)
+                .toolbarBackground(
+                    darkCutStage >= 3 ? AppColor.Palette.ink : AppColor.Palette.cream, for: .tabBar
+                )
+                .toolbarBackground(.visible, for: .tabBar)
                 .sheet(isPresented: $teamVM.showSettingTarget) {
                     NavigationStack {
                         TargetPicker(
@@ -194,36 +196,45 @@ struct TeamWeekView: View {
         }
         .task(
             id:
-                "\(slug)|\(AppCalendar.dateString(teamVM.weekStart))|\(AppCalendar.dateString(month))"
+                "\(slug)|\(AppCalendar.dateString(teamVM.weekStart))"
         ) {
             hasLoadedFreshTeamWeek = preview != nil || isXcodePreview
             if !hasLoadedFreshTeamWeek, team != nil { await reloadWeek() }
         }
         .environmentObject(teamVM)
+        .sheet(item: $selectedProfileUser) { user in
+            NavigationStack {
+                TeamMemberProfileView(
+                    user: user, slug: slug, month: month, viewerID: viewerID,
+                    referenceDate: referenceDate, showsMonth: !selectedWeek.isFuture)
+            }
+        }
     }
 
     @MainActor
     private func reloadWeek() async {
         guard preview == nil, !isXcodePreview else { return }
         let selectedWeek = teamVM.weekStart
-        let selectedMonth = month
-        isLoadingMonth = true
+        isLoadingWeek = true
         defer {
-            if teamVM.weekStart == selectedWeek && month == selectedMonth {
-                isLoadingMonth = false
+            if teamVM.weekStart == selectedWeek {
+                isLoadingWeek = false
             }
         }
 
         guard
             await teamsVM.reloadTeamWeek(slug: slug, weekStart: selectedWeek, vm: vm, ctx: ctx)
                 != nil,
-            !Task.isCancelled, teamVM.weekStart == selectedWeek, month == selectedMonth
+            !Task.isCancelled, teamVM.weekStart == selectedWeek
         else { return }
         hasLoadedFreshTeamWeek = true
 
-        for weekStart in AppCalendar.weekStartsInMonth(containing: selectedMonth)
-        where weekStart != selectedWeek {
-            guard !Task.isCancelled, teamVM.weekStart == selectedWeek, month == selectedMonth else {
+        guard selectedWeek <= AppCalendar.startOfWeek(containing: referenceDate) else { return }
+        // History needs only the three preceding weeks; the profile owns month loading.
+        for offset in 1...3 {
+            let weekStart = AppCalendar.calendar.date(
+                byAdding: .weekOfYear, value: -offset, to: selectedWeek)!
+            guard !Task.isCancelled, teamVM.weekStart == selectedWeek else {
                 return
             }
             guard
@@ -297,11 +308,11 @@ extension TeamWeekView {
         .modifier(AppGlass(dark: darkCutStage >= 3))
     }
 
-    private var selectedWeekTitle: String {
+    private var selectedWeek: TeamWeekPresentation {
         TeamWeekPresentation(
             weekStart: teamVM.weekStart, members: [], currentUserID: viewerID,
             streak: 0, now: referenceDate
-        ).title
+        )
     }
 
     private var weekRange: String { TeamWeekPresentation.dateRange(for: teamVM.weekStart) }
@@ -314,14 +325,14 @@ extension TeamWeekView {
                 week: TeamWeekPresentation(
                     week: teamWeek, currentUserID: viewerID, now: referenceDate),
                 members: preview == nil ? teamWeek.members : [],
-                initiallyDetailed: false
+                initiallyDetailed: false, onSelectMember: showProfile
             ) { identID in
                 teamVM.selectedIdent = teamWeek.members.flatMap(\.idents).first {
                     TeamWeekPresentation.identID($0) == identID
                 }
             }
             .id(teamVM.weekStart)
-        } else if isLoadingMonth {
+        } else if isLoadingWeek {
             ProgressView().frame(maxWidth: .infinity).padding(40)
         } else {
             ContentUnavailableView {
@@ -332,28 +343,8 @@ extension TeamWeekView {
         }
     }
 
-    private var monthContent: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Dein Monat").font(TeamWeekStyle.font(19, heavy: true))
-                .foregroundStyle(
-                    darkCutStage >= 4 ? AppColor.Palette.cream : AppColor.Palette.ink)
-            if monthWeeks.count == AppCalendar.weekStartsInMonth(containing: month).count {
-                LastMonthView(
-                    month: month,
-                    personalWeeks: monthWeeks.compactMap {
-                        PersonalWeek(teamWeek: $0, userID: viewerID)
-                    },
-                    referenceDate: referenceDate
-                )
-                .padding(16)
-                .modifier(AppGlass(dark: darkCutStage >= 4))
-            } else if isLoadingMonth {
-                ProgressView().frame(maxWidth: .infinity).padding()
-            } else {
-                Text("Monat nicht geladen. Zum Aktualisieren nach unten ziehen.")
-                    .foregroundStyle(AppColor.muted)
-            }
-        }
+    private func showProfile(_ memberID: String) {
+        selectedProfileUser = teamWeek?.members.first { $0.user.userID == memberID }?.user
     }
 
     @ToolbarContentBuilder

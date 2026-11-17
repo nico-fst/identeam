@@ -39,7 +39,7 @@ extension TeamWeekPresentation {
     /// RETURN [primary if present, streak.flame, streak.level, streak.chain, streak.milestone]
     ///
     /// Selection returns the card identity directly; rendering never re-evaluates these rules.
-    var primarySummaryCard: TeamWeekSummaryCard? {
+    nonisolated var primarySummaryCard: TeamWeekSummaryCard? {
         if isPast { return .reaction(.recap) }
         if viewerIdentedToday, let currentMember {
             let others = members.filter { $0.id != currentUserID && $0.target > 0 }
@@ -68,7 +68,7 @@ extension TeamWeekPresentation {
     }
 
     /// The optional primary card precedes the four streak variants in both pager and stacked previews.
-    var summaryCards: [TeamWeekSummaryCard] {
+    nonisolated var summaryCards: [TeamWeekSummaryCard] {
         [primarySummaryCard].compactMap { $0 }
             + TeamWeekSummaryCard.Streak.allCases.map(TeamWeekSummaryCard.streak)
     }

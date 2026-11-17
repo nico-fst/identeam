@@ -6,6 +6,7 @@ struct TeamWeekReactionCard: View {
     let kind: TeamWeekSummaryCard.Reaction
     let week: TeamWeekPresentation
     let dark: Bool
+    var onSelectMember: (String) -> Void = { _ in }
 
     private var copy: TeamWeekCardCopy {
         switch kind {
@@ -40,7 +41,8 @@ struct TeamWeekReactionCard: View {
         ) {
             if [.newWeek, .personallyOnTrack].contains(kind) {
                 TeamWeekMemberProgress(
-                    week: week, dark: dark, highlightsViewer: kind == .personallyOnTrack)
+                    week: week, dark: dark, highlightsViewer: kind == .personallyOnTrack,
+                    onSelectMember: onSelectMember)
             } else {
                 TeamWeekTeamProgress(week: week, dark: dark)
             }

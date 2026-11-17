@@ -165,16 +165,21 @@ nonisolated struct TeamWeekGeometry {
     var dayWidth: CGFloat { max(1, (width - personWidth - summaryWidth) / 7) }
     var dayHeaderHeight: CGFloat { 34 }
     var rowHeight: CGFloat { 84 }
-    var height: CGFloat { detailed ? dayHeaderHeight + CGFloat(memberCount) * rowHeight : 114 }
+    var verticalPadding: CGFloat { 8 }
+    var height: CGFloat {
+        (detailed ? dayHeaderHeight + CGFloat(memberCount) * rowHeight : 114) + 2 * verticalPadding
+    }
 
     func dayX(_ day: Int) -> CGFloat { personWidth + (CGFloat(day) + 0.5) * dayWidth }
-    func rowY(_ member: Int) -> CGFloat { dayHeaderHeight + (CGFloat(member) + 0.5) * rowHeight }
+    func rowY(_ member: Int) -> CGFloat {
+        verticalPadding + dayHeaderHeight + (CGFloat(member) + 0.5) * rowHeight
+    }
     func markPosition(day: Int, member: Int, stack: Int, count: Int) -> CGPoint {
         let dx = (CGFloat(stack) - CGFloat(count - 1) / 2) * 8
         let dy = CGFloat(stack) * 6
         return CGPoint(
             x: dayX(day) + dx,
-            y: detailed ? rowY(member) + dy : dayHeaderHeight + 30 + dy)
+            y: detailed ? rowY(member) + dy : verticalPadding + dayHeaderHeight + 30 + dy)
     }
 
     func todayFrame(_ day: Int) -> CGRect {

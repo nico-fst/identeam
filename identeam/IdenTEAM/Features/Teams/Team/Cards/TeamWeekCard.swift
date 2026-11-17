@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Shared dimensions for TeamWeekCard and the paging viewport in TeamWeekSummaryCards.
 enum TeamWeekCardLayout {
-    static let height: CGFloat = 400
+    static let aspectRatio: CGFloat = 6 / 5
+    static let referenceSize = CGSize(width: 360, height: 300)
 }
 
 /// Explicit decoration shared by message cards; streak cards use no watermark.
@@ -22,17 +23,20 @@ struct TeamWeekCard<Content: View>: View {
     var watermark: TeamWeekCardWatermark = .none
     var information = false
     @ViewBuilder let content: Content
-    @ScaledMetric(relativeTo: .body) private var height = TeamWeekCardLayout.height
 
     var body: some View {
-        content
-            .frame(maxWidth: .infinity, alignment: .center)
-            .multilineTextAlignment(.center)
-            .padding(24)
-            .frame(maxWidth: .infinity)
-            .frame(height: height, alignment: .top)
-            .background { watermarkView }
-            .modifier(AppGlass(dark: dark, tint: tint, information: information))
+        GeometryReader { geometry in
+            // Scale one banner content layout uniformly, including typography, on smaller phones.
+            let reference = TeamWeekCardLayout.referenceSize
+            content
+                .frame(width: reference.width - 36, height: reference.height - 36, alignment: .top)
+                .multilineTextAlignment(.center)
+                .padding(18)
+                .scaleEffect(geometry.size.width / reference.width, anchor: .topLeading)
+        }
+        .aspectRatio(TeamWeekCardLayout.aspectRatio, contentMode: .fit)
+        .background { watermarkView }
+        .modifier(AppGlass(dark: dark, tint: tint, information: information))
     }
 
     private var watermarkView: some View {
@@ -81,20 +85,23 @@ struct TeamWeekMessageCard<Details: View>: View {
     let dark: Bool
     var tint: Color?
     var watermark: TeamWeekCardWatermark = .flash()
-    var titleSize: CGFloat = 28
+    var titleSize: CGFloat = 32
     @ViewBuilder let details: Details
 
     var body: some View {
         TeamWeekCard(dark: dark, tint: tint, watermark: watermark, information: true) {
-            VStack(alignment: .center, spacing: 16) {
-                Text(copy.kicker.uppercased()).modifier(TeamWeekHeavyText(12)).tracking(1.4)
+            VStack(alignment: .center, spacing: 0) {
+                Text(copy.kicker.uppercased()).modifier(TeamWeekHeavyText(12)).tracking(1)
+                Spacer(minLength: 6)
                 Text(copy.title).modifier(TeamWeekHeavyText(titleSize))
-                    .tracking(-1).lineSpacing(-5).fixedSize(horizontal: false, vertical: true)
-                Text(copy.body).font(.custom("Nunito-ExtraBold", size: 15, relativeTo: .body))
-                    .lineSpacing(3).fixedSize(horizontal: false, vertical: true).padding(
-                        .bottom, 12)
+                    .tracking(-0.6).lineSpacing(-3).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 6)
+                Text(copy.body).font(.custom("Nunito-ExtraBold", size: 16, relativeTo: .body))
+                    .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 6)
                 details
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
@@ -109,14 +116,14 @@ struct TeamWeekTeamProgress: View {
     var body: some View {
         VStack(spacing: 9) {
             HStack(alignment: .lastTextBaseline) {
-                Text("Euer Wochenziel").font(TeamWeekStyle.font(13, heavy: true))
+                Text("Euer Wochenziel").font(TeamWeekStyle.font(16, heavy: true))
                 Spacer()
                 if showsRemaining {
                     Text("Noch \(week.remaining)").modifier(TeamWeekHeavyText(30))
                 } else {
                     HStack(alignment: .lastTextBaseline, spacing: 0) {
                         Text("\(week.completed)").modifier(TeamWeekHeavyText(30))
-                        Text("/\(week.target)").font(TeamWeekStyle.font(18, heavy: true))
+                        Text("/\(week.target)").font(TeamWeekStyle.font(16, heavy: true))
                     }
                 }
             }
@@ -135,6 +142,7 @@ struct TeamWeekMemberProgress: View {
     let week: TeamWeekPresentation
     let dark: Bool
     var highlightsViewer = false
+    var onSelectMember: (String) -> Void = { _ in }
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 86), spacing: 0)], spacing: 8) {
@@ -144,9 +152,14 @@ struct TeamWeekMemberProgress: View {
                         completed: member.completed, target: member.target,
                         color: TeamWeekStyle.color(for: member.id, in: week, dark: dark), dark: dark
                     )
-                    .frame(width: 86, height: 86)
-                    Text(member.id == week.currentUserID ? "Du" : member.name)
-                        .font(TeamWeekStyle.font(12, heavy: true)).lineLimit(1)
+                    .frame(width: 64, height: 64)
+                    Button {
+                        onSelectMember(member.id)
+                    } label: {
+                        Text(member.id == week.currentUserID ? "Du" : member.name)
+                            .font(TeamWeekStyle.font(13, heavy: true)).lineLimit(1)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .opacity(highlightsViewer && member.id != week.currentUserID ? 0.55 : 1)
                 .frame(maxWidth: .infinity)
@@ -160,14 +173,20 @@ struct TeamWeekMemberProgress: View {
 struct TeamWeekMemberRanking: View {
     let week: TeamWeekPresentation
     let dark: Bool
+    var onSelectMember: (String) -> Void = { _ in }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 4) {
             ForEach(Array(week.rankedMembers.enumerated()), id: \.element.id) { index, member in
                 let own = member.id == week.currentUserID
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Text("\(index + 1)").frame(width: 17)
-                    Text(own ? "Du" : member.name).lineLimit(1)
+                    Button {
+                        onSelectMember(member.id)
+                    } label: {
+                        Text(own ? "Du" : member.name).lineLimit(1)
+                    }
+                    .buttonStyle(.plain)
                     ProgressView(value: min(1, member.progress))
                         .progressViewStyle(
                             TeamWeekProgressBarStyle(
@@ -175,12 +194,12 @@ struct TeamWeekMemberRanking: View {
                                 height: own ? 11 : 8))
                     HStack(alignment: .lastTextBaseline, spacing: 0) {
                         Text("\(member.completed)").font(
-                            TeamWeekStyle.font(own ? 30 : 19, heavy: true))
+                            TeamWeekStyle.font(own ? 24 : 18, heavy: true))
                         Text("/\(member.target)").font(
-                            TeamWeekStyle.font(own ? 18 : 12, heavy: true))
+                            TeamWeekStyle.font(own ? 16 : 13, heavy: true))
                     }
                 }
-                .font(TeamWeekStyle.font(own ? 21 : 14, heavy: true))
+                .font(TeamWeekStyle.font(own ? 18 : 14, heavy: true))
                 .opacity(own ? 1 : 0.65)
             }
         }

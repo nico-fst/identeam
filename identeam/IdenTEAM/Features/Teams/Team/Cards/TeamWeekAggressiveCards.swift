@@ -6,6 +6,7 @@ struct TeamWeekAggressiveCard: View {
     let kind: TeamWeekSummaryCard.Aggressive
     let week: TeamWeekPresentation
     let dark: Bool
+    var onSelectMember: (String) -> Void = { _ in }
 
     private var tint: Color {
         switch kind {
@@ -42,7 +43,7 @@ struct TeamWeekAggressiveCard: View {
             titleSize: 34
         ) {
             if kind == .catchingUp {
-                TeamWeekMemberRanking(week: week, dark: dark)
+                TeamWeekMemberRanking(week: week, dark: dark, onSelectMember: onSelectMember)
             } else {
                 TeamWeekTeamProgress(
                     week: week, dark: dark, showsRemaining: kind == .nearlyFinished)

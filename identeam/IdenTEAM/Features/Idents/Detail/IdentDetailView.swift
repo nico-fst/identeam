@@ -5,6 +5,8 @@ struct IdentDetailView: View {
     let ident: Ident
     let member: TeamMember
     let slug: String
+    var referenceDate = Date()
+    @State private var selectedProfileUser: User?
 
     @AppStorage("userID") private var userID = ""
     @EnvironmentObject private var vm: AppVM
@@ -34,7 +36,7 @@ struct IdentDetailView: View {
                             .font(.nunito(.caption))
                             .opacity(0.5)
 
-                        Text("\(Text(member.user.nickname).bold())  \(ident.userText)")
+                        message(ident.userText, author: member.user)
                     }
                 }
 
@@ -45,12 +47,26 @@ struct IdentDetailView: View {
                             $0.time < $1.time
                         })
                     ) { comment in
-                        VStack(alignment: .leading) {
-                            Text(AppCalendar.shortDateAndTime(for: comment.time))
-                                .font(.nunito(.caption))
-                                .opacity(0.5)
+                        HStack(alignment: .top, spacing: 12) {
+                            Button {
+                                selectedProfileUser = comment.user
+                            } label: {
+                                UserAvatarView(
+                                    image: RemoteImageReference(item: comment.user.avatar)
+                                )
+                                .frame(width: 40, height: 40)
+                                .contentShape(.rect)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Profil von \(comment.user.nickname)")
 
-                            Text("\(Text(comment.user.nickname).bold())  \(comment.text)")
+                            VStack(alignment: .leading) {
+                                Text(AppCalendar.shortDateAndTime(for: comment.time))
+                                    .font(.nunito(.caption))
+                                    .opacity(0.5)
+
+                                message(comment.text, author: comment.user)
+                            }
                         }
                         .contextMenu {
                             // copy
@@ -105,5 +121,27 @@ struct IdentDetailView: View {
             .listRowBackground(AppColor.surface)
         }
         .appListColors()
+        .sheet(item: $selectedProfileUser) { user in
+            NavigationStack {
+                TeamMemberProfileView(
+                    user: user, slug: slug,
+                    month: AppCalendar.startOfMonth(containing: ident.time), viewerID: userID,
+                    referenceDate: referenceDate,
+                    showsMonth: AppCalendar.startOfWeek(containing: ident.time)
+                        <= AppCalendar.startOfWeek(containing: referenceDate))
+            }
+        }
+    }
+
+    private func message(_ text: String, author: User) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Button {
+                selectedProfileUser = author
+            } label: {
+                Text(author.nickname).bold()
+            }
+            .buttonStyle(.plain)
+            Text(text).frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }

@@ -323,7 +323,7 @@
 #ignite-team-demo .it-info-panel[hidden]{display:none}
 #ignite-team-demo [data-close-ident-info]{float:right;width:28px;height:28px;margin:-8px -8px 4px 4px;border:0;border-radius:50%;background:#24201d0a;color:inherit;font-size:20px;cursor:pointer}
 /* Shared app theme, card sizing and status rules. */
-#ignite-team-demo{--it-orange:#ff6b2c;--it-yellow:#ffd166;--it-violet:light-dark(#513aa6,#cbb8ff);--it-success:light-dark(#286648,#a9d8af);--it-cut-color:#24201d;--it-card-height:320px;--it-base-0:rgb(65% 26% 11%);--it-base-1:rgb(42% 30% 77%);--it-base-2:rgb(13% 50% 45%)}
+#ignite-team-demo{--it-orange:#ff6b2c;--it-yellow:#ffd166;--it-violet:light-dark(#513aa6,#cbb8ff);--it-success:light-dark(#286648,#a9d8af);--it-cut-color:#24201d;--it-card-aspect-ratio:6/5;--it-base-0:rgb(65% 26% 11%);--it-base-1:rgb(42% 30% 77%);--it-base-2:rgb(13% 50% 45%)}
 #ignite-team-demo[data-cut-color="gold"]{--it-cut-color:var(--it-yellow)}
 #ignite-team-demo[data-cut-color="orange"]{--it-cut-color:var(--it-orange)}
 #ignite-team-demo[data-cream="orange"]{--it-preview-cream:#ffead5;--it-bg:light-dark(#ffead5,#24201d)}
@@ -334,8 +334,9 @@
 #ignite-team-demo .it-frozen{background:var(--it-violet)}
 #ignite-team-demo .it-phone[data-streak-count="0"]::after{display:block;filter:blur(56px);z-index:-1;background:radial-gradient(circle,color-mix(in srgb,var(--it-violet) 40%,transparent),transparent 65%)}
 #ignite-team-demo .it-reward-zero{background:transparent}
-#ignite-team-demo .it-hero-track,#ignite-team-demo .it-hero-slide{height:var(--it-card-height)}
-#ignite-team-demo .it-hero-slide>.it-hero,#ignite-team-demo .it-hero-slide>.it-reward{height:var(--it-card-height);min-height:0;overflow:clip;padding:24px;border-radius:26px}
+#ignite-team-demo .it-hero-track{aspect-ratio:var(--it-card-aspect-ratio)}
+#ignite-team-demo .it-hero-slide{height:100%}
+#ignite-team-demo .it-hero-slide>.it-hero,#ignite-team-demo .it-hero-slide>.it-reward{height:100%;min-height:0;overflow:clip;padding:0;border-radius:26px}
 #ignite-team-demo .it-hero.it-near{background:linear-gradient(135deg,#ff6b2c6b,#ff6b2c2e)}
 #ignite-team-demo .it-hero-summaries{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:8px}
 #ignite-team-demo .it-hero-member-summary{width:86px;justify-self:center}
@@ -397,16 +398,45 @@
 
 #ignite-team-demo{--it-preview-cream:#fff3e5}
 #ignite-team-demo .it-phone .it-hero{display:block;text-align:center}
-#ignite-team-demo .it-phone .it-hero h2{font-size:28px;text-align:center;line-height:1.05;margin:12px auto}
+#ignite-team-demo .it-phone .it-hero h2{font-size:32px;text-align:center;line-height:1.05;margin:10px auto}
 #ignite-team-demo .it-phone .it-hero[data-card-type="aggressive"] h2{font-size:34px;line-height:.98}
 #ignite-team-demo .it-phone .it-hero .it-shout{font-size:12px;text-align:center}
-#ignite-team-demo .it-phone .it-hero p{font-size:15px;line-height:1.25;text-align:center;margin:12px auto 16px}
+#ignite-team-demo .it-phone .it-hero p{font-size:16px;line-height:1.25;text-align:center;margin:10px auto}
 #ignite-team-demo .it-phone .it-hero .it-hero-progress strong{font-size:30px;line-height:1;font-weight:1000;white-space:nowrap}
-#ignite-team-demo .it-phone .it-hero .it-hero-target{font-size:18px}
+#ignite-team-demo .it-phone .it-hero .it-hero-target{font-size:16px}
 #ignite-team-demo .it-phone .it-reward{text-align:center}
 #ignite-team-demo .it-phone .it-reward-top{justify-content:center;gap:16px}
-#ignite-team-demo .it-phone .it-reward>p{font-size:14px;line-height:1.3}
-#ignite-team-demo .it-phone .it-reward .it-eyebrow{font-size:11px}
+#ignite-team-demo .it-phone .it-reward .it-card-content>p{font-size:16px;line-height:1.3;margin:0}
+#ignite-team-demo .it-phone .it-reward .it-eyebrow{font-size:14px}
+/* A shared 360 x 300 content canvas scales with each card's actual 6:5 frame. */
+#ignite-team-demo .it-card-content{width:360px;height:300px;box-sizing:border-box;padding:18px;transform:scale(var(--it-card-scale,1));transform-origin:top left}
+#ignite-team-demo .it-phone .it-hero .it-card-content{display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:6px}
+#ignite-team-demo .it-phone .it-hero .it-card-content>h2,#ignite-team-demo .it-phone .it-hero .it-card-content>p{margin:0;max-width:none}
+#ignite-team-demo .it-phone .it-hero .it-card-content .it-hero-progress,#ignite-team-demo .it-phone .it-hero .it-card-content .it-hero-members,#ignite-team-demo .it-phone .it-hero .it-card-content .it-hero-summaries,#ignite-team-demo .it-phone .it-hero .it-card-content .it-goal-action{margin-top:0}
+#ignite-team-demo .it-phone .it-hero-progress{font-size:16px;margin-top:12px}
+#ignite-team-demo .it-phone .it-hero-summaries{margin-top:12px}
+#ignite-team-demo .it-hero-summaries .it-person-progress{--it-flash-size:64px}
+#ignite-team-demo .it-phone .it-hero-member{gap:8px;font-size:14px}
+#ignite-team-demo .it-phone .it-hero-member strong{font-size:18px}
+#ignite-team-demo .it-phone .it-hero-member small{font-size:13px}
+#ignite-team-demo .it-phone .it-hero-member-self{font-size:18px;min-height:22px;padding:0}
+#ignite-team-demo .it-phone .it-hero-member-self strong{font-size:24px}
+#ignite-team-demo .it-phone .it-hero-member-self small{font-size:16px}
+#ignite-team-demo .it-phone .it-goal-action{margin-top:12px}
+#ignite-team-demo .it-phone .it-goal-button{font-size:16px;min-height:32px;padding:8px 14px}
+#ignite-team-demo .it-phone .it-reward .it-card-content{display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:4px}
+#ignite-team-demo .it-phone .it-reward .it-card-content h2{font-size:32px;line-height:1.05;margin:0}
+#ignite-team-demo .it-phone .it-reward .it-card-content>.it-streak,#ignite-team-demo .it-phone .it-reward .it-card-content>.it-frozen{transform:scale(.9);margin:-4px 0}
+#ignite-team-demo .it-phone .it-reward-top .it-streak{transform:scale(.75);margin:0 -9px;width:72px;flex-shrink:0}
+#ignite-team-demo .it-phone .it-level-number{font-size:48px}
+#ignite-team-demo .it-phone .it-level-number small{font-size:13px}
+#ignite-team-demo .it-phone .it-reward .it-level-track{align-self:stretch;flex-shrink:0;margin:0}
+#ignite-team-demo .it-phone .it-reward .it-chain{margin:0}
+#ignite-team-demo .it-phone .it-medal{width:82px;height:82px;margin:0;flex-shrink:0}
+#ignite-team-demo .it-phone .it-medal .it-streak{transform:rotate(8deg) scale(.9)}
+#ignite-team-demo .it-phone .it-unlocked{font-size:14px;padding:4px 8px}
+#ignite-team-demo .it-phone .it-hero-member-summary p{font-size:13px}
+#ignite-team-demo .it-phone .it-hero-members{gap:4px}
 #ignite-team-demo .it-phone[data-streak-count="0"]::after{left:var(--it-glow-x);top:var(--it-glow-y);right:auto;transform:translate(-50%,-50%);width:130px;height:130px;filter:blur(55px)}
 #ignite-team-demo .it-month-row[data-goal-reached="true"]{position:relative;background:none}
 #ignite-team-demo .it-month-row[data-goal-reached="true"]::before{content:"";position:absolute;top:-2px;bottom:-2px;left:calc(var(--it-leading) * (100% + 2px) / 7);right:calc(var(--it-trailing) * (100% + 2px) / 7);background:light-dark(#e4f0e1,#302722);border-radius:16px}
@@ -592,7 +622,7 @@ function streakPresentation(design){
   chain:`<div class="it-reward-top">${icon}<p>Jede Woche ein Link.</p></div><h2>Die Kette h\u00e4lt.</h2><p>${count} Wochen zusammen drangeblieben.</p><div class="it-chain">${Array.from({length:Math.min(count+1,5)},(_,i)=>`<div class="it-chain-node"><b>${i<count?'\u2713':'\u2668'}</b>Woche ${i+1}</div>`).join('')}</div>`,
   medal:`<div class="it-medal">${icon}</div><span class="it-unlocked">${count?'MEILENSTEIN ERREICHT':'DEIN ERSTER MEILENSTEIN WARTET'}</span><h2>${count===0?'Der Anfang z\u00e4hlt.':count===1?'Der Anfang steht.':count===2?'Doppelt stark.':'Ein starkes Team.'}</h2><p>${count} Wochen Streak. Das habt ihr euch verdient.</p>`
  };
- return `<section class="it-reward it-reward-${design}${count?'':' it-reward-zero'}" aria-label="Streak-Belohnung" data-card-type="streak" data-streak-card="${design}">${content[design]}</section>`;
+ return `<section class="it-reward it-reward-${design}${count?'':' it-reward-zero'}" aria-label="Streak-Belohnung" data-card-type="streak" data-streak-card="${design}"><div class="it-card-content">${content[design]}</div></section>`;
 }
 function darkCutStage(completed,target){
  return target>0?Math.round(Math.max(0,Math.min(1,completed/target))*4):0;
@@ -626,10 +656,18 @@ function prepareCarousel(){
  const track=root.querySelector('.it-hero-track');
  if(!track)return;
  heroSlide=Math.max(0,Math.min(heroSlide,heroCardCount-1));
- track.style.height='320px';
- track.scrollLeft=heroSlide*track.clientWidth;
+ const resize=()=>{
+  track.style.height=(track.clientWidth*5/6)+'px';
+  track.style.setProperty('--it-card-scale',track.clientWidth/360);
+  track.scrollLeft=heroSlide*track.clientWidth;
+ };
+ resize();
  const update=()=>root.querySelectorAll('[data-hero-slide]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.heroSlide)===heroSlide)));
  if(carouselObserver)carouselObserver.disconnect();
+ if(typeof ResizeObserver!=='undefined'){
+  carouselObserver=new ResizeObserver(resize);
+  carouselObserver.observe(track);
+ }
  track.onscroll=()=>{heroSlide=Math.max(0,Math.min(heroCardCount-1,Math.round(track.scrollLeft/track.clientWidth)));update();};
  update();
 }
@@ -668,9 +706,9 @@ function summaryCards(s,key,done,targets,count,teamTarget,cutStage){
  }else if(key==='catchup'){
   details=`<div class="it-hero-members">${users.map((user,index)=>({user,index,progress:targets[index]>0?done[index]/targets[index]:0})).sort((a,b)=>b.progress-a.progress).map(({user,index},place)=>`<div class="it-hero-member${index===0?' it-hero-member-self':''}" style="--user:${user.color}"><span class="it-member-place">${place+1}.</span><span>${user.name}</span><div class="it-member-track" role="progressbar" aria-label="${user.name}: Wochenziel" aria-valuenow="${done[index]}" aria-valuemin="0" aria-valuemax="${targets[index]}"><i style="width:${Math.min(done[index]/targets[index],1)*100}%"></i></div><strong>${done[index]}<small>/${targets[index]}</small></strong></div>`).join('')}</div>`;
  }else{
-  details=`<div class="it-hero-progress"><span>Euer Wochenziel</span><strong>${key==='near'?`Noch ${Math.max(0,teamTarget-count)}`:`${count}<span class="it-hero-target">/${teamTarget}</span>`}</strong></div><div class="it-track" role="progressbar" aria-label="Teamfortschritt" aria-valuenow="${count}" aria-valuemin="0" aria-valuemax="${teamTarget}"><span style="width:${teamTarget>0?Math.min(count/teamTarget,1)*100:0}%"></span></div>`;
+  details=`<div class="it-card-details"><div class="it-hero-progress"><span>Euer Wochenziel</span><strong>${key==='near'?`Noch ${Math.max(0,teamTarget-count)}`:`${count}<span class="it-hero-target">/${teamTarget}</span>`}</strong></div><div class="it-track" role="progressbar" aria-label="Teamfortschritt" aria-valuenow="${count}" aria-valuemin="0" aria-valuemax="${teamTarget}"><span style="width:${teamTarget>0?Math.min(count/teamTarget,1)*100:0}%"></span></div></div>`;
  }
- const primary=`<section class="it-hero ${s.tone}${key==='near'?' it-near':''}" aria-label="Wochenstatus" data-card-type="${category}">${backdrop}<div class="it-shout">${s.kicker}</div><h2>${s.title}</h2><p>${s.copy}</p>${details}</section>`;
+ const primary=`<section class="it-hero ${s.tone}${key==='near'?' it-near':''}" aria-label="Wochenstatus" data-card-type="${category}">${backdrop}<div class="it-card-content"><div class="it-shout">${s.kicker}</div><h2>${s.title}</h2><p>${s.copy}</p>${details}</div></section>`;
  const cards=[...(key==='none'?[]:[primary]),...['trophy','level','chain','medal'].map(streakPresentation)];
  heroCardCount=cards.length;
  if(resetHeroSelection){
