@@ -102,6 +102,9 @@ struct AuthSheetView: View {
         .appColors()
         .interactiveDismissDisabled()
         .presentationDetents([.medium])
+        .alert(item: $vm.alert) { alert in
+            Alert(title: Text(alert.title), message: Text(alert.message))
+        }
     }
 }
 

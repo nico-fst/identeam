@@ -8,6 +8,16 @@ struct ContentView: View {
     @EnvironmentObject var navVM: NavigationVM
     @Environment(\.modelContext) private var modelContext
 
+    private var showsAuthentication: Bool {
+        authVM.authState == .unauthenticated || authVM.authState == .enteringUserDetails
+    }
+
+    private var contentAlert: Binding<AppVM.AlertData?> {
+        Binding(
+            get: { showsAuthentication ? nil : vm.alert },
+            set: { vm.alert = $0 })
+    }
+
     var body: some View {
         ToastContainer(toastMessage: $vm.toastMessage) {
             TabView(selection: $navVM.selectedTab) {
@@ -27,8 +37,7 @@ struct ContentView: View {
             .sheet(
                 isPresented: Binding<Bool>(
                     get: {
-                        (authVM.authState == .unauthenticated)
-                            || (authVM.authState == .enteringUserDetails)
+                        showsAuthentication
                     },
                     set: { newValue in
                         // When the sheet is dismissed (newValue == false), reset auth state if needed
@@ -45,7 +54,7 @@ struct ContentView: View {
                     .environmentObject(authVM)
                     .environmentObject(vm)
             }
-            .alert(item: $vm.alert) { alert in
+            .alert(item: contentAlert) { alert in
                 Alert(
                     title: Text(alert.title),
                     message: Text(alert.message),

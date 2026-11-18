@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	"net/http"
 	"net/mail"
 	"os"
+	"strings"
 
 	"github.com/Timothylock/go-signin-with-apple/apple"
 	"github.com/google/uuid"
@@ -173,14 +173,15 @@ type AuthApplePayload struct {
 }
 
 // @Summary		Sign in with Apple (native)
-// @Description	Exchanges the Apple Sign In authorization code, creates or retrieves the user with the provided nickname, and returns a session token.
+// @Description	Exchanges the native Apple authorization code, creates or retrieves the user with the provided nickname, and returns a session token. Apple rejections are returned as JSON errors containing the Apple error code.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
 // @Param			payload	body		AuthApplePayload	true	"SignIn Payload"
 // @Success		200		{object}	util.JSONResponse{data=AuthResponseData}	"Returns the created/retrieved user, a session token and a boolean if the user is new"
-// @Failure		400		{object}	util.JSONResponse					"Invalid JSON or missing authorizationCode"
-// @Failure		500		{object}	util.JSONResponse					"Server key missing, user creation failure, or session token generation failure"
+// @Failure		400		{object}	util.JSONResponse					"Invalid JSON, missing authorizationCode, or Apple rejected the authorization code"
+// @Failure		500		{object}	util.JSONResponse					"Apple configuration or signing key invalid, user creation failure, or session token generation failure"
+// @Failure		502		{object}	util.JSONResponse					"Apple unavailable or returned an invalid response"
 // @Router			/auth/apple/native/callback [post]
 func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Read body
@@ -197,9 +198,14 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 
 	// SIWA: generate ClientSecret
 
-	teamID := os.Getenv("TEAM_ID")
-	clientID := os.Getenv("SIWA_CLIENT_ID_APP")
-	keyID := os.Getenv("SIWA_KEY_ID")
+	teamID := strings.TrimSpace(os.Getenv("TEAM_ID"))
+	clientID := strings.TrimSpace(os.Getenv("SIWA_CLIENT_ID_APP"))
+	keyID := strings.TrimSpace(os.Getenv("SIWA_KEY_ID"))
+	if teamID == "" || clientID == "" || keyID == "" {
+		log.Printf("Apple sign-in configuration missing: team_id=%t client_id=%t key_id=%t", teamID != "", clientID != "", keyID != "")
+		util.ErrorJSON(w, errors.New("apple sign-in is not configured"), http.StatusInternalServerError)
+		return
+	}
 
 	keyBytes, err := os.ReadFile("./siwa_key.p8")
 	if err != nil {
@@ -211,7 +217,8 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// Generate the client secret used to authenticate with Apple's validation servers
 	secret, err := apple.GenerateClientSecret(keyString, teamID, clientID, keyID)
 	if err != nil {
-		fmt.Println("error generating secret: " + err.Error())
+		log.Printf("generate Apple client secret: %v", err)
+		util.ErrorJSON(w, errors.New("unable to configure Apple sign-in"), http.StatusInternalServerError)
 		return
 	}
 
@@ -226,13 +233,15 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	var resp apple.ValidationResponse
 
 	// Do the verification (send to Apple's Token endpoint)
-	err = client.VerifyAppToken(context.Background(), vReq, &resp)
+	err = client.VerifyAppToken(r.Context(), vReq, &resp)
 	if err != nil {
-		fmt.Println("error verifying: " + err.Error())
+		log.Printf("verify Apple authorization code: %v", err)
+		util.ErrorJSON(w, errors.New("unable to contact Apple sign-in"), http.StatusBadGateway)
 		return
 	}
 	if resp.Error != "" {
-		fmt.Printf("apple returned an error: %s - %s\n", resp.Error, resp.ErrorDescription)
+		log.Printf("Apple sign-in rejected: error=%q description=%q client_id=%q", resp.Error, resp.ErrorDescription, clientID)
+		util.ErrorJSON(w, fmt.Errorf("apple sign-in failed: %s", resp.Error), http.StatusBadRequest)
 		return
 	}
 
@@ -242,13 +251,20 @@ func (app *App) AuthCallbackNative(w http.ResponseWriter, r *http.Request) {
 	// claims: *map[string]interface{} contains claims = content of JWT as Map
 	claims, err := apple.GetClaims(resp.IDToken)
 	if err != nil {
-		fmt.Println("ERROR getting claims: " + err.Error())
+		log.Printf("read Apple ID token claims: %v", err)
+		util.ErrorJSON(w, errors.New("invalid Apple sign-in response"), http.StatusBadGateway)
+		return
+	}
+	userID, hasUserID := (*claims)["sub"].(string)
+	email, hasEmail := (*claims)["email"].(string)
+	if !hasUserID || userID == "" || !hasEmail || email == "" {
+		util.ErrorJSON(w, errors.New("invalid Apple sign-in response"), http.StatusBadGateway)
 		return
 	}
 
 	user := models.User{
-		UserID:       (*claims)["sub"].(string), // Apple's unique stable UserID
-		Email:        (*claims)["email"].(string),
+		UserID:       userID, // Apple's unique stable UserID
+		Email:        email,
 		AuthProvider: "apple",
 		Nickname:     payload.Nickname,
 		// Username set afterwards updating User details
