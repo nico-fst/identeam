@@ -61,6 +61,7 @@ struct ContentView: View {
                 )
             }
         }
+        .identDetailOverlay()
         .task {
             await authVM.trySiwaLogin(vm: vm)
         }

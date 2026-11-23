@@ -39,6 +39,7 @@
             .environmentObject(TeamsVM())
             .modelContainer(container)
             .appColors()
+            .identDetailOverlay()
         }
 
         private static func model(from week: TeamWeekPresentation) -> TeamWeek {

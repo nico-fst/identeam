@@ -14,6 +14,7 @@ struct TeamWeekView: View {
     @EnvironmentObject var vm: AppVM
     @EnvironmentObject var teamsVM: TeamsVM
     @Environment(\.modelContext) private var ctx
+    @Environment(\.identDetailPresentation) private var identPresentation
 
     @StateObject var teamVM: TeamWeekVM
 
@@ -169,27 +170,6 @@ struct TeamWeekView: View {
                             .zoom(sourceID: "info-button", in: transitions)
                         )
                 }
-                .sheet(
-                    item: $teamVM.selectedIdent,
-                    onDismiss: {
-                        teamVM.commentInput = ""
-                        teamVM.commentError = ""
-                    }
-                ) { ident in
-                    NavigationStack {
-                        if let member = teamWeek?.members.first(where: { member in
-                            member.idents.contains(where: { $0.id == ident.id })
-                        }) {
-                            IdentDetailView(ident: ident, member: member, slug: team.slug)
-                        } else {
-                            ContentUnavailableView(
-                                "Failed to load Ident",
-                                systemImage: "exclamationmark.triangle"
-                            )
-                        }
-                    }
-                    .presentationDetents([.large])
-                }
             } else {
                 Color.clear
             }
@@ -326,10 +306,18 @@ extension TeamWeekView {
                     week: teamWeek, currentUserID: viewerID, now: referenceDate),
                 members: preview == nil ? teamWeek.members : [],
                 initiallyDetailed: false, onSelectMember: showProfile
-            ) { identID in
-                teamVM.selectedIdent = teamWeek.members.flatMap(\.idents).first {
-                    TeamWeekPresentation.identID($0) == identID
-                }
+            ) { identID, source in
+                guard
+                    let member = teamWeek.members.first(where: { member in
+                        member.idents.contains { TeamWeekPresentation.identID($0) == identID }
+                    }),
+                    let ident = member.idents.first(where: {
+                        TeamWeekPresentation.identID($0) == identID
+                    })
+                else { return }
+                identPresentation?.present(
+                    ident: ident, author: member.user, slug: slug,
+                    source: source, teamVM: teamVM)
             }
             .id(teamVM.weekStart)
         } else if isLoadingWeek {

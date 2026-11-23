@@ -3,21 +3,22 @@ import SwiftUI
 struct TeamWeekGrid: View {
     let week: TeamWeekPresentation
     let members: [TeamMember]
-    let onSelectIdent: (String) -> Void
+    let onSelectIdent: (String, IdentFlashSource) -> Void
     let onSelectMember: (String) -> Void
     @AppStorage private var showIdentImages: Bool
     @State private var detailed = false
     @State private var explanationMarkID: String?
     @State private var barProgress: Double = 0
+    @Environment(\.identDetailPresentation) private var identPresentation
 
     init(
         slug: String, week: TeamWeekPresentation, members: [TeamMember],
         initiallyDetailed: Bool = false,
         onSelectMember: @escaping (String) -> Void = { _ in },
-        onSelectIdent: @escaping (String) -> Void
+        onSelectIdent: @escaping (String, IdentFlashSource) -> Void
     ) {
         _showIdentImages = AppStorage(
-            wrappedValue: true, TeamWeekImageSettings.key(for: slug))
+            wrappedValue: false, TeamWeekImageSettings.key(for: slug))
         self.week = week
         self.members = members
         self.onSelectIdent = onSelectIdent
@@ -144,44 +145,61 @@ struct TeamWeekGrid: View {
 
     private func markView(_ mark: TeamWeekPresentation.Mark) -> some View {
         let color = TeamWeekStyle.color(for: mark.memberID, in: week)
-        return ZStack {
-            // Erase both the halo and the interior from earlier layers. This keeps outlined
-            // plans opaque to other Idents while preserving the real glass underneath.
-            FlashShape().fill(.black).blendMode(.destinationOut)
-            FlashShape().stroke(.black, lineWidth: 4).blendMode(.destinationOut)
-            if mark.kind == .planned {
-                FlashShape().stroke(color, lineWidth: 1.8)
-            } else {
-                FlashShape().fill(color.opacity(mark.kind == .missed ? 0.22 : 1))
-                if let id = mark.thumbnailIdentID(showImages: showIdentImages),
-                    let ident = members.first(where: { $0.user.userID == mark.memberID })?
-                        .idents.first(where: { TeamWeekPresentation.identID($0) == id })
-                {
-                    IdentImageView(image: RemoteImageReference(item: ident.image))
-                        .clipShape(FlashShape())
+        return GeometryReader { geometry in
+            Button {
+                select(mark, frame: geometry.frame(in: .global))
+            } label: {
+                ZStack {
+                    // Erase both the halo and the interior from earlier layers. This keeps outlined
+                    // plans opaque to other Idents while preserving the real glass underneath.
+                    FlashShape().fill(.black).blendMode(.destinationOut)
+                    FlashShape().stroke(.black, lineWidth: 4).blendMode(.destinationOut)
+                    if mark.kind == .planned {
+                        FlashShape().stroke(color, lineWidth: 1.8)
+                    } else {
+                        FlashShape().fill(color.opacity(mark.kind == .missed ? 0.22 : 1))
+                        if let id = mark.thumbnailIdentID(showImages: showIdentImages),
+                            let ident = members.first(where: { $0.user.userID == mark.memberID })?
+                                .idents.first(where: { TeamWeekPresentation.identID($0) == id })
+                        {
+                            ImageFlash(image: RemoteImageReference(item: ident.image), color: color)
+                        }
+                    }
                 }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .contentShape(FlashShape())
             }
-        }
-        .contentShape(FlashShape())
-        .onTapGesture { select(mark) }
-        .popover(
-            isPresented: Binding(
-                get: { explanationMarkID == mark.id },
-                set: { if !$0 { explanationMarkID = nil } }
-            ), attachmentAnchor: .rect(.bounds), arrowEdge: .top
-        ) {
-            TeamWeekLegend().padding(24).presentationCompactAdaptation(.popover)
+            .buttonStyle(IdentFlashPressStyle())
+            .opacity(
+                identPresentation?.selection.map { $0.identID == mark.identID } == true ? 0 : 1
+            )
+            .popover(
+                isPresented: Binding(
+                    get: { explanationMarkID == mark.id },
+                    set: { if !$0 { explanationMarkID = nil } }
+                ), attachmentAnchor: .rect(.bounds), arrowEdge: .top
+            ) {
+                TeamWeekLegend().padding(24).presentationCompactAdaptation(.popover)
+            }
         }
     }
 
-    private func select(_ mark: TeamWeekPresentation.Mark) {
+    private func select(_ mark: TeamWeekPresentation.Mark, frame: CGRect) {
         guard detailed else {
             detailed = true
             return
         }
 
         switch mark.interaction {
-        case .image(let id): onSelectIdent(id)
+        case .image(let id):
+            onSelectIdent(
+                id,
+                // contains visual start conditions
+                // without data yet
+                IdentFlashSource(
+                    frame: frame, color: TeamWeekStyle.color(for: mark.memberID, in: week),
+                    showsImage: mark.thumbnailIdentID(showImages: showIdentImages) != nil
+                        && !members.isEmpty))
         case .explanation: explanationMarkID = mark.id
         }
     }
@@ -266,5 +284,13 @@ struct TeamWeekLegend: View {
             }.frame(width: 30, height: 30)
             Text(title)
         }
+    }
+}
+
+private struct IdentFlashPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.82 : 1)
+            .animation(.spring(duration: 0.22, bounce: 0.24), value: configuration.isPressed)
     }
 }
