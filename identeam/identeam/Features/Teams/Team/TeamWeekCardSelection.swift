@@ -25,7 +25,8 @@ nonisolated enum TeamWeekSummaryCard: Hashable, Identifiable {
 extension TeamWeekPresentation {
     /// Selection pseudocode (first matching condition wins):
     ///
-    /// IF selected week is past: primary = reaction.recap
+    /// IF selected week is future: RETURN [action.setGoal]
+    /// ELSE IF selected week is past: primary = reaction.recap
     /// ELSE IF viewer idented today in the current week:
     ///     IF viewer is unfinished AND ahead of someone (or trains alone): primary = reaction.personallyOnTrack
     ///     ELSE: primary = reaction.teamOnTrack
@@ -40,6 +41,7 @@ extension TeamWeekPresentation {
     ///
     /// Selection returns the card identity directly; rendering never re-evaluates these rules.
     nonisolated var primarySummaryCard: TeamWeekSummaryCard? {
+        if isFuture { return .action(.setGoal) }
         if isPast { return .reaction(.recap) }
         if viewerIdentedToday, let currentMember {
             let others = members.filter { $0.id != currentUserID && $0.target > 0 }
@@ -67,9 +69,10 @@ extension TeamWeekPresentation {
         return nil
     }
 
-    /// The optional primary card precedes the four streak variants in both pager and stacked previews.
+    /// Future weeks show only goal planning; other weeks append the four streak variants.
     nonisolated var summaryCards: [TeamWeekSummaryCard] {
-        [primarySummaryCard].compactMap { $0 }
+        if isFuture { return [.action(.setGoal)] }
+        return [primarySummaryCard].compactMap { $0 }
             + TeamWeekSummaryCard.Streak.allCases.map(TeamWeekSummaryCard.streak)
     }
 }

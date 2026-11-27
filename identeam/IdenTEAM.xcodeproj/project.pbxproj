@@ -6,19 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* ImageFlash unit tests */
-A51800000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = A51800000000000000000002; buildPhases = (A51800000000000000000003, A51800000000000000000009,); buildRules = (); dependencies = (A5180000000000000000000A,); fileSystemSynchronizedGroups = (A51800000000000000000008,); name = identeamTests; packageProductDependencies = (978D61342FAED82300C46DF4,); productName = identeamTests; productReference = A51800000000000000000004; productType = "com.apple.product-type.bundle.unit-test"; };
-A51800000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (A51800000000000000000005,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
-A51800000000000000000003 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-A51800000000000000000004 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = identeamTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-A51800000000000000000005 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/identeam.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/identeam"; PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeamTests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; SWIFT_VERSION = 5.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = Y8K762KJBC; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks"; }; };
-A51800000000000000000008 = {isa = PBXFileSystemSynchronizedRootGroup; path = identeamTests; sourceTree = "<group>"; };
-A51800000000000000000009 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A5180000000000000000000C,); runOnlyForDeploymentPostprocessing = 0; };
-A5180000000000000000000A = {isa = PBXTargetDependency; target = 97B62F4A2ED36C170076D0C0; targetProxy = A5180000000000000000000B; };
-A5180000000000000000000B = {isa = PBXContainerItemProxy; containerPortal = 97B62F432ED36C170076D0C0; proxyType = 1; remoteGlobalIDString = 97B62F4A2ED36C170076D0C0; remoteInfo = identeam; };
-A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C46DF4; };
-
-
 /* Begin PBXBuildFile section */
 		97218C0F307140BD008836CD /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 97218C0E307140BD008836CD /* Config.xcconfig */; };
 		97218C11307142C2008836CD /* versioning.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97218C10307142C2008836CD /* versioning.sh */; };
@@ -26,6 +13,7 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 		97D89288306D81310020F89A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97D89287306D81310020F89A /* WidgetKit.framework */; };
 		97D8928A306D81310020F89A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 97D89289306D81310020F89A /* SwiftUI.framework */; };
 		97D89297306D81330020F89A /* Widgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 97D89285306D81310020F89A /* Widgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A5180000000000000000000C /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 978D61342FAED82300C46DF4 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +23,13 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			proxyType = 1;
 			remoteGlobalIDString = 97D89284306D81310020F89A;
 			remoteInfo = Widgets;
+		};
+		A5180000000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97B62F432ED36C170076D0C0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 97B62F4A2ED36C170076D0C0;
+			remoteInfo = identeam;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -60,6 +55,7 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 		97D89287306D81310020F89A /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		97D89289306D81310020F89A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		97D8929D306D827B0020F89A /* Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Widgets.entitlements; sourceTree = "<group>"; };
+		A51800000000000000000004 /* identeamTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = identeamTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -131,6 +127,11 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			path = widgets;
 			sourceTree = "<group>";
 		};
+		A51800000000000000000008 /* identeamTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = identeamTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,13 +152,21 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A51800000000000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5180000000000000000000C /* Kingfisher in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		97B62F422ED36C170076D0C0 = {
 			isa = PBXGroup;
 			children = (
-                A51800000000000000000008 /* identeamTests */,
+				A51800000000000000000008 /* identeamTests */,
 				97218C0E307140BD008836CD /* Config.xcconfig */,
 				97218C10307142C2008836CD /* versioning.sh */,
 				97D8929D306D827B0020F89A /* Widgets.entitlements */,
@@ -171,7 +180,7 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 		97B62F4C2ED36C170076D0C0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-                A51800000000000000000004 /* identeamTests.xctest */,
+				A51800000000000000000004 /* identeamTests.xctest */,
 				97B62F4B2ED36C170076D0C0 /* identeam.app */,
 				97D89285306D81310020F89A /* Widgets.appex */,
 			);
@@ -237,6 +246,29 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			productReference = 97D89285306D81310020F89A /* Widgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		A51800000000000000000001 /* identeamTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A51800000000000000000002 /* Build configuration list for PBXNativeTarget "identeamTests" */;
+			buildPhases = (
+				A51800000000000000000003 /* Sources */,
+				A51800000000000000000009 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A5180000000000000000000A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A51800000000000000000008 /* identeamTests */,
+			);
+			name = identeamTests;
+			packageProductDependencies = (
+				978D61342FAED82300C46DF4 /* Kingfisher */,
+			);
+			productName = identeamTests;
+			productReference = A51800000000000000000004 /* identeamTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -272,7 +304,7 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-                A51800000000000000000001 /* identeamTests */,
+				A51800000000000000000001 /* identeamTests */,
 				97B62F4A2ED36C170076D0C0 /* identeam */,
 				97D89284306D81310020F89A /* Widgets */,
 			);
@@ -313,6 +345,13 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A51800000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -320,6 +359,11 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			isa = PBXTargetDependency;
 			target = 97D89284306D81310020F89A /* Widgets */;
 			targetProxy = 97D89295306D81330020F89A /* PBXContainerItemProxy */;
+		};
+		A5180000000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 97B62F4A2ED36C170076D0C0 /* identeam */;
+			targetProxy = A5180000000000000000000B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -537,6 +581,15 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			};
 			name = Release;
 		};
+		97C4CC2530B903C600D8D3FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				PRODUCT_NAME = identeamTests;
+			};
+			name = Release;
+		};
 		97D89299306D81330020F89A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -601,6 +654,29 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			};
 			name = Release;
 		};
+		A51800000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y8K762KJBC;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = de.nicostern.identeamTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/identeam.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/identeam";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -630,6 +706,15 @@ A5180000000000000000000C = {isa = PBXBuildFile; productRef = 978D61342FAED82300C
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		A51800000000000000000002 /* Build configuration list for PBXNativeTarget "identeamTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A51800000000000000000005 /* Debug */,
+				97C4CC2530B903C600D8D3FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 

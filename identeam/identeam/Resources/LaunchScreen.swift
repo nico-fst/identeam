@@ -90,10 +90,10 @@ struct LaunchScreenView: View {
     var onReveal: () -> Void = {}
     let onComplete: () -> Void
     @State private var fill: CGFloat = 0
-    @State private var flashSnapshot: UIImage?
+    @State private var glassSnapshot: UIImage?
     @State private var phase = Phase.glass
 
-    private enum Phase { case glass, filling, charged, anticipating, revealing }
+    private enum Phase { case glass, filling, anticipating, revealing }
 
     var body: some View {
         GeometryReader { geometry in
@@ -122,18 +122,11 @@ struct LaunchScreenView: View {
                     .compositingGroup()
                 }
 
-                Group {
-                    if let flashSnapshot {
-                        Image(uiImage: flashSnapshot).resizable()
-                            .clipShape(FlashShape())
-                    } else {
-                        flash
-                    }
-                }
-                .frame(width: layout.flashSide, height: layout.flashSide)
-                .scaleEffect(scale)
-                .rotationEffect(.degrees(rotation), anchor: .center)
-                .opacity(phase == .revealing ? 0 : 1)
+                flash
+                    .frame(width: layout.flashSide, height: layout.flashSide)
+                    .scaleEffect(scale)
+                    .rotationEffect(.degrees(rotation), anchor: .center)
+                    .opacity(phase == .revealing ? 0 : 1)
             }
             .opacity(phase == .revealing ? 0 : 1)
             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -147,26 +140,31 @@ struct LaunchScreenView: View {
 
     private var flash: some View {
         ZStack {
-            Color.clear.glassEffect(.clear, in: FlashShape())
-                .clipShape(FlashShape())
-            TimelineView(.animation(minimumInterval: 1 / 30, paused: phase != .filling)) {
+            Group {
+                if let glassSnapshot {
+                    Image(uiImage: glassSnapshot).resizable()
+                } else {
+                    Color.clear.glassEffect(.clear, in: FlashShape())
+                }
+            }
+            .clipShape(FlashShape())
+            TimelineView(.animation(minimumInterval: 1 / 30, paused: phase == .glass)) {
                 timeline in
-                FlashShape()
-                    .fill(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black, location: 0),
-                                .init(color: .black.opacity(0.96), location: 0.28),
-                                .init(color: .black.opacity(0.55), location: 0.65),
-                                .init(color: .black.opacity(0.08), location: 1),
-                            ], startPoint: .top, endPoint: .bottom)
-                    )
-                    .mask {
-                        ProgressFlashWater(
-                            progress: fill,
-                            phase: timeline.date.timeIntervalSinceReferenceDate * 1.6,
-                            layer: .combined)
-                    }
+                let wavePhase = timeline.date.timeIntervalSinceReferenceDate * 1.6
+                let gradient = LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0),
+                        .init(color: .black.opacity(0.96), location: 0.28),
+                        .init(color: .black.opacity(0.55), location: 0.65),
+                        .init(color: .black.opacity(0.08), location: 1),
+                    ], startPoint: .top, endPoint: .bottom)
+                ZStack {
+                    ProgressFlashWater(progress: fill, phase: wavePhase, layer: .back)
+                        .fill(gradient).opacity(0.45)
+                    ProgressFlashWater(progress: fill, phase: wavePhase, layer: .front)
+                        .fill(gradient)
+                }
+                .clipShape(FlashShape())
             }
             FlashShape().strokeBorder(
                 LinearGradient(
@@ -179,22 +177,23 @@ struct LaunchScreenView: View {
         guard phase == .glass else { return }
         do {
             try await Task.sleep(for: .seconds(0.24))
+            // Freeze only the empty glass surface; the water stays live during the finale.
+            glassSnapshot = captureFlash()
             phase = .filling
-            withAnimation(.easeInOut(duration: 0.9)) { fill = 1 }
-            try await Task.sleep(for: .seconds(1.02))
-            // Freeze the fully rendered glass before transforming it. Native glass otherwise
-            // morphs its surface independently of the fill during scale/rotation animations.
-            flashSnapshot = captureFlash()
-            phase = .charged
-            try await Task.sleep(for: .seconds(0.16))
-            withAnimation(.easeIn(duration: 0.16), completionCriteria: .logicallyComplete) {
-                phase = .anticipating
+            withAnimation(.linear(duration: 0.6), completionCriteria: .logicallyComplete) {
+                fill = 2.0 / 3.0
             } completion: {
-                onReveal()
-                withAnimation(.easeOut(duration: 1.25), completionCriteria: .logicallyComplete) {
-                    phase = .revealing
+                withAnimation(.linear(duration: 0.3)) { fill = 1 }
+                withAnimation(.easeIn(duration: 0.16), completionCriteria: .logicallyComplete) {
+                    phase = .anticipating
                 } completion: {
-                    onComplete()
+                    onReveal()
+                    withAnimation(.easeOut(duration: 1.25), completionCriteria: .logicallyComplete)
+                    {
+                        phase = .revealing
+                    } completion: {
+                        onComplete()
+                    }
                 }
             }
         } catch {

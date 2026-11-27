@@ -116,9 +116,6 @@ struct TeamWeekView: View {
                                 .modifier(AppGlass(dark: darkCutStage >= 4))
                             }
                         }
-                        TeamWeekActionsSection(
-                            slug: team.slug, hasLoadedFreshTeamWeek: hasLoadedFreshTeamWeek,
-                            dark: darkCutStage >= 4)
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 12)
@@ -337,6 +334,17 @@ extension TeamWeekView {
 
     @ToolbarContentBuilder
     fileprivate func teamToolbar(for team: Team) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                Task { await teamVM.tryRemindingTeam(slug: team.slug, vm: vm) }
+            } label: {
+                Label(
+                    "Remind Team",
+                    systemImage: teamVM.remindButtonDisabled ? "bell.fill" : "bell")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(teamVM.remindButtonDisabled || !hasLoadedFreshTeamWeek)
+        }
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 showTeamSettings = true

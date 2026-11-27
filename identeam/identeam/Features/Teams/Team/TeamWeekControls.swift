@@ -11,7 +11,7 @@ struct TeamWeekModePicker: View {
                 Button {
                     withAnimation(.smooth(duration: 0.3)) { detailed = value }
                 } label: {
-                    Text(value ? "Combined" : "Smart")
+                    Text(value ? "Detailed" : "Smart")
                         .font(TeamWeekStyle.font(14, heavy: true))
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .foregroundStyle(
