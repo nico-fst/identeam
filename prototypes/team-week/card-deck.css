@@ -1,0 +1,67 @@
+/* Deck layout preserves Swift's 360 × 300 card canvas, Nunito and app palette. */
+#ignite-team-demo .it-control-group{min-width:0;margin:0;padding:18px;border:1px solid #24201d1c;border-radius:20px;background:#fffaf5;color:#24201d;display:flex;flex-direction:column;gap:14px}
+#ignite-team-demo .it-control-group legend{padding:0 8px;font-size:16px;font-weight:1000}
+#ignite-team-demo .it-control-group .it-examples,#ignite-team-demo .it-control-group>label:not(.it-start-toggle){display:flex;flex-direction:column;align-items:stretch;gap:7px;font-size:13px;font-weight:800}
+#ignite-team-demo .it-control-group select{width:100%;min-height:44px;background:#fff;border:1px solid #24201d20;border-radius:12px;padding:10px 12px;font:800 14px TeamNunito,sans-serif;color:#24201d;cursor:pointer}
+#ignite-team-demo .it-control-group .it-start-toggle{margin:0;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+#ignite-team-demo .it-control-range{display:flex;align-items:center;gap:12px;min-height:44px}
+#ignite-team-demo .it-control-range input{flex:1;min-width:0;margin:0;accent-color:#24201d}
+#ignite-team-demo .it-control-range output{min-width:24px;text-align:center;font-size:16px;font-weight:1000}
+#ignite-team-demo .it-control-actions{margin-top:auto;padding-top:4px;display:flex;flex-direction:column;gap:10px}
+#ignite-team-demo .it-control-actions button{width:100%;min-height:42px;border:1px solid #24201d20;border-radius:12px;background:#fff;font:800 14px TeamNunito,sans-serif;color:#24201d;cursor:pointer}
+#ignite-team-demo .it-control-hint{margin:0;font-size:12px;line-height:1.4;color:#706257}
+#ignite-team-demo .it-hero-carousel[data-deck-mounted]{position:relative;isolation:isolate;padding:16px 10px 0;margin-bottom:24px;height:auto;aspect-ratio:auto}
+#ignite-team-demo [data-deck-mounted] .it-hero-track{position:relative;display:block;width:100%;overflow:visible;scroll-snap-type:none;touch-action:pan-y;perspective:1000px;aspect-ratio:6/5}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide{position:absolute;inset:0;width:100%;min-width:0;transform:translateY(calc(var(--depth)*7px)) rotate(var(--angle)) scale(calc(1 - var(--depth)*.035));transform-origin:50% 75%;transition:transform 650ms cubic-bezier(.18,.9,.23,1.15),opacity 350ms;filter:drop-shadow(0 12px 14px #24201d12);cursor:grab}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide[hidden]{display:none}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide>.it-hero,#ignite-team-demo [data-deck-mounted] .it-hero-slide>.it-reward{width:100%;height:100%;border-radius:28px;background-color:#fff3e5;box-shadow:inset 0 1px 0 #ffffffb0,0 1px 3px #24201d12;overflow:hidden}
+#ignite-team-demo .it-phone[data-info-theme="dark"] [data-deck-mounted] .it-hero-slide>.it-hero.it-quiet,#ignite-team-demo .it-phone[data-reward-theme="dark"] [data-deck-mounted] .it-hero-slide>.it-reward{background-color:#393029}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide>.it-hero:not(.it-quiet){background-color:#ffb344}
+#ignite-team-demo [data-deck-mounted] .it-deck-dragging .it-hero-slide{transition:none;cursor:grabbing}
+#ignite-team-demo [data-deck-mounted] .it-card-content{text-align:center}
+#ignite-team-demo .it-orbit-guide{fill:none;stroke:currentColor;stroke-opacity:.07;stroke-dasharray:1 7}
+@media(prefers-reduced-motion:reduce){#ignite-team-demo [data-deck-mounted] *{animation:none!important;transition:none!important}}
+/* Let the same prototype fit narrow phones as well as the comparison canvas. */
+#ignite-team-demo .it-screen-comparison{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),393px))}
+#ignite-team-demo [data-screen]{width:100%;min-width:0}
+#ignite-team-demo [data-screen]>.it-preview,#ignite-team-demo [data-screen]>.it-preview>.it-scene,#ignite-team-demo [data-screen] .it-phone{width:100%;max-width:393px}
+#ignite-team-demo [data-deck-mounted] .it-hero-track{touch-action:none;border-radius:0}
+#ignite-team-demo [data-deck-mounted] .it-hero-track{--it-card-scale:1}
+/* Solid backing keeps content on lower glass cards from bleeding through. */
+#ignite-team-demo .it-phone[data-info-theme] [data-deck-mounted] .it-hero-slide>.it-hero.it-quiet{background:linear-gradient(135deg,#fff3e5,#ffe6cb)}
+#ignite-team-demo .it-phone[data-info-theme="dark"] [data-deck-mounted] .it-hero-slide>.it-hero.it-quiet{background:linear-gradient(135deg,#443a30,#2a2520)}
+#ignite-team-demo .it-phone[data-reward-theme] [data-deck-mounted] .it-hero-slide>.it-reward{background:linear-gradient(135deg,#fff3e5,#ffe6cb)}
+#ignite-team-demo .it-phone[data-reward-theme="dark"] [data-deck-mounted] .it-hero-slide>.it-reward{background:linear-gradient(135deg,#443a30,#2a2520)}
+#ignite-team-demo .it-hero-carousel[data-deck-mounted]{padding-bottom:60px}
+#ignite-team-demo [data-deck-mounted] .it-hero-track{z-index:1}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide{border-radius:28px;overflow:hidden}
+#ignite-team-demo [data-deck-mounted] .it-hero-track{user-select:none;-webkit-user-select:none}
+/* Cards own a foreground stacking context; flying snapshots live above the whole page. */
+#ignite-team-demo .it-hero-carousel[data-deck-mounted]{z-index:100;padding-bottom:60px;transition:none}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide{transform-origin:50% 65%}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide[data-auto-hint="true"]{animation:it-auto-hint 10s linear forwards}
+@keyframes it-auto-hint{
+  0%,76%{transform:translate(0,0) rotate(var(--angle))}
+  84%{transform:translate(-1px,-.4px) rotate(calc(var(--angle) - .3deg))}
+  92%{transform:translate(-4px,-1.5px) rotate(calc(var(--angle) - 1.1deg))}
+  100%{transform:translate(-10px,-4px) rotate(calc(var(--angle) - 3deg))}
+}
+.it-flight-layer{overflow:visible;isolation:isolate}
+/* The Core shares the exact progress renderer used by Detailed and the weekly summaries. */
+#ignite-team-demo .it-core{position:absolute;inset:16px 10px 60px;z-index:0;display:grid;place-items:center;opacity:1;pointer-events:none;color:#24201d}
+#ignite-team-demo [data-core-ready="false"] .it-core{opacity:0}
+#ignite-team-demo [data-deck-phase="core"] .it-core{pointer-events:auto}
+#ignite-team-demo .it-core-universe{position:relative;width:auto;height:calc(100% + 48px);max-width:100%;aspect-ratio:1}
+#ignite-team-demo .it-core-orbit{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+#ignite-team-demo .it-core-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:block;width:43%;padding:0;border:0;background:transparent;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
+#ignite-team-demo .it-core-center .it-person-progress{--it-flash-size:148px;width:100%;--it-number-surface:#fff3e5}
+#ignite-team-demo .it-core-center .it-progress-number{font-size:clamp(24px,8cqw,32px);font-weight:1000}
+#ignite-team-demo .it-core-center .it-progress-number span{font-size:clamp(13px,4.5cqw,18px)}
+#ignite-team-demo .it-core-center:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:50%}
+#ignite-team-demo .it-core .it-progress-outline{fill:none;stroke:currentColor;stroke-width:5;opacity:.3}
+#ignite-team-demo .it-phone[data-info-theme="dark"] .it-core{color:#fff3e5}
+#ignite-team-demo .it-phone[data-info-theme="dark"] .it-core .it-person-progress{--it-number-surface:#24201d}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide .it-card-content{transition:opacity 250ms ease}
+#ignite-team-demo [data-deck-mounted] .it-hero-slide[inert] .it-card-content{opacity:0}
+#ignite-team-demo [data-deck-mounted] .it-hero-track:focus:not(:focus-visible){outline:none}
+#ignite-team-demo [data-deck-phase="core"] .it-hero-track{pointer-events:none}

@@ -1493,7 +1493,7 @@ test("behind scenario gives Nico zero of three and Greta two of four", () => {
   const app = mount();
   app.select.value = "behind";
   app.select.change();
-  assert.ok(app.scene.innerHTML.includes(">3/10 Idents</button></h1>"));
+  assert.ok(app.scene.innerHTML.includes(">Noch 7 Idents</button></p>"));
   assert.ok(app.scene.innerHTML.includes("it-hero it-behind"));
   app.switchMode("detailed");
   const rows = [
@@ -1656,7 +1656,7 @@ test("week navigation respects reduced motion and leaves current scenario data i
   app.stepWeek(-1);
   app.today();
   assert.equal(app.animations.length, 0);
-  assert.ok(app.scene.innerHTML.includes(">3/10 Idents</button></h1>"));
+  assert.ok(app.scene.innerHTML.includes(">Noch 7 Idents</button></p>"));
   app.switchMode("detailed");
   assert.ok(
     app.scene.innerHTML.includes(
@@ -1706,6 +1706,15 @@ test("streak number is centered in the shifted inner flame bowl", () => {
     html,
     /\.it-streak strong\{[^}]*left:54\.2%;top:79%;transform:translate\(-50%,-50%\)/,
   );
+});
+
+test("prototype controls group card selection and appearance with their matching actions", () => {
+  const cards=html.match(/<fieldset[^>]*data-controls="cards">([\s\S]*?)<\/fieldset>/)[1];
+  const appearance=html.match(/<fieldset[^>]*data-controls="appearance">([\s\S]*?)<\/fieldset>/)[1];
+  for(const id of ['it-scenario','it-streak-design','it-streak-first'])assert.ok(cards.includes(`id="${id}"`));
+  assert.ok(cards.includes('data-replay-deck'));
+  for(const id of ['it-cream','it-cut-color'])assert.ok(appearance.includes(`id="${id}"`));
+  assert.ok(!appearance.includes('data-replay-deck'));
 });
 
 test("four reward screens are selectable beside the situation and preserve all week interactions", () => {
@@ -1974,7 +1983,7 @@ test("situation overrides retain all five cards and keep week interactions", () 
     app.switchMode("detailed");
     assert.ok(app.scene.innerHTML.includes('data-view="detailed"'));
     app.select.value="behind";app.select.change();
-    assert.ok(app.scene.innerHTML.includes('>3/10 Idents</button></h1>'));
+    assert.ok(app.scene.innerHTML.includes('>Noch 7 Idents</button></p>'));
   }
 });
 
@@ -2521,7 +2530,7 @@ test("goal screen appears first and prompts setting a weekly goal without an inv
   assert.ok(!app.scene.innerHTML.includes("Infinity"));
 });
 
-test("team header shows the team name above aggregate Idents for every scenario", () => {
+test("team header shows remaining Idents above the team name for every scenario", () => {
   const app = mount();
   for (const [scenario, total] of Object.entries({
     near: "8/9",
@@ -2537,8 +2546,8 @@ test("team header shows the team name above aggregate Idents for every scenario"
     const header = app.scene.innerHTML.match(
       /<header class="it-teamtop">([\s\S]*?)<\/header>/,
     )[1];
-    assert.ok(header.includes(">Die Kanten</button></p><h1>"), scenario);
-    assert.ok(header.includes(`>${total} Idents</button></h1>`), scenario);
+    assert.ok(header.includes(">Die Kanten</button></h1>"), scenario);
+    assert.ok(header.includes(`>Noch ${Math.max(0,Number(total.split("/")[1])-Number(total.split("/")[0]))} Idents</button></p>`), scenario);
     assert.equal((header.match(/ data-aura-info /g) || []).length, 2);
     assert.ok(header.includes('class="it-streak"'));
     assert.ok(!header.includes("it-hero-track"));
@@ -2549,7 +2558,7 @@ test("team header shows the team name above aggregate Idents for every scenario"
       ),
     );
     assert.ok(
-      app.scene.innerHTML.includes('</section><div class="it-hero-carousel">'),
+      app.scene.innerHTML.includes('</section><div class="it-hero-carousel" data-core='),
     );
   }
 });
@@ -2625,14 +2634,13 @@ test("hero team bar stays neutral while personal footer keeps its person color i
   }
 });
 
-test("header Idents follow the selected week and remain the team aggregate in Detailed", () => {
+test("remaining header Idents follow the selected week and the team aggregate in Detailed", () => {
   const app = mount();
   for (const step of [-1, -1, 1, 1, 1]) {
     app.stepWeek(step);
-    const total = app.scene.innerHTML.match(
-      /<h1><button[^>]*>(\d+)\/(\d+) Idents<\/button><\/h1>/,
-    );
-    const title = `>${total[1]}/${total[2]} Idents</button></h1>`;
+    const {done,targets} = JSON.parse(app.scene.innerHTML.match(/data-core='([^']+)'/)[1]);
+    const remaining = Math.max(0,targets.reduce((a,b)=>a+b,0)-done.reduce((a,b)=>a+b,0));
+    const title = `>Noch ${remaining} Idents</button></p>`;
     assert.ok(app.scene.innerHTML.includes(title));
     app.switchMode("detailed");
     assert.ok(app.scene.innerHTML.includes(title));
@@ -2660,6 +2668,10 @@ test("weekly team progress rounds to five cut designs at identical thresholds fo
     for (const streak of [0, 1, 3, 5, 12]) {
       const app = mount({ streak, totals: { completed, target } });
       assert.ok(
+        app.scene.innerHTML.includes(`>Noch ${Math.max(0,target-completed)} Idents</button></p>`),
+        `remaining Idents: ${completed}/${target}, streak ${streak}`,
+      );
+      assert.ok(
         app.scene.innerHTML.includes(`data-cut-stage="${stage}"`),
         `${completed}/${target}, streak ${streak}`,
       );
@@ -2683,13 +2695,9 @@ test("changing weeks recomputes the cut from that week instead of the streak", (
   const app = mount({ scenario: "", ownScenario: "near" });
   for (const step of [-1, -1, 1, 1, 1]) {
     app.stepWeek(step);
-    const totals = app.scene.innerHTML.match(
-      /<h1><button[^>]*>(\d+)\/(\d+) Idents<\/button><\/h1>/,
-    );
-    const stage =
-      Number(totals[2]) > 0
-        ? Math.round(Math.min(1, Number(totals[1]) / Number(totals[2])) * 4)
-        : 0;
+    const {done,targets} = JSON.parse(app.scene.innerHTML.match(/data-core='([^']+)'/)[1]);
+    const completed = done.reduce((a,b)=>a+b,0), target = targets.reduce((a,b)=>a+b,0);
+    const stage = target > 0 ? Math.round(Math.min(1,completed/target)*4) : 0;
     assert.ok(app.scene.innerHTML.includes(`data-cut-stage="${stage}"`));
   }
 });
@@ -2899,21 +2907,6 @@ test("a today's column Ident in a different selected week never triggers a today
   assert.ok(past.scene.innerHTML.includes("Woche im Rückblick"));
 });
 
-test("all current-month flashes and outlines follow the team goal independently of personal completion", () => {
-  for (const [completed, expected] of [[1, "var(--it-orange)"], [9, "var(--it-success)"]]) {
-    const app = mount({ scenario: "near", rows: ["D.X...P", completed === 9 ? "DDDD..." : ".......", completed === 9 ? "DDDD..." : "......."], targets: [3,3,3] });
-    const row = app.scene.innerHTML.match(/class="it-month-row" data-month-current="true"([\s\S]*?)<\/div>/)[1];
-    const colors = [...row.matchAll(/style="--user:([^;]+);/g)].map(m => m[1]);
-    assert.ok(colors.length > 0);
-    assert.ok(colors.every(color => color === expected), row);
-    assert.ok(row.includes(`data-goal-reached="${completed === 9}"`));
-  }
-  const missed = mount({ scenario: "behind" });
-  const current = missed.scene.innerHTML.match(/class="it-month-row" data-month-current="true"([\s\S]*?)<\/div>/)[1];
-  assert.ok(current.includes('it-planned'));
-  assert.ok(!current.includes('var(--it-violet)'));
-});
-
 test("history uses the same two-layer ratio flashes as the week grid", () => {
   const app = mount({ scenario: "start" });
   const history = app.scene.innerHTML.match(/<div class="it-history it-custom-glass"([\s\S]*?)<\/section>/)[1];
@@ -2926,14 +2919,16 @@ test("history uses the same two-layer ratio flashes as the week grid", () => {
   assert.ok(history.includes('class="it-progress-number">0<span>/9</span>'));
 });
 
-test("month and grouped actions follow the week history in screen order", () => {
-  const { scene } = mount();
-  const out = scene.innerHTML;
-  assert.ok(out.indexOf('class="it-week-section"') < out.indexOf('class="it-history-section"'));
-  assert.ok(out.indexOf('class="it-history-section"') < out.indexOf('class="it-month-section"'));
-  assert.ok(out.indexOf('class="it-month-section"') < out.indexOf('class="it-actions"'));
-  assert.equal((out.match(/data-remind-team/g) || []).length, 1);
-  assert.ok(out.includes('data-set-goal>◎ Ziel planen</button>'));
+test("week history remains while month and grouped actions are removed", () => {
+  for(const scenario of ['goal','near','behind','team']) {
+    const app=mount({scenario});
+    for(const offset of [0,-1,1]) {
+      app.stepWeek(offset);
+      const out=app.scene.innerHTML;
+      assert.ok(out.indexOf('class="it-week-section"') < out.indexOf('class="it-history-section"'));
+      for(const removed of ['Dein Monat','it-month-section','it-actions','data-remind-team','Ziel planen'])assert.ok(!out.includes(removed));
+    }
+  }
 });
 
 test("prototype has no Ident image toggle or placeholder photo rendering", () => {
